@@ -8,12 +8,8 @@ import (
 	errs "deblasis.net/space-traffic-control/common/errors"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/api/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service/endpoints"
-	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
-
-	"github.com/streadway/handy/breaker"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -25,7 +21,6 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 
 	r := mux.NewRouter().StrictSlash(false)
 	r.Use(jsonHeaderMiddleware)
-	r.Use(loggingMiddleware(logger))
 
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
@@ -33,21 +28,21 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 	}
 
 	r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
-		circuitbreaker.HandyBreaker(breaker.NewBreaker(0.2))(e.StatusEndpoint),
+		e.StatusEndpoint,
 		decodeHTTPServiceStatusRequest,
 		encodeResponse,
 		options...,
 	))
 
 	r.Methods("POST").Path("/users").Handler(httptransport.NewServer(
-		circuitbreaker.HandyBreaker(breaker.NewBreaker(0.2))(e.CreateUserEndpoint),
+		e.CreateUserEndpoint,
 		decodeHTTPCreateUserRequest,
 		encodeResponse,
 		options...,
 	))
 
 	r.Methods("GET").Path("/users/{username}").Handler(httptransport.NewServer(
-		circuitbreaker.HandyBreaker(breaker.NewBreaker(0.2))(e.GetUserByUsernameEndpoint),
+		e.GetUserByUsernameEndpoint,
 		decodeHTTPGetUserByUsernameRequest,
 		encodeResponse,
 		options...,
@@ -119,14 +114,4 @@ func jsonHeaderMiddleware(next http.Handler) http.Handler {
 		rw.Header().Add("Content-Type", "application/vnd.deblasis.spacetrafficcontrol-v1+/json; charset=utf-8")
 		next.ServeHTTP(rw, r)
 	})
-}
-
-func loggingMiddleware(logger log.Logger) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			level.Debug(logger).Log("msg", "calling endpoint", "URL", r.URL, "method", r.Method)
-			defer level.Debug(logger).Log("msg", "called endpoint", "URL", r.URL, "method", r.Method)
-			next.ServeHTTP(rw, r)
-		})
-	}
 }
