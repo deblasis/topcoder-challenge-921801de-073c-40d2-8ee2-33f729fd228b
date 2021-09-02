@@ -1,0 +1,59 @@
+version: '3.7'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:12.0
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - 5432:5432
+#    volumes:
+#      - ./postgres-data:/var/lib/postgresql/data
+    network_mode: "bridge"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    container_name: app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: rest-api-demo
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+    environment:
+      API_DB_ADDRESS: 'postgres:5432'
+    network_mode: "bridge"
+    links:
+      - postgres
+    volumes:
+      - ./config/app.yaml:/opt/app/config/app.yaml
+      - ./scripts/migrations:/opt/app/scripts/migrations
+    command:
+      - /bin/bash
+      - -c
+      - |
+        sleep 10
+        ls -al
+        ./migrate -dir /opt/app/scripts/migrations -init
+        ./app
+
+  swagger:
+    container_name: swagger
+    image: swaggerapi/swagger-ui
+    environment:
+      - SWAGGER_JSON=/sw/swagger.json
+    volumes:
+      - ./swagger/:/sw/
+    ports:
+      - 8888:8080
+    links:
+      - app
+
