@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option go_package = "services/auth_dbsvc/pb";
+
+service AuthDBSvc {
+  rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusReply) {}
+  rpc CreateUser (CreateUserRequest) returns (UserReply) {}
+  rpc GetUserByUsername (GetUserByUsernameRequest) returns (UserReply) {}
+}
+
+
+message User {
+  enum Role {
+    UNSPECIFIED = 0;
+    SHIP = 1;
+    STATION = 2;
+    COMMAND = 3;
+  }
+  int32 id = 1;
+  string username = 2;
+  string password = 3;
+  Role role = 4;
+}
+
+message CreateUserRequest {
+  User user = 1;
+}
+
+message GetUserByUsernameRequest {
+  string username = 1;
+}
+message UserReply {
+  User user = 1;
+  string error = 2;
+}
+
+message ServiceStatusRequest {}
+
+message ServiceStatusReply {
+  int64 code = 1;
+  string err = 2;
+}

@@ -1,0 +1,13 @@
+httpserverport: 8081
+grpcserverport: 8082
+
+db:
+  address: localhost:5432
+  username: postgres
+  password: secret
+  database: postgres
+  drivername: postgres
+  sslmode: disable
+
+
+loglevel: debug

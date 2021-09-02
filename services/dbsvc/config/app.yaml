@@ -1,0 +1,12 @@
+serverport: 8080
+
+db:
+  address: localhost:5432
+  username: postgres
+  password: secret
+  database: postgres
+  sslmode: disable
+  drivername: postgres
+
+
+loglevel: debug
