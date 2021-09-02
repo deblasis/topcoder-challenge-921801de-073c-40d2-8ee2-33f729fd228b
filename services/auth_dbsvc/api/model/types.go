@@ -3,10 +3,9 @@ package model
 // User represents an user entity
 type User struct {
 	ID       int64  `json:"id,omitempty" db:"id"`
-	Username string `json:"username" db:"username"`
-	Password string `json:"password" db:"password"`
-	RoleID   int64  `json:"role_id" db:"role_id"`
-	Role     *Role  `pg:"rel:has-one"`
+	Username string `json:"username" db:"username" validate:"required"`
+	Password string `json:"password" db:"password" validate:"required"`
+	Role     string `json:"role" db:"role" validate:"required,oneof=Ship Station Command"`
 }
 
 // Role represents an role entity

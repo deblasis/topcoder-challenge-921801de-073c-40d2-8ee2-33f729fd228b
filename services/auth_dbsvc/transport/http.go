@@ -124,8 +124,8 @@ func jsonHeaderMiddleware(next http.Handler) http.Handler {
 func loggingMiddleware(logger log.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			level.Debug(logger).Log("msg", "calling endpoint", "URL", r.URL)
-			defer level.Debug(logger).Log("msg", "called endpoint", "URL", r.URL)
+			level.Debug(logger).Log("msg", "calling endpoint", "URL", r.URL, "method", r.Method)
+			defer level.Debug(logger).Log("msg", "called endpoint", "URL", r.URL, "method", r.Method)
 			next.ServeHTTP(rw, r)
 		})
 	}

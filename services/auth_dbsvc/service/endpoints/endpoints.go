@@ -2,11 +2,15 @@ package endpoints
 
 import (
 	"context"
+	"reflect"
+	"strings"
 
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/api/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
+	"github.com/go-playground/validator"
+	"github.com/pkg/errors"
 )
 
 type EndpointSet struct {
@@ -39,6 +43,14 @@ func makeStatusEndpoint(s service.UserManager) endpoint.Endpoint {
 func makeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(model.GetUserByUsernameRequest)
+
+		var err error
+		err = validate.Struct(req)
+		if err != nil {
+			validationErrors := err.(validator.ValidationErrors)
+			return -1, errors.Wrap(validationErrors, "Validation failed")
+		}
+
 		user, err := s.GetUserByUsername(ctx, req.Username)
 		if err != nil {
 			return model.GetUserByUsernameReply{
@@ -55,8 +67,16 @@ func makeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
 
 func makeCreateUserEndpointEndpoint(s service.UserManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(model.CreateUserRequest)
-		id, err := s.CreateUser(ctx, &req.User)
+		req := request.(model.User)
+
+		var err error
+		err = validate.Struct(req)
+		if err != nil {
+			validationErrors := err.(validator.ValidationErrors)
+			return -1, errors.Wrap(validationErrors, "Validation failed")
+		}
+
+		id, err := s.CreateUser(ctx, &req)
 		if err != nil {
 			return model.CreateUserReply{
 				Id:  -1,
@@ -68,4 +88,23 @@ func makeCreateUserEndpointEndpoint(s service.UserManager) endpoint.Endpoint {
 			Err: "",
 		}, nil
 	}
+}
+
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New()
+	validate.RegisterValidation("notblank", func(fl validator.FieldLevel) bool {
+		field := fl.Field()
+		switch field.Kind() {
+		case reflect.String:
+			return len(strings.TrimSpace(field.String())) > 0
+		case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
+			return field.Len() > 0
+		case reflect.Ptr, reflect.Interface, reflect.Func:
+			return !field.IsNil()
+		default:
+			return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
+		}
+	})
 }
