@@ -52,11 +52,11 @@ func NewPostgresClient(db *pg.DB) PostgresClient {
 // GetPgConnectionOptions returns pg Options based on config
 func GetPgConnectionOptions(config config.Config) *pg.Options {
 	return &pg.Options{
+		ApplicationName: "deblasis_spaceTrafficControl",
 		Addr:            config.DbConfig.Address,
 		User:            config.DbConfig.Username,
 		Password:        config.DbConfig.Password,
 		Database:        config.DbConfig.Database,
-		ApplicationName: "demo",
 		ReadTimeout:     ReadTimeout,
 		WriteTimeout:    WriteTimeout,
 		PoolSize:        PoolSize,

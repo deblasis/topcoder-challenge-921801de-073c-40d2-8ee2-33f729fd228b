@@ -29,8 +29,8 @@ func (u userRepository) GetUserByUsername(ctx context.Context, username string) 
 		return model.User{}, err
 	}
 
-	user := model.User{Username: username}
-	err := u.Db.WithContext(ctx).Model(&user).Select()
+	var user model.User
+	err := u.Db.WithContext(ctx).Model(&user).Where("username = ?", username).Select()
 	if err == pg.ErrNoRows {
 		level.Debug(u.logger).Log("no rows")
 		return model.User{}, nil

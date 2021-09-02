@@ -7,16 +7,14 @@ type ServiceStatusReply struct {
 }
 
 type GetUserByUsernameRequest struct {
-	Username string `json:"username"`
+	Username string `json:"username" validate:"required,notblank"`
 }
 type GetUserByUsernameReply struct {
 	User User   `json:"user"`
 	Err  string `json:"err,omitempty"`
 }
 
-type CreateUserRequest struct {
-	User User `json:"user"`
-}
+type CreateUserRequest User
 type CreateUserReply struct {
 	Id  int64  `json:"id"`
 	Err string `json:"err,omitempty"`
