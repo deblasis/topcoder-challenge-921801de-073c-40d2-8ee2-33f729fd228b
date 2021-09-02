@@ -4,7 +4,7 @@ option go_package = "services/auth_dbsvc/pb";
 
 service AuthDBSvc {
   rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusReply) {}
-  rpc CreateUser (CreateUserRequest) returns (UserReply) {}
+  rpc CreateUser (CreateUserRequest) returns (CreateUserReply) {}
   rpc GetUserByUsername (GetUserByUsernameRequest) returns (UserReply) {}
 }
 
@@ -16,7 +16,7 @@ message User {
     STATION = 2;
     COMMAND = 3;
   }
-  int32 id = 1;
+  int64 id = 1;
   string username = 2;
   string password = 3;
   Role role = 4;
@@ -24,6 +24,12 @@ message User {
 
 message CreateUserRequest {
   User user = 1;
+}
+
+
+message CreateUserReply {
+  int64 id = 1;
+  string error = 2;
 }
 
 message GetUserByUsernameRequest {

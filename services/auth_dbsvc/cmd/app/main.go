@@ -10,11 +10,15 @@ import (
 	"syscall"
 
 	"deblasis.net/space-traffic-control/common/config"
+	"deblasis.net/space-traffic-control/services/auth_dbsvc/pb"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/repositories"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service/db"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service/endpoints"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/transport"
+	"google.golang.org/grpc"
+
+	grpcgokit "github.com/go-kit/kit/transport/grpc"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -29,7 +33,7 @@ func main() {
 	}
 
 	httpAddr := net.JoinHostPort("localhost", cfg.HttpServerPort)
-	// grpcAddr := net.JoinHostPort("localhost", cfg.GrpcServerPort)
+	grpcAddr := net.JoinHostPort("localhost", cfg.GrpcServerPort)
 
 	level.Debug(cfg.Logger).Log("DB address", cfg.DbConfig.Address)
 
@@ -41,7 +45,9 @@ func main() {
 
 	svc := service.NewUserManager(repo, log.With(cfg.Logger, "component", "UserManager"))
 	eps := endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"))
+
 	httpHandler := transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
+	grpcServer := transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
 
 	var g group.Group
 
@@ -60,7 +66,22 @@ func main() {
 
 	}
 	{
-		// This function just sits and waits for ctrl-C.
+		grpcListener, err := net.Listen("tcp", grpcAddr)
+		if err != nil {
+			level.Error(cfg.Logger).Log("transport", "gRPC", "during", "Listen", "err", err)
+			os.Exit(1)
+		}
+		g.Add(func() error {
+			level.Error(cfg.Logger).Log("transport", "gRPC", "addr", grpcAddr)
+
+			baseServer := grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+			pb.RegisterAuthDBSvcServer(baseServer, grpcServer)
+			return baseServer.Serve(grpcListener)
+		}, func(error) {
+			grpcListener.Close()
+		})
+	}
+	{
 		cancelInterrupt := make(chan struct{})
 		g.Add(func() error {
 			c := make(chan os.Signal, 1)

@@ -2,15 +2,22 @@ package endpoints
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/api/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/service"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-playground/validator"
 	"github.com/pkg/errors"
+	"github.com/sony/gobreaker"
+	"golang.org/x/time/rate"
 )
 
 type EndpointSet struct {
@@ -21,10 +28,25 @@ type EndpointSet struct {
 }
 
 func NewEndpointSet(s service.UserManager, logger log.Logger) EndpointSet {
+
+	var statusEndpoint endpoint.Endpoint
+	{
+		statusEndpoint = makeStatusEndpoint(s)
+		statusEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(statusEndpoint)
+		statusEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(statusEndpoint)
+		//statusEndpoint = opentracing.TraceServer(otTracer, "ServiceStatus")(statusEndpoint)
+		// if zipkinTracer != nil {
+		// 	statusEndpoint = zipkin.TraceEndpoint(zipkinTracer, "ServiceStatus")(statusEndpoint)
+		// }
+		statusEndpoint = LoggingMiddleware(log.With(logger, "method", "ServiceStatus"))(statusEndpoint)
+		//statusEndpoint = InstrumentingMiddleware(duration.With("method", "ServiceStatus"))(statusEndpoint)
+
+	}
+
 	return EndpointSet{
-		StatusEndpoint:            makeStatusEndpoint(s),
-		GetUserByUsernameEndpoint: makeGetUserByUsernameEndpoint(s),
-		CreateUserEndpoint:        makeCreateUserEndpointEndpoint(s),
+		StatusEndpoint:            statusEndpoint,
+		GetUserByUsernameEndpoint: LoggingMiddleware(log.With(logger, "method", "GetUserByUsername"))(makeGetUserByUsernameEndpoint(s)),
+		CreateUserEndpoint:        LoggingMiddleware(log.With(logger, "method", "CreateUser"))(makeCreateUserEndpointEndpoint(s)),
 		logger:                    logger,
 	}
 }
@@ -67,7 +89,7 @@ func makeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
 
 func makeCreateUserEndpointEndpoint(s service.UserManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(model.User)
+		req := request.(model.CreateUserRequest)
 
 		var err error
 		err = validate.Struct(req)
@@ -76,7 +98,13 @@ func makeCreateUserEndpointEndpoint(s service.UserManager) endpoint.Endpoint {
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		id, err := s.CreateUser(ctx, &req)
+		id, err := s.CreateUser(ctx, &model.User{
+			ID:       req.ID,
+			Username: req.Username,
+			Password: req.Password,
+			Role:     req.Role,
+		})
+
 		if err != nil {
 			return model.CreateUserReply{
 				Id:  -1,
@@ -87,6 +115,38 @@ func makeCreateUserEndpointEndpoint(s service.UserManager) endpoint.Endpoint {
 			Id:  id,
 			Err: "",
 		}, nil
+	}
+}
+
+// LoggingMiddleware returns an endpoint middleware that logs the
+// duration of each invocation, and the resulting error, if any.
+func LoggingMiddleware(logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+
+			defer func(begin time.Time) {
+				logger.Log("transport_error", err, "took", time.Since(begin))
+			}(time.Now())
+			return next(ctx, request)
+
+		}
+	}
+}
+
+// InstrumentingMiddleware returns an endpoint middleware that records
+// the duration of each invocation to the passed histogram. The middleware adds
+// a single field: "success", which is "true" if no error is returned, and
+// "false" otherwise.
+func InstrumentingMiddleware(duration metrics.Histogram) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+
+			defer func(begin time.Time) {
+				duration.With("success", fmt.Sprint(err == nil)).Observe(time.Since(begin).Seconds())
+			}(time.Now())
+			return next(ctx, request)
+
+		}
 	}
 }
 
