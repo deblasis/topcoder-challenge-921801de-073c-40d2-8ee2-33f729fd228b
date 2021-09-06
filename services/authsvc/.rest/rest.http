@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:9081
+
+//HEALTH
+GET {{baseUrl}}/health HTTP/1.1
+
+###
+
+//CreateUser KO
+POST {{baseUrl}}/signup HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{
+    "username": "aasdasdewea",
+    "password": "tesasdtpass",
+    "role": "Command"
+}
+
+###
+
+//CreateUser OK
+POST {{baseUrl}}/login HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{
+    "username": "deblasis",
+    "password": "deblasis"
+}
+
+###
+
+
+
+
+
+# grpcurl -import-path ./services/auth_dbsvc/pb/ -proto auth_dbsvc.proto -d @ -plaintext localhost:8082 AuthDBSvc/CreateUser <<EOM                                                                             baremetal-cluster 
+# {
+#   "user": {
+#     "username": "He6a6rl86757r8a4ltto",
+#     "password": "Hello",
+#     "role": "COMMAND"
+#   }
+# }
+# EOM
