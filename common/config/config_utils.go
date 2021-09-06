@@ -1,7 +1,7 @@
 package config
 
 var cfg = Config{
-	DbConfig: DbConfig{
+	Db: DbConfig{
 		Address:    "localhost",
 		Username:   "postgres",
 		Password:   "secret",

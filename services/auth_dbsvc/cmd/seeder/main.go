@@ -3,16 +3,18 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
+	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/service/db"
+	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/db"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,10 +22,10 @@ var filePath = flag.String("file", "./scripts/seeding/users.csv", "seeding file 
 
 type seeder struct {
 	connection *pg.DB
-	logger     *logrus.Logger
+	logger     log.Logger
 }
 
-func NewSeeder(connection *pg.DB, logger *logrus.Logger) *seeder {
+func NewSeeder(connection *pg.DB, logger log.Logger) *seeder {
 	return &seeder{
 		connection: connection,
 		logger:     logger,
@@ -48,10 +50,11 @@ func main() {
 
 	err = seeder.csvParse(*filePath, "users")
 	if err != nil {
-		cfg.Logger.Fatal(err, "Could not seed table!")
+		level.Error(cfg.Logger).Log("err", errors.Wrap(err, "Could not seed table!"))
+		os.Exit(1)
 	}
 
-	cfg.Logger.Info("table seeded successfully!")
+	level.Info(cfg.Logger).Log("msg", "table seeded successfully!")
 }
 
 func (s *seeder) csvParse(filePath string, tableName string) (err error) {
@@ -68,7 +71,7 @@ func (s *seeder) csvParse(filePath string, tableName string) (err error) {
 
 	for sc.Scan() {
 		txt := sc.Text()
-		s.logger.Info(txt)
+		level.Info(s.logger).Log("msg", txt)
 
 		if idx == 0 {
 			csvReader := csv.NewReader(strings.NewReader(txt))
@@ -79,7 +82,8 @@ func (s *seeder) csvParse(filePath string, tableName string) (err error) {
 			}
 			err = s.sqlInsert(fieldNames, record, tableName)
 			if err != nil {
-				s.logger.Fatal(err)
+				level.Error(s.logger).Log("err", err)
+				os.Exit(1)
 			}
 		}
 		idx++
@@ -105,7 +109,8 @@ func (s *seeder) sqlInsert(cols []string, record []string, table string) (err er
 			valStr += fmt.Sprintf("%v, ", val)
 		} else {
 			//password
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(val), bcrypt.DefaultCost+1)
+			//TODO refactor
+			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(val+auth.PWDSALT), bcrypt.DefaultCost+1)
 			if err != nil {
 				return err
 			}
@@ -116,7 +121,7 @@ func (s *seeder) sqlInsert(cols []string, record []string, table string) (err er
 		`INSERT INTO "%s" %s VALUES %s`,
 		table, colsStr, valStr)
 
-	s.logger.Info("Executing Query: ", qry)
+	level.Info(s.logger).Log("msg", fmt.Sprintf("Executing Query: %v", qry))
 	res, err := s.connection.Exec(qry)
 
 	if err != nil {
