@@ -1,3 +1,4 @@
+listenaddr: 
 httpserverport: 8081
 grpcserverport: 8082
 

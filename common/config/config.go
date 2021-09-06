@@ -14,10 +14,36 @@ const configFileName = "app"
 
 // Config declare the application configuration variables
 type Config struct {
+	ListenAddr     string
 	HttpServerPort string
 	GrpcServerPort string
-	DbConfig       DbConfig `mapstructure:"db"`
-	Logger         log.Logger
+
+	BindOnLocalhost bool
+
+	Db         DbConfig         `mapstructure:"db"`
+	Consul     ConsulConfig     `mapstructure:"consul"`
+	Zipkin     ZipkinConfig     `mapstructure:"zipkin"`
+	SSL        SSLConfig        `mapstructure:"ssl"`
+	APIGateway APIGatewayConfig `mapstructure:"apigateway"`
+	JWT        JWTConfig        `mapstructure:"jwt"`
+
+	Logger log.Logger
+}
+
+type ConsulConfig struct {
+	Host string
+	Port string
+}
+
+type SSLConfig struct {
+	ServerCert string
+	ServerKey  string
+}
+
+type ZipkinConfig struct {
+	V2Url          string
+	UseBridge      bool
+	LightstepToken string
 }
 
 // DbConfig declare database variables
@@ -28,6 +54,16 @@ type DbConfig struct {
 	Database   string
 	Sslmode    string
 	Drivername string
+}
+
+type JWTConfig struct {
+	Secret        string
+	TokenDuration int
+}
+
+type APIGatewayConfig struct {
+	RetryMax       int
+	RetryTimeoutMs int
 }
 
 // LoadConfig load config from file

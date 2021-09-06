@@ -9,7 +9,11 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "env": {"F3_API_ENDPOINT": "http://127.0.0.1:8080",},
+            "env": {
+                "F3_API_ENDPOINT": "http://127.0.0.1:8080",
+                "DEBLASIS_CONSUL_HOST" : "localhost",
+                "DEBLASIS_BINDTOLOCALHOST": "true"
+            },
             "program": "${workspaceFolder}/cmd/app/main.go"
         }
     ]

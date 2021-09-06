@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package authsvc.v1;
+
+option go_package = "deblasis.net/space-traffic-control/gen/proto/go/authsvc/proto/v1;authsvc_v1";
+
+service AuthService {
+  rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusResponse) {}
+  rpc Signup(SignupRequest) returns (SignupResponse) {}
+  rpc Login(LoginRequest) returns (LoginResponse) {}
+}
+
+message SignupRequest {
+  enum Role {
+    ROLE_UNSPECIFIED = 0;
+    ROLE_SHIP = 1;
+    ROLE_STATION = 2;
+    ROLE_COMMAND = 3;
+  }
+  string username = 1;
+  string password = 2;
+  Role role = 3;
+}
+
+message SignupResponse {
+  Token token = 1;
+  string error = 2;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  Token token = 1;
+  string error = 2;
+}
+
+message Token {
+  string token =1;
+  int64 expires_at =2;
+}
+
+
+message ServiceStatusRequest {}
+
+message ServiceStatusResponse {
+  int64 code = 1;
+  string err = 2;
+}

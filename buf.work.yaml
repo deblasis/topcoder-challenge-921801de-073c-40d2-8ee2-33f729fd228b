@@ -1,0 +1,4 @@
+version: v1
+directories:
+  - services/auth_dbsvc/proto
+  - services/authsvc/proto

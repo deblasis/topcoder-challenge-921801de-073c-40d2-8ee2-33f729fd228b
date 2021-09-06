@@ -4,8 +4,11 @@
 			"path": ".",
 			"name": "ROOT"
 		},
+		// {
+		// 	"path": "common"
+		// },
 		{
-			"path": "common"
+			"path": "services/apigateway",
 		},
 		{
 			"path": "services/authsvc"
