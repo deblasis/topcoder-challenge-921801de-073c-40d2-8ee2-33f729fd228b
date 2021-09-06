@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	ca "deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
@@ -79,12 +80,9 @@ func (s *authService) Login(ctx context.Context, request dtos.LoginRequest) (dto
 		return unauthorized(err)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password+ca.PWDSALT), bcrypt.DefaultCost+1)
+	bytesHashed := []byte(user.Password)
+	err = bcrypt.CompareHashAndPassword(bytesHashed, []byte(request.Password+ca.PWDSALT))
 	if err != nil {
-		return resp, err
-	}
-
-	if user.Password != string(hashedPassword) {
 		return unauthorized(nil)
 	}
 
@@ -103,8 +101,8 @@ func (s *authService) Login(ctx context.Context, request dtos.LoginRequest) (dto
 func unauthorized(err error) (dtos.LoginResponse, error) {
 	//TODO refactor
 	return dtos.LoginResponse{
-		Err: "Unauthorized",
-	}, err
+		Err: fmt.Sprintf("Unauthorized: %v", err),
+	}, nil
 }
 
 // func (u *userManager) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {

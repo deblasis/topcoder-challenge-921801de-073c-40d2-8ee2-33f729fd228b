@@ -10,10 +10,10 @@ COPY go.sum .
 RUN go mod download
 
 
-RUN go get github.com/golang/protobuf/protoc-gen-go
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go
 RUN cp /go/bin/protoc-gen-go /usr/local/bin/
 
-RUN go get github.com/gogo/protobuf/protoc-gen-gofast
+RUN go install github.com/gogo/protobuf/protoc-gen-gofast
 RUN cp /go/bin/protoc-gen-gofast /usr/local/bin/
 
 RUN echo $SVC_NAME

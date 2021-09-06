@@ -52,12 +52,12 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 		loginEndpoint = MakeLoginEndpoint(s)
 		loginEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(loginEndpoint)
 		loginEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(loginEndpoint)
-		loginEndpoint = opentracing.TraceServer(otTracer, "Signup")(loginEndpoint)
+		loginEndpoint = opentracing.TraceServer(otTracer, "Login")(loginEndpoint)
 		if zipkinTracer != nil {
-			loginEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Signup")(loginEndpoint)
+			loginEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Login")(loginEndpoint)
 		}
-		loginEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Signup"))(loginEndpoint)
-		loginEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Signup"))(loginEndpoint)
+		loginEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Login"))(loginEndpoint)
+		loginEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Login"))(loginEndpoint)
 	}
 
 	return EndpointSet{

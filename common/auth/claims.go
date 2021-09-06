@@ -20,7 +20,7 @@ func NewJWTToken(config config.JWTConfig, username, role, issuer string) (token 
 		Username: username,
 		Role:     role,
 		StandardClaims: jwt.StandardClaims{
-			Audience:  "SpaceTrafficControl",
+			Audience:  "deblasis.SpaceTrafficControl",
 			ExpiresAt: expiresAt,
 			IssuedAt:  now,
 			Issuer:    issuer,
