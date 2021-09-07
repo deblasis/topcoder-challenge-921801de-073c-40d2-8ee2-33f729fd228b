@@ -148,14 +148,14 @@ func main() {
 	<-done
 
 	{
-		factory := userManagerServiceFactory(dbe.MakeCreateUserEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := authDBServiceFactory(dbe.MakeCreateUserEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateUserEndpoint = retry
 	}
 	{
-		factory := userManagerServiceFactory(dbe.MakeGetUserByUsernameEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := authDBServiceFactory(dbe.MakeGetUserByUsernameEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
@@ -174,7 +174,6 @@ func main() {
 		g   group.Group
 		svc = service.NewAuthService(log.With(cfg.Logger, "component", "AuthService"), cfg.JWT, db_endpoints)
 
-		// svc = service.NewUserManager(log.With(cfg.Logger, "component", "UserManager"))
 		eps = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
@@ -272,7 +271,7 @@ func main() {
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
 
-func userManagerServiceFactory(makeEndpoint func(dbs.UserManager) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
+func authDBServiceFactory(makeEndpoint func(dbs.AuthDBService) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		// We could just as easily use the HTTP or Thrift client package to make
 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
@@ -287,10 +286,10 @@ func userManagerServiceFactory(makeEndpoint func(dbs.UserManager) endpoint.Endpo
 		// if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
 		// 	creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
 		// 	if err != nil {
-		// 		level.Error(cfg.Logger).Log("client", "userManagerServiceFactory", "certificates", creds, "err", err)
+		// 		level.Error(cfg.Logger).Log("client", "authDBServiceFactory", "certificates", creds, "err", err)
 		// 		os.Exit(1)
 		// 	}
-		// 	level.Info(cfg.Logger).Log("client", "userManagerServiceFactory", "protocol", "GRPC", "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
+		// 	level.Info(cfg.Logger).Log("client", "authDBServiceFactory", "protocol", "GRPC", "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
 
 		// 	conn, err = grpc.Dial(instance, grpc.WithTransportCredentials(creds))
 		// 	if err != nil {
@@ -306,7 +305,7 @@ func userManagerServiceFactory(makeEndpoint func(dbs.UserManager) endpoint.Endpo
 		service := dbt.NewGRPCClient(conn, tracer, zipkinTracer, logger)
 		endpoint := makeEndpoint(service)
 		level.Debug(logger).Log(
-			"method", "userManagerServiceFactory",
+			"method", "authDBServiceFactory",
 			"instance", instance,
 			"conn", conn,
 		)
