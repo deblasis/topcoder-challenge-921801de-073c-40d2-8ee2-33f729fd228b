@@ -1,66 +1,54 @@
 package endpoints
 
-// ServiceStatus(ctx context.Context) (int64, error)
-// func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
-// 	resp, err := s.StatusEndpoint(ctx, model.ServiceStatusRequest{})
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	response := resp.(model.ServiceStatusReply)
-// 	return response.Code, errors.Str2err(response.Err)
-// }
+import (
+	"context"
 
-// // GetUserByUsername(ctx context.Context, username string) (model.User, error)
-// func (s EndpointSet) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
-// 	var user model.User
-// 	resp, err := s.GetUserByUsernameEndpoint(ctx, model.GetUserByUsernameRequest{Username: username})
-// 	if err != nil {
-// 		return user, err
-// 	}
-// 	response := resp.(model.GetUserByUsernameReply)
-// 	return response.User, errors.Str2err(response.Err)
-// }
+	"deblasis.net/space-traffic-control/common/errors"
+	"deblasis.net/space-traffic-control/common/healthcheck"
+	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	"github.com/go-kit/kit/endpoint"
+)
 
-// // CreateUser(ctx context.Context, user *model.User) (int64, error)
-// func (s EndpointSet) CreateUser(ctx context.Context, user *model.User) (int64, error) {
-// 	resp, err := s.CreateUserEndpoint(ctx, model.CreateUserRequest{
-// 		Username: user.Username,
-// 		Password: user.Password,
-// 		Role:     user.Role,
-// 	})
-// 	if err != nil {
-// 		return -1, err
-// 	}
-// 	response := resp.(model.CreateUserReply)
-// 	return response.Id, errors.Str2err(response.Err)
-// }
+//ServiceStatus(ctx context.Context) (int64, error)
+func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
+	resp, err := s.StatusEndpoint(ctx, healthcheck.ServiceStatusRequest{})
+	if err != nil {
+		return 0, err
+	}
+	response := resp.(healthcheck.ServiceStatusResponse)
+	return response.Code, errors.Str2err(response.Err)
+}
 
-// var (
-// 	_ endpoint.Failer = model.ServiceStatusReply{}
-// 	_ endpoint.Failer = model.GetUserByUsernameReply{}
-// 	_ endpoint.Failer = model.CreateUserReply{}
-// )
+// Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error)
+func (s EndpointSet) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {
+	var ret dtos.SignupResponse
+	resp, err := s.SignupEndpoint(ctx, dtos.SignupRequest{
+		Username: request.Username,
+		Password: request.Password,
+		Role:     request.Role,
+	})
+	if err != nil {
+		return ret, err
+	}
+	response := resp.(dtos.SignupResponse)
+	return response, errors.Str2err(response.Err)
+}
 
-// type ServiceStatusRequest struct{}
-// type ServiceStatusReply struct {
-// 	Code int64 `json:"code"`
-// 	Err  error `json:"-"`
-// }
+// Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error)
+func (s EndpointSet) Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error) {
+	var ret dtos.LoginResponse
+	resp, err := s.LoginEndpoint(ctx, dtos.LoginRequest{
+		Username: request.Username,
+		Password: request.Password,
+	})
+	if err != nil {
+		return ret, err
+	}
+	response := resp.(dtos.LoginResponse)
+	return response, errors.Str2err(response.Err)
+}
 
-// type GetUserByUsernameRequest struct {
-// 	Username string `json:"username" validate:"required,notblank"`
-// }
-// type GetUserByUsernameReply struct {
-// 	User model.User `json:"user"`
-// 	Err  error      `json:"-"`
-// }
-
-// type CreateUserRequest model.User
-// type CreateUserReply struct {
-// 	Id  int64 `json:"id"`
-// 	Err error `json:"-"`
-// }
-
-//func (r ServiceStatusReply) Failed() error { return r.Err }
-//func (r GetUserByUsernameReply) Failed() error { return r.Err }
-//func (r CreateUserReply) Failed() error { return r.Err }
+var (
+	_ endpoint.Failer = dtos.SignupResponse{}
+	_ endpoint.Failer = dtos.LoginResponse{}
+)

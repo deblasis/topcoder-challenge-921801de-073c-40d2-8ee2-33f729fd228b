@@ -71,6 +71,39 @@ func (r *ConsulRegister) NewConsulGRPCRegister() (*consulsd.Registrar, error) {
 	return consulsd.NewRegistrar(client, reg, r.logger), nil
 }
 
+func (r *ConsulRegister) NewConsulHTTPRegister() (*consulsd.Registrar, error) {
+	consulConfig := api.DefaultConfig()
+	consulConfig.Address = r.ConsulAddress
+	consulClient, err := api.NewClient(consulConfig)
+	if err != nil {
+		return nil, err
+	}
+	client := consulsd.NewClient(consulClient)
+
+	IP := r.getLocalIP()
+	if r.forceLocalhost {
+		IP = "localhost"
+	}
+
+	reg := &api.AgentServiceRegistration{
+		ID:   fmt.Sprintf("%v-%v-%v", r.ServiceName, IP, r.ServicePort),
+		Name: r.ServiceName,
+		Tags: r.Tags,
+		Port: r.ServicePort,
+		Meta: map[string]string{
+			"metricsport": fmt.Sprintf("%v", r.MetricsPort),
+		},
+		Address: IP,
+		Check: &api.AgentServiceCheck{
+			Interval:                       r.Interval.String(),
+			HTTP:                           fmt.Sprintf("http://%v:%v/%v", IP, r.ServicePort, "health"),
+			TLSSkipVerify:                  true, //TODO config
+			DeregisterCriticalServiceAfter: r.DeregisterCriticalServiceAfter.String(),
+		},
+	}
+	return consulsd.NewRegistrar(client, reg, r.logger), nil
+}
+
 func (r *ConsulRegister) getLocalIP() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

@@ -23,7 +23,6 @@ import (
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
-	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator"
 	"github.com/pkg/errors"
 )
@@ -39,7 +38,7 @@ func NewEndpointSet(s service.UserManager, logger log.Logger, duration metrics.H
 
 	var getUserByUsernameEndpoint endpoint.Endpoint
 	{
-		getUserByUsernameEndpoint = MakeGetUserByUsernameEndpoint(s, logger)
+		getUserByUsernameEndpoint = MakeGetUserByUsernameEndpoint(s)
 		getUserByUsernameEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(getUserByUsernameEndpoint)
 		getUserByUsernameEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByUsernameEndpoint)
 		getUserByUsernameEndpoint = opentracing.TraceServer(otTracer, "GetUserByUsername")(getUserByUsernameEndpoint)
@@ -52,7 +51,7 @@ func NewEndpointSet(s service.UserManager, logger log.Logger, duration metrics.H
 
 	var createUserEndpoint endpoint.Endpoint
 	{
-		createUserEndpoint = MakeCreateUserEndpoint(s, logger)
+		createUserEndpoint = MakeCreateUserEndpoint(s)
 		createUserEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(createUserEndpoint)
 		createUserEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(createUserEndpoint)
 		createUserEndpoint = opentracing.TraceServer(otTracer, "CreateUser")(createUserEndpoint)
@@ -71,11 +70,8 @@ func NewEndpointSet(s service.UserManager, logger log.Logger, duration metrics.H
 	}
 }
 
-func MakeGetUserByUsernameEndpoint(s service.UserManager, logger log.Logger) endpoint.Endpoint {
+func MakeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		level.Info(logger).Log("handling request", "MakeGetUserByUsernameEndpoint")
-		defer level.Info(logger).Log("handled request", "MakeGetUserByUsernameEndpoint")
-
 		req := request.(dtos.GetUserByUsernameRequest)
 
 		var err error
@@ -99,11 +95,8 @@ func MakeGetUserByUsernameEndpoint(s service.UserManager, logger log.Logger) end
 	}
 }
 
-func MakeCreateUserEndpoint(s service.UserManager, logger log.Logger) endpoint.Endpoint {
+func MakeCreateUserEndpoint(s service.UserManager) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		level.Info(logger).Log("handling request", "MakeCreateUserEndpoint")
-		defer level.Info(logger).Log("handled request", "MakeCreateUserEndpoint")
-
 		req := request.(dtos.CreateUserRequest)
 
 		var err error

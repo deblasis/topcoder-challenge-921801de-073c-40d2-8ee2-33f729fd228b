@@ -94,6 +94,30 @@ services:
   #   networks:
   #     - net      
 
+  apigateway:
+    image: deblasis/stc-apigateway:latest
+    ports:
+      - 8081:8081
+      - 8082:8082
+    depends_on: 
+      - consul
+      - authsvc
+    volumes:
+      - ./certs:/certs
+      - ./services/apigateway/app.yaml:/app.yaml
+    environment: 
+     DEBLASIS_BINDONLOCALHOST: "false"
+     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    networks:
+      - net      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
   auth_dbsvc:
     image: deblasis/stc-auth_dbsvc:latest
     ports:

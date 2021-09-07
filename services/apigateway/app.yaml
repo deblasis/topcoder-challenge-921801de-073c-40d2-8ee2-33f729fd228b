@@ -1,0 +1,23 @@
+httpserverport: 8081
+grpcserverport: 8082
+
+#bindOnLocalhost: true
+
+consul:
+  host: consul
+  port: 8500
+zipkin:
+  v2_url: http://zipkin:9411/api/v2/spans
+
+
+apigateway:
+  retrymax: 10
+  retrytimeoutms: 5000
+
+
+# ssl:
+#   serverCert: ../../../../certs/deblasis-stc.pem
+#   serverKey: ../../../../certs/deblasis-stc-key.pem
+
+
+loglevel: debug
