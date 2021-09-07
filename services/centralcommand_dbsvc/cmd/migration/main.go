@@ -34,6 +34,8 @@ func main() {
 	connection := pgClient.GetConnection()
 	defer connection.Close()
 
+	level.Debug(cfg.Logger).Log("database", cfg.Db.Database)
+
 	migrationCollection := migrations.NewCollection()
 	if *doInit {
 		// perform the DB

@@ -95,7 +95,11 @@ services:
   #     - net      
 
   apigateway:
-    image: deblasis/stc_apigateway:latest
+    build:
+      dockerfile: ./services/apigateway/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: apigateway
     ports:
       - 8081:8081
       - 8082:8082
@@ -119,7 +123,11 @@ services:
 
 
   auth_dbsvc:
-    image: deblasis/stc_auth_dbsvc:latest
+    build:
+      dockerfile: ./services/auth_dbsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: auth_dbsvc
     ports:
       - 9181:9181
       - 9182:9182
@@ -142,8 +150,40 @@ services:
       timeout: 10s
       retries: 3      
 
+  centralcommand_dbsvc:
+    build:
+      dockerfile: ./services/centralcommand_dbsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: centralcommand_dbsvc
+    ports:
+      - 9381:9381
+      - 9382:9382
+    depends_on: 
+      - centralcommand_db
+      - consul
+    volumes:
+      - ./certs:/certs
+      - ./services/centralcommand_dbsvc/app.yaml:/app.yaml
+    environment: 
+     DEBLASIS_BINDONLOCALHOST: "false"
+     DEBLASIS_DB_ADDRESS: centralcommand_db:5432
+     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9381/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3           
+
   authsvc:
-    image: deblasis/stc_authsvc:latest
+    build:
+      dockerfile: ./services/authsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: authsvc
     ports:
       - 9081:9081
       - 9082:9082
@@ -216,30 +256,6 @@ services:
       timeout: 5s
       retries: 5             
       
-
-  centralcommand_dbsvc:
-    image: deblasis/stc_centralcommand_dbsvc:latest
-    ports:
-      - 9381:9381
-      - 9382:9382
-    depends_on: 
-      - centralcommand_db
-      - consul
-    volumes:
-      - ./certs:/certs
-      - ./services/centralcommand_dbsvc/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_DB_ADDRESS: centralcommand_db:5432
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9381/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3            
 
 #  centralcommandsvc:
 #     image: golang:1.17 

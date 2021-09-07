@@ -2,10 +2,10 @@ httpserverport: 8081
 grpcserverport: 8082
 
 db:
-  address: localhost:5432
+  address: centralcommand_db:5432
   username: postgres
   password: secret
-  database: auth
+  database: centralcommand
   sslmode: disable
   drivername: postgres
 

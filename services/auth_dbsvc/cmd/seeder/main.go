@@ -10,7 +10,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/db"
+	"deblasis.net/space-traffic-control/common/db"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
