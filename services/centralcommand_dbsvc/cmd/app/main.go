@@ -16,11 +16,11 @@ import (
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/db"
 	"deblasis.net/space-traffic-control/common/healthcheck"
-	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/repositories"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/service"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/transport"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/repositories"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -91,9 +91,10 @@ func main() {
 	var (
 		g group.Group
 
-		repo = repositories.NewUserRepository(connection, log.With(cfg.Logger, "component", "UserRepository"))
-		svc  = service.NewAuthDBService(repo, log.With(cfg.Logger, "component", "AuthDBService"))
-		eps  = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		shipRepo    = repositories.NewShipRepository(connection, log.With(cfg.Logger, "component", "ShipRepository"))
+		stationRepo = repositories.NewStationRepository(connection, log.With(cfg.Logger, "component", "StationRepository"))
+		svc         = service.NewCentralCommandDBService(shipRepo, stationRepo, log.With(cfg.Logger, "component", "CentralCommandDBService"))
+		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
@@ -105,7 +106,7 @@ func main() {
 			consulAddres := net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
 			grpcPort, _ := strconv.Atoi(cfg.GrpcServerPort)
 			metricsPort, _ := strconv.Atoi(cfg.HttpServerPort)
-			tags := []string{service.Namespace, service.ServiceName, "authDBService", "DBService"}
+			tags := []string{service.Namespace, service.ServiceName, "centralCommandDBService", "DBService"}
 			consulReg := consulreg.NewConsulRegister(consulAddres, service.ServiceName, grpcPort, metricsPort, tags, cfg.Logger, cfg.BindOnLocalhost)
 			svcRegistar, err := consulReg.NewConsulGRPCRegister()
 			defer svcRegistar.Deregister()
@@ -162,7 +163,7 @@ func main() {
 			} else {
 				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
 			}
-			pb.RegisterAuthDBServiceServer(baseServer, grpcServer)
+			pb.RegisterCentralCommandDBServiceServer(baseServer, grpcServer)
 
 			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
 

@@ -34,7 +34,7 @@ type EndpointSet struct {
 	logger                    log.Logger
 }
 
-func NewEndpointSet(s service.UserManager, logger log.Logger, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer) EndpointSet {
+func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer) EndpointSet {
 
 	var getUserByUsernameEndpoint endpoint.Endpoint
 	{
@@ -70,7 +70,7 @@ func NewEndpointSet(s service.UserManager, logger log.Logger, duration metrics.H
 	}
 }
 
-func MakeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
+func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(dtos.GetUserByUsernameRequest)
 
@@ -95,7 +95,7 @@ func MakeGetUserByUsernameEndpoint(s service.UserManager) endpoint.Endpoint {
 	}
 }
 
-func MakeCreateUserEndpoint(s service.UserManager) endpoint.Endpoint {
+func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(dtos.CreateUserRequest)
 

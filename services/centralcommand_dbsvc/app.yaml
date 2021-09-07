@@ -1,5 +1,5 @@
-httpserverport: 9181
-grpcserverport: 9182
+httpserverport: 9381
+grpcserverport: 9382
 
 bindOnLocalhost: true
 
@@ -10,10 +10,10 @@ zipkin:
   v2_url: http://zipkin:9411/api/v2/spans
 
 db:
-  address: auth_db:5432
+  address: centralcommand_db:5432
   username: postgres
   password: secret
-  database: auth
+  database: centralcommand
   drivername: postgres
   sslmode: disable
 

@@ -20,33 +20,33 @@ var (
 	Tags        = []string{}
 )
 
-type UserManager interface {
+type AuthDBService interface {
 	ServiceStatus(ctx context.Context) (int64, error)
 	GetUserByUsername(ctx context.Context, username string) (model.User, error)
 	CreateUser(ctx context.Context, user *model.User) (int64, error)
 }
 
-type userManager struct {
+type authDbService struct {
 	repository repositories.UserRepository
 	logger     log.Logger
 	validate   *validator.Validate
 }
 
-func NewUserManager(repository repositories.UserRepository, logger log.Logger) UserManager {
-	return &userManager{
+func NewAuthDBService(repository repositories.UserRepository, logger log.Logger) AuthDBService {
+	return &authDbService{
 		repository: repository,
 		logger:     logger,
 		validate:   validator.New(),
 	}
 }
 
-func (u *userManager) ServiceStatus(ctx context.Context) (int64, error) {
+func (u *authDbService) ServiceStatus(ctx context.Context) (int64, error) {
 	level.Info(u.logger).Log("handling request", "ServiceStatus")
 	defer level.Info(u.logger).Log("handled request", "ServiceStatus")
 	return http.StatusOK, nil
 }
 
-func (u *userManager) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
+func (u *authDbService) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
 	level.Info(u.logger).Log("handling request", "GetUserByUsername")
 	defer level.Info(u.logger).Log("handled request", "GetUserByUsername")
 	user, err := u.repository.GetUserByUsername(ctx, username)
@@ -56,7 +56,7 @@ func (u *userManager) GetUserByUsername(ctx context.Context, username string) (m
 	return user, nil
 }
 
-func (u *userManager) CreateUser(ctx context.Context, user *model.User) (int64, error) {
+func (u *authDbService) CreateUser(ctx context.Context, user *model.User) (int64, error) {
 	level.Info(u.logger).Log("handling request", "CreateUser")
 	defer level.Info(u.logger).Log("handled request", "CreateUser")
 	err := u.validate.Struct(user)
