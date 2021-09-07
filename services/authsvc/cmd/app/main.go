@@ -272,7 +272,7 @@ func main() {
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
 
-func userManagerServiceFactory(makeEndpoint func(dbs.UserManager, log.Logger) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
+func userManagerServiceFactory(makeEndpoint func(dbs.UserManager) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		// We could just as easily use the HTTP or Thrift client package to make
 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
@@ -304,7 +304,7 @@ func userManagerServiceFactory(makeEndpoint func(dbs.UserManager, log.Logger) en
 			return nil, nil, err
 		}
 		service := dbt.NewGRPCClient(conn, tracer, zipkinTracer, logger)
-		endpoint := makeEndpoint(service, logger)
+		endpoint := makeEndpoint(service)
 		level.Debug(logger).Log(
 			"method", "userManagerServiceFactory",
 			"instance", instance,

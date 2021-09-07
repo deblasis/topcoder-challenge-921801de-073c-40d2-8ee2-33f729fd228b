@@ -77,7 +77,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			"GetUserByUsername",
 			encodeGRPCGetUserByUsernameRequest,
 			decodeGRPCGetUserByUsernameResponse,
-			pb.CreateUserResponse{},
+			pb.GetUserByUsernameResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 

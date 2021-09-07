@@ -3,7 +3,7 @@
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
-SERVICES = auth_dbsvc authsvc
+SERVICES = auth_dbsvc authsvc apigateway
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
 

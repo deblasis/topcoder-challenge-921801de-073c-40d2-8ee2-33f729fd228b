@@ -4,12 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	ca "deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/repositories"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -62,6 +64,12 @@ func (u *userManager) CreateUser(ctx context.Context, user *model.User) (int64, 
 		validationErrors := err.(validator.ValidationErrors)
 		return -1, errors.Wrap(validationErrors, "Failed to create user")
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password+ca.PWDSALT), bcrypt.DefaultCost+1)
+	if err != nil {
+		return -1, err
+	}
+	user.Password = string(hashedPassword)
 
 	id, err := u.repository.CreateUser(ctx, user)
 	if err != nil {
