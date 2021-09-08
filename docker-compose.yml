@@ -169,6 +169,7 @@ services:
 
   auth_db:
     image: postgres:13.4-alpine3.14
+    command: ["postgres", "-c", "log_statement=all"]
     restart: always
     environment:
       PGUSER: postgres
@@ -194,6 +195,7 @@ services:
 
   centralcommand_db:
     image: postgres:13.4-alpine3.14
+    command: ["postgres", "-c", "log_statement=all"]
     restart: always
     environment:
       PGUSER: postgres
