@@ -7,7 +7,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -34,16 +33,16 @@ func (u stationRepository) GetById(ctx context.Context, id string) (*model.Stati
 
 	var ret model.Station
 	err := u.Db.WithContext(ctx).Model(&ret).
-		Column("Docks").
-		Relation("Docks", func(q *orm.Query) (*orm.Query, error) {
-			return q.Where("station_id = ?", id), nil
-		}).
-		Where("id = ?", id).Select()
-
+		Relation("Docks").
+		Where("id = ?", id).
+		Select()
 	if err == pg.ErrNoRows {
 		level.Debug(u.logger).Log("no rows")
 		return nil, nil
 	}
+
+	//u.Db.WithContext(ctx).Model(&ret.Docks).Where("station_id = ?", id).Select()
+
 	return &ret, err
 }
 
@@ -87,16 +86,17 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 }
 
 func (u stationRepository) GetAll(ctx context.Context) ([]*model.Station, error) {
-	var ret []*model.Station
+	var stations []*model.Station
 
 	err := u.Db.WithContext(ctx).
-		Model(&ret).
-		Relation("Docks").Select()
+		Model(&stations).
+		Relation("Docks").
+		Select()
 	if err != nil {
-		err = errors.Wrapf(err, "Failed to select ships")
+		err = errors.Wrapf(err, "Failed to select stations")
 		level.Debug(u.logger).Log(err)
 		return nil, err
 	}
 
-	return ret, nil
+	return stations, nil
 }

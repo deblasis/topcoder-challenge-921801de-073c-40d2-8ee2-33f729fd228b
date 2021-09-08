@@ -61,7 +61,7 @@ CREATE OR REPLACE VIEW docks_view AS
       sum(s.weight) as weight
       FROM docks d 
       LEFT JOIN docked_ships ds ON (d.id = ds.dock_id)
-      INNER JOIN ships s on (s.id = ds.ship_id)
+      LEFT JOIN ships s on (s.id = ds.ship_id)
       GROUP BY (d.id, ds.ship_id)
    )
 	SELECT d.id as id, d.station_id as station_id, 
