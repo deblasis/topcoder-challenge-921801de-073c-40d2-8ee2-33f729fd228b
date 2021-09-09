@@ -94,28 +94,35 @@ services:
   #   networks:
   #     - net      
 
-  apigateway:
-    image: deblasis/stc_apigateway:latest
-    ports:
-      - 8081:8081
-      - 8082:8082
-    depends_on: 
-      - consul
-      - authsvc
-    volumes:
-      - ./certs:/certs
-      - ./services/apigateway/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net      
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+
+
+
+
+
+
+  
+  # apigateway:
+  #   image: deblasis/stc_apigateway:latest
+  #   ports:
+  #     - 8081:8081
+  #     - 8082:8082
+  #   depends_on: 
+  #     - consul
+  #     - authsvc
+  #   volumes:
+  #     - ./certs:/certs
+  #     - ./services/apigateway/app.yaml:/app.yaml
+  #   environment: 
+  #    DEBLASIS_BINDONLOCALHOST: "false"
+  #    DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+  #    DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+  #   networks:
+  #     - net      
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
 
   auth_dbsvc:
@@ -241,33 +248,32 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:9381/health"]
       interval: 30s
       timeout: 10s
-      retries: 3            
+      retries: 3         
 
-#  centralcommandsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     depends_on:
-#       - centralcommand_db
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - frontend
-#       - centralcommand_backend            
-#   centralcommand_dbsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - centralcommand_backend         
+  centralcommandsvc:
+    image: deblasis/stc_centralcommandsvc:latest
+    ports:
+      - 9481:9481
+      - 9482:9482
+    depends_on: 
+      - consul
+      - centralcommand_dbsvc
+    volumes:
+      - ./certs:/certs
+      - ./services/centralcommandsvc/app.yaml:/app.yaml
+    environment: 
+     DEBLASIS_BINDONLOCALHOST: "false"
+     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    networks:
+      - net      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3         
+
+  
       
 # shippingstationsvc:
 #     image: golang:1.17 
@@ -355,7 +361,7 @@ volumes:
 #     image: vault:1.6.3
 #     environment:
 #       - SKIP_SETCAP=1
-#       - VAULT_DEV_ROOT_TOKEN_ID=8fb95528-57c6-422e-9722-d2147bcba8ed
+#       - VAULT_DEV_ROOT_TOKEN_Id=8fb95528-57c6-422e-9722-d2147bcba8ed
 #     networks:
 #       - backend  
 

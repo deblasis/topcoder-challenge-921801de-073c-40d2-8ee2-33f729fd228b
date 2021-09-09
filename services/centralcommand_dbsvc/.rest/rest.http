@@ -5,27 +5,17 @@ GET {{baseUrl}}/health HTTP/1.1
 
 ###
 
-//CreateUser KO
-POST {{baseUrl}}/ships HTTP/1.1
-Content-Type: application/json; charset=utf-8
-
-{
-    "username": "test",
-    "password": "testpass",
-    "role": "a"
-}
-
-###
-
 //CreateStation OK
 POST {{baseUrl}}/stations HTTP/1.1
 Content-Type: application/json; charset=utf-8
 
 {
-    "capacity": 2.1234,
+    "capacity": 2.21234,
     "docks" : [
         {
             "numDockingPorts": 5
+        }, {
+            "numDockingPorts": 1
         }
     ]
 }
@@ -37,7 +27,7 @@ POST {{baseUrl}}/ships HTTP/1.1
 Content-Type: application/json; charset=utf-8
 
 {
-    "weight": 343.1234
+    "weight": 34657553.5671234
 }
 
 
@@ -53,9 +43,6 @@ GET {{baseUrl}}/stations HTTP/1.1
 
 
 
-###
-//GetUser OK
-GET {{baseUrl}}/users/%20 HTTP/1.1
 
 
 

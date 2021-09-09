@@ -2,8 +2,8 @@
 
 CGO_ENABLED ?= 0
 GOOS ?= linux
-
-SERVICES = auth_dbsvc centralcommand_dbsvc authsvc apigateway 
+#apigateway
+SERVICES = auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
 
@@ -21,10 +21,17 @@ endef
 
 all: $(SERVICES)
 
+deps:
+	go install github.com/favadi/protoc-go-inject-tag@v1.3.0
+
+
 PHONY: proto
-proto:
-#	@./scripts/protobuf-gen.sh
+proto: deps
 	buf generate
+#docker run --volume "$(shell pwd):/workspace" --workdir /workspace bufbuild/buf generate
+	protoc-go-inject-tag -input="gen/proto/go/centralcommand_dbsvc/v1/*.pb.go" -verbose
+	protoc-go-inject-tag -input="gen/proto/go/centralcommandsvc/v1/*.pb.go" -verbose	
+
 
 .PHONY: migrate-auth_dbsvc
 migrate-auth_dbsvc: ## do migration

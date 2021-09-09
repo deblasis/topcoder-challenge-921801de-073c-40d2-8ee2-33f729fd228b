@@ -6,7 +6,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
@@ -169,77 +169,37 @@ func decodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}
 
 func encodeGRPCCreateShipRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(dtos.CreateShipRequest)
-
-	//TODO: centralise
-	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
-	// if roleId <= 0 {
-	// 	return nil, errors.New("cannot unmarshal role")
-	// }
-	return &pb.CreateShipRequest{
-		Ship: &pb.Ship{
-			Weight: float32(req.Weight),
-		},
-	}, nil
+	return converters.CreateShipRequestToProto(req), nil
 }
 func decodeGRPCCreateShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.CreateShipResponse)
-	return dtos.CreateShipResponse{
-		Ship: &model.Ship{
-			ID: response.Ship.Id,
-			//TODO converter
-			Status: response.Ship.Status.String(),
-			Weight: float32(response.Ship.Weight),
-		},
-		Err: response.Error,
-	}, nil
+	return converters.ProtoCreateShipResponseToDto(*response), nil
 }
 
 func encodeGRPCGetAllShipsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return &pb.GetAllShipsRequest{}, nil
-
+	req := request.(dtos.GetAllShipsRequest)
+	return converters.GetAllShipsRequestToProto(req), nil
 }
 func decodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllShipsResponse)
-	return dtos.GetAllShipsResponse{
-		Ships: []*model.Ship{},
-		Err:   response.Error,
-	}, nil
+	return converters.ProtoGetAllShipsResponseToDto(*response), nil
 }
 
 func encodeGRPCCreateStationRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(dtos.CreateStationRequest)
-
-	//TODO: centralise
-	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
-	// if roleId <= 0 {
-	// 	return nil, errors.New("cannot unmarshal role")
-	// }
-	return &pb.CreateStationRequest{
-		Station: &pb.Station{
-			Capacity: req.Capacity,
-			Docks:    modelToProtoDocks(req.Docks),
-		},
-	}, nil
+	return converters.CreateStationRequestToProto(req), nil
 }
+
 func decodeGRPCCreateStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.CreateStationResponse)
-	return dtos.CreateStationResponse{
-		Station: &model.Station{
-			Capacity: response.Station.Capacity,
-			Docks:    protoToModelDocks(response.Station.Docks),
-		},
-		Err: response.Error,
-	}, nil
+	return converters.ProtoCreateStationResponseToDto(*response), nil
 }
 
 func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return &pb.GetAllStationsRequest{}, nil
-
+	req := request.(dtos.GetAllStationsRequest)
+	return converters.GetAllStationsRequestToProto(req), nil
 }
 func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllStationsResponse)
-	return dtos.GetAllStationsResponse{
-		Stations: []*model.Station{},
-		Err:      response.Error,
-	}, nil
+	return converters.ProtoGetAllStationsResponseToDto(*response), nil
 }

@@ -140,7 +140,7 @@ func main() {
 				ok <- true
 				return
 			}
-			logger.Log("msg", "waiting for instances")
+			logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
 			time.Sleep(time.Second * 1)
 		}
 	}(done)

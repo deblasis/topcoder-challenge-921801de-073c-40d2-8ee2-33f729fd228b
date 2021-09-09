@@ -49,8 +49,8 @@ func (u stationRepository) GetById(ctx context.Context, id string) (*model.Stati
 func (u stationRepository) Create(ctx context.Context, station model.Station) (*model.Station, error) {
 
 	err := u.Db.RunInTransaction(ctx, func(t *pg.Tx) error {
-		station.ID = uuid.NewString()
-		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.ID, station.Capacity)
+		station.Id = uuid.NewString()
+		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.Id, station.Capacity)
 		if err != nil {
 			err = errors.Wrapf(err, "Failed to insert station %v", station)
 			level.Debug(u.logger).Log(err)
@@ -67,12 +67,12 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 
 		//insert docks
 		for _, dock := range station.Docks {
-			dock.ID = uuid.NewString()
-			dock.StationId = station.ID
+			dock.Id = uuid.NewString()
+			dock.StationId = station.Id
 
 			_, err = t.Model(dock).
 				ExcludeColumn("occupied", "weight").
-				Returning("id").Insert(&dock.ID)
+				Returning("id").Insert(&dock.Id)
 			if err != nil {
 				err = errors.Wrapf(err, "Failed to insert dock %v", station)
 				level.Debug(u.logger).Log(err)
@@ -85,8 +85,8 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 	return &station, err
 }
 
-func (u stationRepository) GetAll(ctx context.Context) ([]*model.Station, error) {
-	var stations []*model.Station
+func (u stationRepository) GetAll(ctx context.Context) ([]model.Station, error) {
+	var stations []model.Station
 
 	err := u.Db.WithContext(ctx).
 		Model(&stations).

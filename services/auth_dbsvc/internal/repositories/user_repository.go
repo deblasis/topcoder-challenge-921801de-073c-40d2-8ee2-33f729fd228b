@@ -45,7 +45,7 @@ func (u userRepository) CreateUser(ctx context.Context, user *model.User) (int64
 		return -1, err
 	}
 
-	result, err := u.Db.WithContext(ctx).Model(user).Returning("id").Insert(&user.ID)
+	result, err := u.Db.WithContext(ctx).Model(user).Returning("id").Insert(&user.Id)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to insert user %v", user)
 		level.Debug(u.logger).Log(err)
@@ -59,5 +59,5 @@ func (u userRepository) CreateUser(ctx context.Context, user *model.User) (int64
 			return -1, err
 		}
 	}
-	return user.ID, nil
+	return user.Id, nil
 }

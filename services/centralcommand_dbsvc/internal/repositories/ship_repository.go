@@ -43,10 +43,10 @@ func (u shipRepository) GetById(ctx context.Context, id string) (*model.Ship, er
 }
 
 func (u shipRepository) Create(ctx context.Context, ship model.Ship) (*model.Ship, error) {
-	ship.ID = uuid.New().String()
+	ship.Id = uuid.New().String()
 	result, err := u.Db.WithContext(ctx).Model(&ship).
 		ExcludeColumn("status").
-		Returning("id").Insert(&ship.ID)
+		Returning("id").Insert(&ship.Id)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to insert ship %v", ship)
 		level.Debug(u.logger).Log(err)
@@ -63,8 +63,8 @@ func (u shipRepository) Create(ctx context.Context, ship model.Ship) (*model.Shi
 	return &ship, nil
 }
 
-func (u shipRepository) GetAll(ctx context.Context) ([]*model.Ship, error) {
-	var ret []*model.Ship
+func (u shipRepository) GetAll(ctx context.Context) ([]model.Ship, error) {
+	var ret []model.Ship
 
 	err := u.Db.WithContext(ctx).Model(&ret).Select()
 	if err != nil {

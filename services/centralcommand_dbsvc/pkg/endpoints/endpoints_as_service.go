@@ -5,7 +5,6 @@ import (
 
 	"deblasis.net/space-traffic-control/common/errors"
 	"deblasis.net/space-traffic-control/common/healthcheck"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -21,51 +20,48 @@ func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
 }
 
 // CreateShip(ctx context.Context, ship *model.Ship) (int64, error)
-func (s EndpointSet) CreateShip(ctx context.Context, ship model.Ship) (*model.Ship, error) {
-	resp, err := s.CreateShipEndpoint(ctx, dtos.CreateShipRequest{
-		Weight: ship.Weight,
-	})
+func (s EndpointSet) CreateShip(ctx context.Context, request dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {
+	resp, err := s.CreateShipEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 	response := resp.(dtos.CreateShipResponse)
-	return response.Ship, errors.Str2err(response.Err)
+	return &response, errors.Str2err(response.Err)
 }
 
 // GetAllShips(ctx context.Context, ship *model.Ship) (int64, error)
-func (s EndpointSet) GetAllShips(ctx context.Context) ([]*model.Ship, error) {
-	resp, err := s.GetAllShipsEndpoint(ctx, dtos.GetAllShipsRequest{})
+func (s EndpointSet) GetAllShips(ctx context.Context, request dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error) {
+	resp, err := s.GetAllShipsEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(dtos.GetAllShipsResponse)
-	return response.Ships, errors.Str2err(response.Err)
+	response := resp.(*dtos.GetAllShipsResponse)
+	return response, errors.Str2err(response.Err)
 }
 
 // CreateStation(ctx context.Context, station *model.Station) (string, error)
-func (s EndpointSet) CreateStation(ctx context.Context, station model.Station) (*model.Station, error) {
-	resp, err := s.CreateStationEndpoint(ctx, dtos.CreateStationRequest{
-		Capacity: station.Capacity,
-		Docks:    station.Docks,
-	})
+func (s EndpointSet) CreateStation(ctx context.Context, request dtos.CreateStationRequest) (*dtos.CreateStationResponse, error) {
+	resp, err := s.CreateStationEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 	response := resp.(dtos.CreateStationResponse)
-	return response.Station, errors.Str2err(response.Err)
+	return &response, errors.Str2err(response.Err)
 }
 
 // GetAllStations(ctx context.Context, ship *model.Ship) (int64, error)
-func (s EndpointSet) GetAllStations(ctx context.Context) ([]*model.Station, error) {
+func (s EndpointSet) GetAllStations(ctx context.Context, request dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error) {
 	resp, err := s.GetAllStationsEndpoint(ctx, dtos.GetAllStationsRequest{})
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(dtos.GetAllStationsResponse)
-	return response.Stations, errors.Str2err(response.Err)
+	response := resp.(*dtos.GetAllStationsResponse)
+	return response, errors.Str2err(response.Err)
 }
 
 var (
 	_ endpoint.Failer = dtos.CreateStationResponse{}
 	_ endpoint.Failer = dtos.CreateShipResponse{}
+	_ endpoint.Failer = dtos.GetAllShipsResponse{}
+	_ endpoint.Failer = dtos.GetAllStationsResponse{}
 )

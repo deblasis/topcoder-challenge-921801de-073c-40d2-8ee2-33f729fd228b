@@ -43,8 +43,8 @@ func (u dockRepository) GetById(ctx context.Context, id string) (*model.Dock, er
 }
 
 func (u dockRepository) Create(ctx context.Context, dock model.Dock) (*model.Dock, error) {
-	dock.ID = uuid.New().String()
-	result, err := u.Db.WithContext(ctx).Model(dock).Returning("id").Insert(&dock.ID)
+	dock.Id = uuid.New().String()
+	result, err := u.Db.WithContext(ctx).Model(dock).Returning("id").Insert(&dock.Id)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to insert dock %v", dock)
 		level.Debug(u.logger).Log(err)

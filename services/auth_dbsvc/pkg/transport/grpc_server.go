@@ -74,7 +74,7 @@ func (g *grpcServer) GetUserByUsername(ctx context.Context, r *pb.GetUserByUsern
 func decodeGRPCCreateUserRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.CreateUserRequest)
 	return dtos.CreateUserRequest{
-		ID:       req.User.Id,
+		Id:       req.User.Id,
 		Username: req.User.Username,
 		Password: req.User.Password,
 		//TODO centralize
@@ -106,7 +106,7 @@ func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 	}
 	return &pb.GetUserByUsernameResponse{
 		User: &pb.User{
-			Id:       response.User.ID,
+			Id:       response.User.Id,
 			Username: response.User.Username,
 			Password: response.User.Password,
 			Role:     pb.User_Role(roleId),

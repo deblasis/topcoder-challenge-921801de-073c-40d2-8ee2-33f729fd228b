@@ -1,15 +1,31 @@
-#build stage
-FROM golang:alpine AS builder
-RUN apk add --no-cache git
-WORKDIR /go/src/app
-COPY . .
-RUN go get -d -v ./...
-RUN go build -o /go/bin/app -v ./...
+# Base build image
+FROM golang:1.17-alpine AS build_base
+ARG SVC_NAME
 
-#final stage
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-COPY --from=builder /go/bin/app /app
-ENTRYPOINT /app
-LABEL Name=auth Version=0.0.1
-EXPOSE 3000
+RUN apk add make protobuf git gcc g++ libc-dev
+WORKDIR /go/src/deblasis.net/space-traffic-control
+
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+RUN echo $SVC_NAME
+
+FROM build_base AS server_builder
+ARG SVC_NAME
+
+COPY ./Makefile ./Makefile
+COPY ./common ./common
+COPY ./gen ./gen
+COPY ./scripts ./scripts
+COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
+COPY ./services/centralcommandsvc ./services/centralcommandsvc
+COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
+COPY ./services/centralcommandsvc ./services/centralcommandsvc
+
+RUN make $SVC_NAME \
+    && mv build/deblasis-$SVC_NAME /exe
+
+FROM scratch
+COPY --from=server_builder /exe /
+ENTRYPOINT ["/exe"]
