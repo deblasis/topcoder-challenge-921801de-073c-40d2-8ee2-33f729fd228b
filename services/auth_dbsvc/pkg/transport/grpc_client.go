@@ -135,7 +135,7 @@ func encodeGRPCGetUserByUsernameRequest(_ context.Context, request interface{}) 
 func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetUserByUsernameResponse)
 	return dtos.GetUserByUsernameResponse{User: model.User{
-		ID:       response.User.Id,
+		Id:       response.User.Id,
 		Username: response.User.Username,
 		Password: response.User.Password,
 		Role:     strings.Title(strings.ToLower(strings.TrimLeft(response.User.Role.String(), "ROLE_"))),
@@ -152,7 +152,7 @@ func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interf
 	}
 	return &pb.CreateUserRequest{
 		User: &pb.User{
-			Id:       req.ID,
+			Id:       req.Id,
 			Username: req.Username,
 			Password: req.Password,
 			Role:     pb.User_Role(roleId),

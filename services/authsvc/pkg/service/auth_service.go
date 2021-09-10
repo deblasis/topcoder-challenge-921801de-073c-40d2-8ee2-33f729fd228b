@@ -7,9 +7,10 @@ import (
 	ca "deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
 	"deblasis.net/space-traffic-control/common/errors"
-	dbdtos "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
+	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	"deblasis.net/space-traffic-control/services/authsvc/pkg/converters"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
@@ -23,8 +24,8 @@ var (
 )
 
 type AuthService interface {
-	Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error)
-	Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error)
+	Signup(ctx context.Context, request pb.SignupRequest) (pb.SignupResponse, error)
+	Login(ctx context.Context, request pb.LoginRequest) (pb.LoginResponse, error)
 }
 
 type authService struct {
@@ -43,37 +44,38 @@ func NewAuthService(logger log.Logger, jwtConfig config.JWTConfig, db_svc_endpoi
 	}
 }
 
-func (s *authService) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {
+func (s *authService) Signup(ctx context.Context, request pb.SignupRequest) (pb.SignupResponse, error) {
 	level.Info(s.logger).Log("handling request", "Signup")
 	defer level.Info(s.logger).Log("handled request", "Signup")
-	var resp dtos.SignupResponse
+	var resp pb.SignupResponse
 
-	_, err := s.db_svc_endpointset.CreateUserEndpoint(ctx, dbdtos.CreateUserRequest{
+	req := dtos.CreateUserRequest{
 		Username: request.Username,
 		Password: request.Password,
-		Role:     request.Role,
-	})
+		Role:     converters.ProtoToDTORole(request.Role),
+	}
+	_, err := s.db_svc_endpointset.CreateUserEndpoint(ctx, req)
 	if err != nil {
 		return resp, err
 	}
 
-	token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, request.Username, request.Role, ServiceName)
+	token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, request.Username, request.Role.String(), ServiceName)
 
-	resp = dtos.SignupResponse{
-		Token: dtos.Token{
+	resp = pb.SignupResponse{
+		Token: &pb.Token{
 			Token:     token,
 			ExpiresAt: expiresAt,
 		},
-		Err: errors.Err2str(err),
+		Error: errors.Err2str(err),
 	}
 
 	return resp, nil
 }
 
-func (s *authService) Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error) {
+func (s *authService) Login(ctx context.Context, request pb.LoginRequest) (pb.LoginResponse, error) {
 	level.Info(s.logger).Log("handling request", "Login")
 	defer level.Info(s.logger).Log("handled request", "Login")
-	var resp dtos.LoginResponse
+	var resp pb.LoginResponse
 
 	user, err := s.db_svc_endpointset.GetUserByUsername(ctx, request.Username)
 	if err != nil {
@@ -88,33 +90,19 @@ func (s *authService) Login(ctx context.Context, request dtos.LoginRequest) (dto
 
 	token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, user.Username, user.Role, ServiceName)
 
-	resp = dtos.LoginResponse{
-		Token: dtos.Token{
+	resp = pb.LoginResponse{
+		Token: &pb.Token{
 			Token:     token,
 			ExpiresAt: expiresAt,
-		}, Err: errors.Err2str(err),
+		}, Error: errors.Err2str(err),
 	}
 
 	return resp, err
 }
 
-func unauthorized(err error) (dtos.LoginResponse, error) {
+func unauthorized(err error) (pb.LoginResponse, error) {
 	//TODO refactor
-	return dtos.LoginResponse{
-		Err: fmt.Sprintf("Unauthorized: %v", err),
+	return pb.LoginResponse{
+		Error: fmt.Sprintf("Unauthorized: %v", err),
 	}, nil
 }
-
-// func (u *userManager) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {
-// 	level.Info(u.logger).Log("handling request", "Signup")
-// 	defer level.Info(u.logger).Log("handled request", "Signup")
-// 	return http.StatusOK, nil
-// }
-
-// func (u *userManager) GetUserByUsername(ctx context.Context, username string) (dtos.User, error) {
-// 	user, err := u.repository.GetUserByUsername(ctx, username)
-// 	if err != nil {
-// 		return dtos.User{}, errors.Wrap(err, "Failed to get user ")
-// 	}
-// 	return user, nil
-// }

@@ -3,3 +3,4 @@ directories:
   - services/auth_dbsvc/proto
   - services/centralcommand_dbsvc/proto
   - services/authsvc/proto
+  - services/centralcommandsvc/proto

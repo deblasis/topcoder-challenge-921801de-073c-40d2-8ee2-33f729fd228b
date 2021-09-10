@@ -107,7 +107,7 @@ func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 		}
 
 		id, err := s.CreateUser(ctx, &model.User{
-			ID:       req.ID,
+			Id:       req.Id,
 			Username: req.Username,
 			Password: req.Password,
 			Role:     req.Role,

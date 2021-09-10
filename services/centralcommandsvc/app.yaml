@@ -1,0 +1,30 @@
+httpserverport: 9481
+grpcserverport: 9482
+
+bindOnLocalhost: true
+
+consul:
+  host: consul
+  port: 8500
+zipkin:
+  v2_url: http://zipkin:9411/api/v2/spans
+
+
+apigateway:
+  retrymax: 10
+  retrytimeoutms: 5000
+
+db:
+  address: localhost:5433
+  username: postgres
+  password: secret
+  database: postgres
+  drivername: postgres
+  sslmode: disable
+
+# ssl:
+#   serverCert: ../../../../certs/deblasis-stc.pem
+#   serverKey: ../../../../certs/deblasis-stc-key.pem
+
+
+loglevel: debug

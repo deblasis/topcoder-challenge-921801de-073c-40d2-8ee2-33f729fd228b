@@ -6,6 +6,8 @@ import (
 
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/repositories"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-playground/validator/v10"
@@ -19,13 +21,13 @@ var (
 )
 
 type CentralCommandDBService interface {
-	ServiceStatus(ctx context.Context) (int64, error)
+	ServiceStatus(context.Context) (int64, error)
 
-	CreateShip(ctx context.Context, ship model.Ship) (*model.Ship, error)
-	GetAllShips(ctx context.Context) ([]*model.Ship, error)
+	CreateShip(context.Context, *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error)
+	GetAllShips(context.Context, *dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error)
 
-	CreateStation(ctx context.Context, station model.Station) (*model.Station, error)
-	GetAllStations(ctx context.Context) ([]*model.Station, error)
+	CreateStation(context.Context, *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error)
+	GetAllStations(context.Context, *dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error)
 }
 
 type centralCommandDBService struct {
@@ -54,51 +56,65 @@ func (u *centralCommandDBService) ServiceStatus(ctx context.Context) (int64, err
 	return http.StatusOK, nil
 }
 
-func (u *centralCommandDBService) CreateShip(ctx context.Context, ship model.Ship) (*model.Ship, error) {
+func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {
 	//TODO use middleware
 	level.Info(u.logger).Log("handling request", "CreateShip")
 	defer level.Info(u.logger).Log("handled request", "CreateShip")
-	ret, err := u.shipRepository.Create(ctx, ship)
+	ret, err := u.shipRepository.Create(ctx, model.Ship{
+		Weight: request.Weight,
+	})
 	if err != nil {
-		return ret, errors.Wrap(err, "Failed to create ship ")
+		return nil, errors.Wrap(err, "Failed to create ship ")
 	}
-	return ret, nil
+
+	return &dtos.CreateShipResponse{
+		Ship: converters.ShipToDto(ret),
+	}, nil
 }
 
-func (u *centralCommandDBService) GetAllShips(ctx context.Context) ([]*model.Ship, error) {
+func (u *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error) {
 	//TODO use middleware
 	level.Info(u.logger).Log("handling request", "GetAllShips")
 	defer level.Info(u.logger).Log("handled request", "GetAllShips")
 	ret, err := u.shipRepository.GetAll(ctx)
 	if err != nil {
-		return ret, errors.Wrap(err, "Failed to retrieve ships ")
+		return nil, errors.Wrap(err, "Failed to retrieve ships ")
 	}
-	return ret, nil
+
+	return &dtos.GetAllShipsResponse{
+		Ships: converters.ShipsToDto(ret),
+	}, nil
 }
 
-func (u *centralCommandDBService) CreateStation(ctx context.Context, station model.Station) (*model.Station, error) {
+func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error) {
 	level.Info(u.logger).Log("handling request", "CreateStation")
 	defer level.Info(u.logger).Log("handled request", "CreateStation")
-	err := u.validate.Struct(station)
+	err := u.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
 		return nil, errors.Wrap(validationErrors, "Failed to create station")
 	}
 
-	ret, err := u.stationRepository.Create(ctx, station)
+	ret, err := u.stationRepository.Create(ctx, converters.StationToModel(dtos.Station(*request)))
 	if err != nil {
-		return ret, errors.Wrap(err, "Failed to create station")
+		return nil, errors.Wrap(err, "Failed to create station")
 	}
-	return ret, nil
+
+	return &dtos.CreateStationResponse{
+		Station: converters.StationToDto(ret),
+	}, nil
 }
 
-func (u *centralCommandDBService) GetAllStations(ctx context.Context) ([]*model.Station, error) {
+func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error) {
 	//TODO use middleware
 	level.Info(u.logger).Log("handling request", "GetAllStations")
 	defer level.Info(u.logger).Log("handled request", "GetAllStations")
 	ret, err := u.stationRepository.GetAll(ctx)
 	if err != nil {
-		return ret, errors.Wrap(err, "Failed to retrieve ships ")
+		return nil, errors.Wrap(err, "Failed to retrieve stations ")
 	}
-	return ret, nil
+
+	return &dtos.GetAllStationsResponse{
+		Stations: converters.StationsToDto(ret),
+	}, nil
 }

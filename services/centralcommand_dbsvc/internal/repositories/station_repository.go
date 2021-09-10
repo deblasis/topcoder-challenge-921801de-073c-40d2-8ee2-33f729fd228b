@@ -7,7 +7,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
@@ -34,24 +33,24 @@ func (u stationRepository) GetById(ctx context.Context, id string) (*model.Stati
 
 	var ret model.Station
 	err := u.Db.WithContext(ctx).Model(&ret).
-		Column("Docks").
-		Relation("Docks", func(q *orm.Query) (*orm.Query, error) {
-			return q.Where("station_id = ?", id), nil
-		}).
-		Where("id = ?", id).Select()
-
+		Relation("Docks").
+		Where("id = ?", id).
+		Select()
 	if err == pg.ErrNoRows {
 		level.Debug(u.logger).Log("no rows")
 		return nil, nil
 	}
+
+	//u.Db.WithContext(ctx).Model(&ret.Docks).Where("station_id = ?", id).Select()
+
 	return &ret, err
 }
 
 func (u stationRepository) Create(ctx context.Context, station model.Station) (*model.Station, error) {
 
 	err := u.Db.RunInTransaction(ctx, func(t *pg.Tx) error {
-		station.ID = uuid.NewString()
-		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.ID, station.Capacity)
+		station.Id = uuid.NewString()
+		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.Id, station.Capacity)
 		if err != nil {
 			err = errors.Wrapf(err, "Failed to insert station %v", station)
 			level.Debug(u.logger).Log(err)
@@ -68,12 +67,12 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 
 		//insert docks
 		for _, dock := range station.Docks {
-			dock.ID = uuid.NewString()
-			dock.StationId = station.ID
+			dock.Id = uuid.NewString()
+			dock.StationId = station.Id
 
 			_, err = t.Model(dock).
 				ExcludeColumn("occupied", "weight").
-				Returning("id").Insert(&dock.ID)
+				Returning("id").Insert(&dock.Id)
 			if err != nil {
 				err = errors.Wrapf(err, "Failed to insert dock %v", station)
 				level.Debug(u.logger).Log(err)
@@ -86,17 +85,18 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 	return &station, err
 }
 
-func (u stationRepository) GetAll(ctx context.Context) ([]*model.Station, error) {
-	var ret []*model.Station
+func (u stationRepository) GetAll(ctx context.Context) ([]model.Station, error) {
+	var stations []model.Station
 
 	err := u.Db.WithContext(ctx).
-		Model(&ret).
-		Relation("Docks").Select()
+		Model(&stations).
+		Relation("Docks").
+		Select()
 	if err != nil {
-		err = errors.Wrapf(err, "Failed to select ships")
+		err = errors.Wrapf(err, "Failed to select stations")
 		level.Debug(u.logger).Log(err)
 		return nil, err
 	}
 
-	return ret, nil
+	return stations, nil
 }

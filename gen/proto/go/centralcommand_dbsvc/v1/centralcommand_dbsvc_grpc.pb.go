@@ -20,8 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type CentralCommandDBServiceClient interface {
 	ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error)
 	CreateShip(ctx context.Context, in *CreateShipRequest, opts ...grpc.CallOption) (*CreateShipResponse, error)
-	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
 	CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error)
+	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
 	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error)
 }
 
@@ -51,18 +51,18 @@ func (c *centralCommandDBServiceClient) CreateShip(ctx context.Context, in *Crea
 	return out, nil
 }
 
-func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error) {
-	out := new(GetAllShipsResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
+func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error) {
+	out := new(CreateStationResponse)
+	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateStation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error) {
-	out := new(CreateStationResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateStation", in, out, opts...)
+func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error) {
+	out := new(GetAllShipsResponse)
+	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +84,8 @@ func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *
 type CentralCommandDBServiceServer interface {
 	ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error)
 	CreateShip(context.Context, *CreateShipRequest) (*CreateShipResponse, error)
-	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
 	CreateStation(context.Context, *CreateStationRequest) (*CreateStationResponse, error)
+	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error)
 }
 
@@ -99,11 +99,11 @@ func (UnimplementedCentralCommandDBServiceServer) ServiceStatus(context.Context,
 func (UnimplementedCentralCommandDBServiceServer) CreateShip(context.Context, *CreateShipRequest) (*CreateShipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateShip not implemented")
 }
-func (UnimplementedCentralCommandDBServiceServer) GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllShips not implemented")
-}
 func (UnimplementedCentralCommandDBServiceServer) CreateStation(context.Context, *CreateStationRequest) (*CreateStationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateStation not implemented")
+}
+func (UnimplementedCentralCommandDBServiceServer) GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllShips not implemented")
 }
 func (UnimplementedCentralCommandDBServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllStations not implemented")
@@ -156,24 +156,6 @@ func _CentralCommandDBService_CreateShip_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CentralCommandDBService_GetAllShips_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllShipsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, req.(*GetAllShipsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _CentralCommandDBService_CreateStation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateStationRequest)
 	if err := dec(in); err != nil {
@@ -188,6 +170,24 @@ func _CentralCommandDBService_CreateStation_Handler(srv interface{}, ctx context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).CreateStation(ctx, req.(*CreateStationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CentralCommandDBService_GetAllShips_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllShipsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, req.(*GetAllShipsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -226,12 +226,12 @@ var CentralCommandDBService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CentralCommandDBService_CreateShip_Handler,
 		},
 		{
-			MethodName: "GetAllShips",
-			Handler:    _CentralCommandDBService_GetAllShips_Handler,
-		},
-		{
 			MethodName: "CreateStation",
 			Handler:    _CentralCommandDBService_CreateStation_Handler,
+		},
+		{
+			MethodName: "GetAllShips",
+			Handler:    _CentralCommandDBService_GetAllShips_Handler,
 		},
 		{
 			MethodName: "GetAllStations",

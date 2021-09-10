@@ -8,7 +8,7 @@ import (
 	"deblasis.net/space-traffic-control/common/encoding"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -53,7 +53,7 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 }
 
 func decodeHTTPSignupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.SignupRequest
+	var req pb.SignupRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil
@@ -66,7 +66,7 @@ func decodeHTTPSignupRequest(_ context.Context, r *http.Request) (interface{}, e
 }
 
 func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.LoginRequest
+	var req pb.LoginRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil

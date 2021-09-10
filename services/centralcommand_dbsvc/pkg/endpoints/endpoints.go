@@ -13,7 +13,6 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -103,117 +102,79 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 
 func MakeCreateShipEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.CreateShipRequest)
-
-		var err error
-		err = validate.Struct(req)
+		req := request.(*dtos.CreateShipRequest)
+		err := validate.Struct(req)
 		if err != nil {
 			validationErrors := err.(validator.ValidationErrors)
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		ret, err := s.CreateShip(ctx, model.Ship{
-			Weight: req.Weight,
-		})
-
-		if err != nil {
-			return dtos.CreateShipResponse{
-				Ship: ret,
-				Err:  err.Error(),
-			}, err
-		}
-		return dtos.CreateShipResponse{
-			Ship: ret,
-			Err:  "",
-		}, nil
+		return s.CreateShip(ctx, req)
 	}
 }
 
 func MakeGetAllShipsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.GetAllShipsRequest)
+		req := request.(*dtos.GetAllShipsRequest)
 
-		var err error
-		err = validate.Struct(req)
+		err := validate.Struct(req)
 		if err != nil {
 			validationErrors := err.(validator.ValidationErrors)
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		ret, err := s.GetAllShips(ctx)
-
-		if err != nil {
-			return dtos.GetAllShipsResponse{
-				Ships: ret,
-				Err:   err.Error(),
-			}, err
-		}
-		return dtos.GetAllShipsResponse{
-			Ships: ret,
-			Err:   "",
-		}, nil
+		return s.GetAllShips(ctx, req)
 	}
 }
 
 func MakeCreateStationEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.CreateStationRequest)
+		req := request.(*dtos.CreateStationRequest)
 
-		var err error
-		err = validate.Struct(req)
+		err := validate.Struct(req)
 		if err != nil {
 			validationErrors := err.(validator.ValidationErrors)
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		station := model.Station{
-			Capacity: req.Capacity,
-			Docks:    []*model.Dock{},
-		}
-		for _, d := range req.Docks {
-			station.Docks = append(station.Docks, &model.Dock{
-				NumDockingPorts: d.NumDockingPorts,
-			})
-		}
-
-		ret, err := s.CreateStation(ctx, station)
-
-		if err != nil {
-			return dtos.CreateStationResponse{
-				Station: nil,
-				Err:     err.Error(),
-			}, err
-		}
-		return dtos.CreateStationResponse{
-			Station: ret,
-			Err:     "",
-		}, nil
+		return s.CreateStation(ctx, req)
 	}
 }
 
 func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.GetAllStationsRequest)
+		req := request.(*dtos.GetAllStationsRequest)
 
-		var err error
-		err = validate.Struct(req)
+		err := validate.Struct(req)
 		if err != nil {
 			validationErrors := err.(validator.ValidationErrors)
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		ret, err := s.GetAllStations(ctx)
+		return s.GetAllStations(ctx, req)
 
-		if err != nil {
-			return dtos.GetAllStationsResponse{
-				Stations: ret,
-				Err:      err.Error(),
-			}, err
-		}
-		return dtos.GetAllStationsResponse{
-			Stations: ret,
-			Err:      "",
-		}, nil
+		// 	if err != nil {
+		// 		return dtos.GetAllStationsResponse{
+		// 			Err: err.Error(),
+		// 		}, err
+		// 	}
+
+		// 	stations := make([]dtos.Station, 0)
+		// 	for _, x := range ret.Stations {
+
+		// 		station := &dtos.Station{}
+		// 		errs := m.Copy(station, x)
+		// 		if len(errs) > 0 {
+		// 			return nil, errors.Wrap(errs[0], "Failed to map station")
+		// 		}
+		// 		stations = append(stations, *station)
+		// 	}
+
+		// 	return dtos.GetAllStationsResponse{
+		// 		Stations: stations,
+		// 	}, nil
+		// }
+
 	}
 }
 

@@ -6,25 +6,12 @@ option go_package = "deblasis.net/space-traffic-control/gen/proto/go/centralcomm
 
 service CentralCommandDBService {
   rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusResponse) {}
+ 
   rpc CreateShip (CreateShipRequest) returns (CreateShipResponse) {}
-  rpc GetAllShips (GetAllShipsRequest) returns (GetAllShipsResponse) {}
   rpc CreateStation (CreateStationRequest) returns (CreateStationResponse) {}
+  
+  rpc GetAllShips (GetAllShipsRequest) returns (GetAllShipsResponse) {}
   rpc GetAllStations (GetAllStationsRequest) returns (GetAllStationsResponse) {}
-
-}
-
-
-message User {
-  enum Role {
-    ROLE_UNSPECIFIED = 0;
-    ROLE_SHIP = 1;
-    ROLE_STATION = 2;
-    ROLE_COMMAND = 3;
-  }
-  int64 id = 1;
-  string username = 2;
-  string password = 3;
-  Role role = 4;
 }
 
 message Dock {
@@ -50,7 +37,8 @@ message Ship {
     STATUS_DOCKED=2;
   }
   string id = 1;
-  Status status =2;
+  //@gotags: model:"-"
+  Status status = 2; 
   float weight = 3;
 }
 

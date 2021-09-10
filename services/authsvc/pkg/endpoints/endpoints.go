@@ -8,7 +8,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
@@ -71,11 +71,11 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp dtos.SignupResponse
+			resp pb.SignupResponse
 			err  error
 		)
 
-		req := request.(dtos.SignupRequest)
+		req := request.(*pb.SignupRequest)
 
 		err = validate.Struct(req)
 		if err != nil {
@@ -83,7 +83,7 @@ func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 			return resp, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		resp, err = s.Signup(ctx, req)
+		resp, err = s.Signup(ctx, *req)
 		return resp, err
 	}
 }
@@ -91,11 +91,11 @@ func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp dtos.LoginResponse
+			resp pb.LoginResponse
 			err  error
 		)
 
-		req := request.(dtos.LoginRequest)
+		req := request.(*pb.LoginRequest)
 
 		err = validate.Struct(req)
 		if err != nil {
@@ -103,7 +103,7 @@ func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 			return resp, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		resp, err = s.Login(ctx, req)
+		resp, err = s.Login(ctx, *req)
 		return resp, err
 	}
 }

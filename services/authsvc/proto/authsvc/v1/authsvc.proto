@@ -17,8 +17,11 @@ message SignupRequest {
     ROLE_STATION = 2;
     ROLE_COMMAND = 3;
   }
+  //@gotags: validate:"required,notblank"
   string username = 1;
+  //@gotags: validate:"required,notblank"
   string password = 2;
+  //@gotags: validate:"required"
   Role role = 3;
 }
 
@@ -28,7 +31,9 @@ message SignupResponse {
 }
 
 message LoginRequest {
+  //@gotags: validate:"required,notblank"
   string username = 1;
+  //@gotags: validate:"required,notblank"
   string password = 2;
 }
 

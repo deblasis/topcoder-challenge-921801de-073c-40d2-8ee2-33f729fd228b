@@ -18,10 +18,7 @@ COPY ./Makefile ./Makefile
 COPY ./common ./common
 COPY ./gen ./gen
 COPY ./scripts ./scripts
-COPY ./services/auth_dbsvc ./services/auth_dbsvc
-COPY ./services/authsvc ./services/authsvc
 COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
-COPY ./services/centralcommandsvc ./services/centralcommandsvc
 
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe

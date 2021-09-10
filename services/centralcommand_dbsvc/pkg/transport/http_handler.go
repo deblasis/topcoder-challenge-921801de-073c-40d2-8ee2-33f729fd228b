@@ -36,28 +36,28 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 		options...,
 	))
 
-	r.Methods("POST").Path("/ships").Handler(httptransport.NewServer(
+	r.Methods("POST").Path("/ship").Handler(httptransport.NewServer(
 		e.CreateShipEndpoint,
 		decodeHTTPCreateShipRequest,
 		encodeResponse,
 		options...,
 	))
 
-	r.Methods("GET").Path("/ships").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/ship/all").Handler(httptransport.NewServer(
 		e.GetAllShipsEndpoint,
 		decodeHTTPGetAllShipsRequest,
 		encodeResponse,
 		options...,
 	))
 
-	r.Methods("POST").Path("/stations").Handler(httptransport.NewServer(
+	r.Methods("POST").Path("/station").Handler(httptransport.NewServer(
 		e.CreateStationEndpoint,
 		decodeHTTPCreateStationRequest,
 		encodeResponse,
 		options...,
 	))
 
-	r.Methods("GET").Path("/stations").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/station/all").Handler(httptransport.NewServer(
 		e.GetAllStationsEndpoint,
 		decodeHTTPGetAllStationsRequest,
 		encodeResponse,
@@ -81,8 +81,7 @@ func decodeHTTPCreateShipRequest(_ context.Context, r *http.Request) (interface{
 }
 
 func decodeHTTPGetAllShipsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllShipsRequest
-	return req, nil
+	return &dtos.GetAllShipsRequest{}, nil
 }
 
 func decodeHTTPCreateStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -99,8 +98,7 @@ func decodeHTTPCreateStationRequest(_ context.Context, r *http.Request) (interfa
 }
 
 func decodeHTTPGetAllStationsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllStationsRequest
-	return req, nil
+	return &dtos.GetAllStationsRequest{}, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

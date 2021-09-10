@@ -2,11 +2,12 @@ package transport
 
 import (
 	"context"
+	"fmt"
 
 	"deblasis.net/space-traffic-control/common/errors"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
@@ -51,7 +52,6 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandDBSer
 			encodeGRPCGetAllStationsResponse,
 		),
 	}
-
 }
 
 func (g *grpcServer) ServiceStatus(ctx context.Context, r *pb.ServiceStatusRequest) (*pb.ServiceStatusResponse, error) {
@@ -101,12 +101,12 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 }
 
 func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.CreateShipRequest)
-	return dtos.CreateShipRequest{
-		Weight: req.Ship.Weight,
-	}, nil
 
-	// ID:       req.User.Id,
+	req := grpcReq.(*pb.CreateShipRequest)
+	fmt.Printf("CreateShipRequest.ship %+v <\n", req.Ship)
+	return converters.ProtoCreateShipRequestToDto(req), nil
+
+	// Id:       req.User.Id,
 	// Username: req.User.Username,
 	// Password: req.User.Password,
 	// //TODO centralize
@@ -114,39 +114,27 @@ func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interf
 
 }
 func encodeGRPCCreateShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(dtos.CreateShipResponse)
-	return &pb.CreateShipResponse{
-		Ship: &pb.Ship{
-			Id:     response.Ship.ID,
-			Status: pb.Ship_Status(0), //TODO
-			Weight: response.Ship.Weight,
-		},
-		Error: response.Err,
-	}, nil
+	response := grpcResponse.(*dtos.CreateShipResponse)
+	return converters.CreateShipResponseToProto(response), nil
 }
 
 func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetAllShipsRequest)
 	if req != nil {
-		return dtos.GetAllShipsRequest{}, nil
+		return &dtos.GetAllShipsRequest{}, nil
 	}
 	return nil, errors.Str2err("cannot unmarshal GetAllShipsRequest")
 }
 func encodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(dtos.GetAllShipsResponse)
-	return &pb.GetAllShipsResponse{
-		Ships: modelToProtoShips(response.Ships),
-	}, nil
+	response := grpcResponse.(*dtos.GetAllShipsResponse)
+	return converters.GetAllShipsResponseToProto(response), nil
 }
 
 func decodeGRPCCreateStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.CreateStationRequest)
-	return dtos.CreateStationRequest{
-		Capacity: req.Station.Capacity,
-		Docks:    protoToModelDocks(req.Station.Docks), //TODO converte
-	}, nil
+	return converters.ProtoCreateStationRequestToDto(req), nil
 
-	// ID:       req.User.Id,
+	// Id:       req.User.Id,
 	// Username: req.User.Username,
 	// Password: req.User.Password,
 	// //TODO centralize
@@ -154,166 +142,18 @@ func decodeGRPCCreateStationRequest(c context.Context, grpcReq interface{}) (int
 
 }
 func encodeGRPCCreateStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(dtos.CreateStationResponse)
-	return &pb.CreateStationResponse{
-		Station: modelToProtoStation(response.Station),
-		Error:   response.Err,
-	}, nil
+	response := grpcResponse.(*dtos.CreateStationResponse)
+	return converters.CreateStationResponseToProto(response), nil
 }
+
 func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetAllStationsRequest)
 	if req != nil {
-		return dtos.GetAllStationsRequest{}, nil
+		return &dtos.GetAllStationsRequest{}, nil
 	}
 	return nil, errors.Str2err("cannot unmarshal GetAllStationsRequest")
 }
 func encodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(dtos.GetAllStationsResponse)
-	return &pb.GetAllStationsResponse{
-		Stations: modelToProtoStations(response.Stations),
-	}, nil
+	response := grpcResponse.(*dtos.GetAllStationsResponse)
+	return converters.GetAllStationsResponseToProto(response), nil
 }
-
-//TODO refactor into converters across the board
-
-func protoToModelDocks(src []*pb.Dock) []*model.Dock {
-	var ret []*model.Dock
-	for _, x := range src {
-		ret = append(ret, protoToModelDock(x))
-	}
-	return ret
-}
-
-func protoToModelDock(src *pb.Dock) *model.Dock {
-	return &model.Dock{
-		ID:              src.Id,
-		StationId:       src.StationId,
-		NumDockingPorts: src.NumDockingPorts,
-		Occupied:        src.Occupied,
-		Weight:          src.Weight,
-	}
-}
-
-func protoToModelStation(src *pb.Station) *model.Station {
-	return &model.Station{
-		ID:           src.Id,
-		Capacity:     src.Capacity,
-		UsedCapacity: src.UsedCapacity,
-		Docks:        protoToModelDocks(src.Docks),
-	}
-}
-
-func modelToProtoDocks(src []*model.Dock) []*pb.Dock {
-	var ret []*pb.Dock
-	for _, x := range src {
-		ret = append(ret, modelToProtoDock(x))
-	}
-	return ret
-}
-
-func modelToProtoDock(src *model.Dock) *pb.Dock {
-	return &pb.Dock{
-		Id:              src.ID,
-		StationId:       src.StationId,
-		NumDockingPorts: src.NumDockingPorts,
-		Occupied:        src.Occupied,
-		Weight:          src.Weight,
-	}
-}
-
-func modelToProtoStation(src *model.Station) *pb.Station {
-	return &pb.Station{
-		Id:           src.ID,
-		Capacity:     src.Capacity,
-		UsedCapacity: src.UsedCapacity,
-		Docks:        modelToProtoDocks(src.Docks),
-	}
-}
-
-func modelToProtoStations(src []*model.Station) []*pb.Station {
-	var ret []*pb.Station
-	for _, x := range src {
-		ret = append(ret, modelToProtoStation(x))
-	}
-	return ret
-}
-
-func modelToProtoShip(src *model.Ship) *pb.Ship {
-	return &pb.Ship{
-		Id:     src.ID,
-		Status: modelToProtoShipStatus(src.Status),
-		Weight: src.Weight,
-	}
-}
-
-func modelToProtoShips(src []*model.Ship) []*pb.Ship {
-	var ret []*pb.Ship
-	for _, x := range src {
-		ret = append(ret, modelToProtoShip(x))
-	}
-	return ret
-}
-
-func modelToProtoShipStatus(src string) pb.Ship_Status {
-	switch src {
-	case "in-flight": //TODO const
-		return pb.Ship_STATUS_INFLIGHT
-	case "docked": //TODO const
-		return pb.Ship_STATUS_DOCKED
-	default:
-		return pb.Ship_STATUS_UNSPECIFIED
-	}
-}
-
-func protoToModelShip(src *pb.Ship) *model.Ship {
-	return &model.Ship{
-		ID:     src.Id,
-		Status: protoToModelShipStatus(src.Status),
-		Weight: src.Weight,
-	}
-}
-
-func protoToModelShips(src []*pb.Ship) []*model.Ship {
-	var ret []*model.Ship
-	for _, x := range src {
-		ret = append(ret, protoToModelShip(x))
-	}
-	return ret
-}
-
-func protoToModelShipStatus(src pb.Ship_Status) string {
-	switch src {
-	case pb.Ship_STATUS_INFLIGHT:
-		return "in-flight" //TODO const
-	case pb.Ship_STATUS_DOCKED:
-		return "docked" //TODO const
-	default:
-		return "" //TODO const
-	}
-}
-
-// func decodeGRPCGetUserByUsernameRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-// 	req := grpcReq.(*pb.GetUserByUsernameRequest)
-// 	return dtos.GetUserByUsernameRequest{
-// 		Username: req.Username,
-// 	}, nil
-// }
-
-// func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-// 	response := grpcResponse.(dtos.GetUserByUsernameResponse)
-
-// 	//TODO: centralise
-// 	roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+response.User.Role)]
-// 	if roleId <= 0 {
-// 		return nil, errors.New("cannot unmarshal role")
-// 	}
-// 	return &pb.GetUserByUsernameResponse{
-// 		User: &pb.User{
-// 			Id:       response.User.ID,
-// 			Username: response.User.Username,
-// 			Password: response.User.Password,
-// 			Role:     pb.User_Role(roleId),
-// 		},
-// 		Error: response.Err,
-// 	}, nil
-// }

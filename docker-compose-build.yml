@@ -2,124 +2,32 @@ version: '3'
 
 services:
 
-  consul:
-    image: consul:1.10.2
-    ports:
-      - 8400:8400
-      - 8500:8500
-      - 8600:8600
-    networks:
-      - net
-
-  zipkin:
-    image: openzipkin/zipkin
-    ports:
-      - 9411:9411
-    networks:
-      - net
-
-  # prometheus:
-  #   image: prom/prometheus
-  #   depends_on:
-  #     - fluentd
+  # apigateway:
+  #   build:
+  #     dockerfile: ./services/apigateway/Dockerfile
+  #     context: .
+  #     args: 
+  #       SVC_NAME: apigateway
   #   ports:
-  #     - 9090:9090
+  #     - 8081:8081
+  #     - 8082:8082
+  #   depends_on: 
+  #     - consul
+  #     - authsvc
   #   volumes:
-  #     - ./services/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: alpha.efk.prometheus
-  #   networks:
-  #     - net
-
-  # grafana:
-  #   image: grafana/grafana
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=password
-  #   depends_on:
-  #     - fluentd
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - ./extra/grafana_db:/var/lib/grafana grafana/grafana
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: alpha.efk.grafana
-  #   networks:
-  #     - net
-
-  # fluentd:
-  #   build: ./services/fluentd
-  #   depends_on:
-  #     - elasticsearch
-  #   volumes:
-  #     - ./services/fluentd/conf:/fluentd/etc
-  #   ports:
-  #     - 24224:24224
-  #     - 24224:24224/udp
-  #   networks:
-  #     - net
-
-  # elasticsearch:
-  #   image: elasticsearch:6.8.18
-  #   volumes:
-  #     - ./esdata:/usr/share/elasticsearch/data
-  #   environment:
-  #     #- bootstrap.memory_lock=true
-  #     #- "ES_JAVA_OPTS=-Xms256m -Xms256m"
-  #     - discovery.type=single-node
-  #   expose:
-  #     - 9200
-  #   ports:
-  #     - 9200:9200
-  #   networks:
-  #     - net
-
-  # kibana:
-  #   image: kibana:6.8.18
-  #   depends_on:
-  #     - elasticsearch
-  #     - fluentd
-  #   ports:
-  #     - 5601:5601
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: alpha.efk.kibana
+  #     - ./certs:/certs
+  #     - ./services/apigateway/app.yaml:/app.yaml
+  #   environment: 
+  #    DEBLASIS_BINDONLOCALHOST: "false"
+  #    DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+  #    DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
   #   networks:
   #     - net      
-
-  apigateway:
-    build:
-      dockerfile: ./services/apigateway/Dockerfile
-      context: .
-      args: 
-        SVC_NAME: apigateway
-    ports:
-      - 8081:8081
-      - 8082:8082
-    depends_on: 
-      - consul
-      - authsvc
-    volumes:
-      - ./certs:/certs
-      - ./services/apigateway/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net      
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
 
 
   auth_dbsvc:
@@ -128,27 +36,6 @@ services:
       context: .
       args: 
         SVC_NAME: auth_dbsvc
-    ports:
-      - 9181:9181
-      - 9182:9182
-    depends_on: 
-      - auth_db
-      - consul
-    volumes:
-      - ./certs:/certs
-      - ./services/auth_dbsvc/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_DB_ADDRESS: auth_db:5432
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9181/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3      
 
   centralcommand_dbsvc:
     build:
@@ -156,240 +43,18 @@ services:
       context: .
       args: 
         SVC_NAME: centralcommand_dbsvc
-    ports:
-      - 9381:9381
-      - 9382:9382
-    depends_on: 
-      - centralcommand_db
-      - consul
-    volumes:
-      - ./certs:/certs
-      - ./services/centralcommand_dbsvc/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_DB_ADDRESS: centralcommand_db:5432
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9381/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3           
-
+   
   authsvc:
     build:
       dockerfile: ./services/authsvc/Dockerfile
       context: .
       args: 
         SVC_NAME: authsvc
-    ports:
-      - 9081:9081
-      - 9082:9082
-    depends_on: 
-      - consul
-      - auth_dbsvc
-    volumes:
-      - ./certs:/certs
-      - ./services/authsvc/app.yaml:/app.yaml
-    environment: 
-     DEBLASIS_BINDONLOCALHOST: "false"
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-    networks:
-      - net      
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-
-
-  auth_db:
-    image: postgres:13.4-alpine3.14
-    restart: always
-    environment:
-      PGUSER: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: auth
-      DEBLASIS_CONSULT_HOST: consul
-      DEBLASIS_CONSULT_PORT: 8500
-      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    # ports:
-    #   - "5432:5432"
-    volumes:
-      - data_auth:/var/lib/postgresql/data
-    networks: 
-      - auth_backend    
-      - net  
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5              
-
-
-  centralcommand_db:
-    image: postgres:13.4-alpine3.14
-    restart: always
-    environment:
-      PGUSER: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: centralcommand
-      DEBLASIS_CONSULT_HOST: consul
-      DEBLASIS_CONSULT_PORT: 8500
-      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    ports:
-      - "5432:5432"
-    volumes:
-      - data_centralcommand:/var/lib/postgresql/data
-    networks: 
-      - centralcommand_backend    
-      - net  
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5             
-      
-
-#  centralcommandsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     depends_on:
-#       - centralcommand_db
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - frontend
-#       - centralcommand_backend            
-#   centralcommand_dbsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - centralcommand_backend         
-      
-# shippingstationsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     depends_on:
-#       - shippingstation_db
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - frontend
-#       - shippingstation_backend            
-#   shippingstation_dbsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - shippingstation_backend         
-      
-      
-volumes:
-  data_auth:      
-  data_centralcommand:      
-  data_shippingstation:      
-
-#   accountapi:
-#     image: form3tech/interview-accountapi:v1.0.0-39-gef7db03d
-#     restart: on-failure
-#     depends_on:
-#       - postgresql
-#       - vault
-#     environment:
-#       - VAULT_ADDR=http://vault:8200
-#       - VAULT_TOKEN=8fb95528-57c6-422e-9722-d2147bcba8ed
-#       - PSQL_USER=root
-#       - PSQL_PASSWORD=password
-#       - PSQL_HOST=postgresql
-#       - PSQL_PORT=5432
-#       - STACK_NAME=f3-interview-accountapi
-#       - DATABASE-HOST=postgresql
-#       - DATABASE-SSL-MODE=disable
-#       - DATABASE-USERNAME=interview_accountapi_user
-#       - DATABASE-PASSWORD=123
-#     ports:
-#       - 8080:8080
-#     networks:
-#       - backend
-#       - frontend
-#     healthcheck:
-#       test: ["CMD", "curl", "-f", "http://localhost:8080"]
-#       interval: 30s
-#       timeout: 10s
-#       retries: 3
-
-#   postgresql:
-#     image: postgres:9.5-alpine
-#     healthcheck:
-#       test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
-#       timeout: 45s
-#       interval: 10s
-#       retries: 10
-#     restart: always
-#     environment:
-#       - POSTGRES_USER=root
-#       - POSTGRES_PASSWORD=password
-#     volumes:
-#       - ./scripts/db:/docker-entrypoint-initdb.d/
-#     networks:
-#       - backend      
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready"]
-#       interval: 10s
-#       timeout: 5s
-#       retries: 5      
-
-#   vault:
-#     image: vault:1.6.3
-#     environment:
-#       - SKIP_SETCAP=1
-#       - VAULT_DEV_ROOT_TOKEN_ID=8fb95528-57c6-422e-9722-d2147bcba8ed
-#     networks:
-#       - backend  
-
-#   integrationtester:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     depends_on:
-#       - accountapi
-#     working_dir: /go/src/f3accounts
-#     volumes: 
-#       - .:/go/src/f3accounts
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make integrationtests"
-#     networks: 
-#       - frontend          
-
-networks: 
-  #auth_frontend:    
-  auth_backend:
-  centralcommand_backend:
-  net:
-  ##  driver: bridge
+   
+  centralcommandsvc:
+    build:
+      dockerfile: ./services/centralcommandsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: centralcommandsvc
+   
