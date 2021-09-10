@@ -11,7 +11,6 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -65,11 +64,11 @@ func (u *authDbService) CreateUser(ctx context.Context, user *model.User) (int64
 		return -1, errors.Wrap(validationErrors, "Failed to create user")
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password+ca.PWDSALT), bcrypt.DefaultCost+1)
+	hashedPassword, err := ca.HashPwd(user.Password)
 	if err != nil {
 		return -1, err
 	}
-	user.Password = string(hashedPassword)
+	user.Password = hashedPassword
 
 	id, err := u.repository.CreateUser(ctx, user)
 	if err != nil {

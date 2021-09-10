@@ -8,14 +8,12 @@ import (
 	"os"
 	"strings"
 
-	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
 	"deblasis.net/space-traffic-control/common/db"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var filePath = flag.String("file", "./scripts/seeding/users.csv", "seeding file for the users table")
@@ -48,7 +46,8 @@ func main() {
 
 	seeder := NewSeeder(connection, cfg.Logger)
 
-	err = seeder.csvParse(*filePath, "users")
+	//table name hardcoded on purpose, we don't want it to be in config files and environment variables...
+	err = seeder.csvParse(*filePath, "seeding_tmp")
 	if err != nil {
 		level.Error(cfg.Logger).Log("err", errors.Wrap(err, "Could not seed table!"))
 		os.Exit(1)
@@ -96,33 +95,17 @@ func (s *seeder) csvParse(filePath string, tableName string) (err error) {
 
 func (s *seeder) sqlInsert(cols []string, record []string, table string) (err error) {
 
-	colsStr := "(role, username, password)"
+	qry := fmt.Sprintf(`INSERT INTO %s (role, username, password) VALUES (?, ?, ?)`, table)
 
-	valStr := "( "
-	for idx, val := range record {
-
-		if val != "null" {
-			val = fmt.Sprintf("'%v'", val)
-		}
-
-		if idx < len(cols)-1 {
-			valStr += fmt.Sprintf("%v, ", val)
-		} else {
-			//password
-			//TODO refactor
-			hashedPassword, err := bcrypt.GenerateFromPassword([]byte(val+auth.PWDSALT), bcrypt.DefaultCost+1)
-			if err != nil {
-				return err
-			}
-			valStr += fmt.Sprintf("'%v' )", string(hashedPassword))
-		}
-	}
-	qry := fmt.Sprintf(
-		`INSERT INTO "%s" %s VALUES %s`,
-		table, colsStr, valStr)
-
-	level.Info(s.logger).Log("msg", fmt.Sprintf("Executing Query: %v", qry))
-	res, err := s.connection.Exec(qry)
+	level.Info(s.logger).Log("msg", fmt.Sprintf("Executing Query (obfuscated): %v", qry))
+	res, err := s.connection.Exec(qry,
+		record[0],
+		record[1],
+		//password
+		//we could hash it here but it would be a mistake for several reasons.
+		//better to use a temporary table that we remove after the application starts for the first time
+		record[2],
+	)
 
 	if err != nil {
 		return fmt.Errorf("not inserted correctly, result is nil: %v", err)
