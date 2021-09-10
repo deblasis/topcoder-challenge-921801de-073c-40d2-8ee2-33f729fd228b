@@ -18,6 +18,7 @@ import (
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/repositories"
+	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/seeding"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/service"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/transport"
@@ -50,6 +51,9 @@ func main() {
 	)
 
 	level.Debug(cfg.Logger).Log("DB address", cfg.Db.Address)
+
+	seeding.SeedDB(cfg)
+
 	var (
 		pgClient   = db.NewPostgresClientFromConfig(cfg)
 		connection = pgClient.GetConnection()
