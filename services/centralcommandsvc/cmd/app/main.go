@@ -310,8 +310,9 @@ func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService)
 		// 		return nil, nil, err
 		// 	}
 		// } else {
-		// conn, err = grpc.Dial(instance, grpc.WithInsecure())
-		conn, err = grpc.Dial("localhost:9382", grpc.WithInsecure())
+		//TODO: #17 localhost instance configurable via switch
+		conn, err = grpc.Dial(instance, grpc.WithInsecure())
+		//conn, err = grpc.Dial("localhost:9382", grpc.WithInsecure())
 
 		//}
 

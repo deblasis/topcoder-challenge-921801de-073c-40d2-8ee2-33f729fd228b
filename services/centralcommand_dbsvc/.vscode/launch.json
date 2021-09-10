@@ -11,7 +11,7 @@
             "mode": "auto",
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
-                "DEBLASIS_DB_ADDRESS": "localhost:5432"
+                "DEBLASIS_DB_ADDRESS": "localhost:5433"
             },
             "program": "${workspaceFolder}/cmd/app/main.go"
         }

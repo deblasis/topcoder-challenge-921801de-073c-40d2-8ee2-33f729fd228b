@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"fmt"
 
 	"deblasis.net/space-traffic-control/common/errors"
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -51,7 +52,6 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandDBSer
 			encodeGRPCGetAllStationsResponse,
 		),
 	}
-
 }
 
 func (g *grpcServer) ServiceStatus(ctx context.Context, r *pb.ServiceStatusRequest) (*pb.ServiceStatusResponse, error) {
@@ -101,10 +101,10 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 }
 
 func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+
 	req := grpcReq.(*pb.CreateShipRequest)
-	return dtos.CreateShipRequest{
-		Weight: req.Ship.Weight,
-	}, nil
+	fmt.Printf("CreateShipRequest.ship %+v <\n", req.Ship)
+	return converters.ProtoCreateShipRequestToDto(req), nil
 
 	// Id:       req.User.Id,
 	// Username: req.User.Username,
@@ -115,24 +115,24 @@ func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interf
 }
 func encodeGRPCCreateShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.CreateShipResponse)
-	return converters.CreateShipResponseToProto(*response), nil
+	return converters.CreateShipResponseToProto(response), nil
 }
 
 func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetAllShipsRequest)
 	if req != nil {
-		return dtos.GetAllShipsRequest{}, nil
+		return &dtos.GetAllShipsRequest{}, nil
 	}
 	return nil, errors.Str2err("cannot unmarshal GetAllShipsRequest")
 }
 func encodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetAllShipsResponse)
-	return converters.GetAllShipsResponseToProto(*response), nil
+	return converters.GetAllShipsResponseToProto(response), nil
 }
 
 func decodeGRPCCreateStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.CreateStationRequest)
-	return converters.ProtoCreateStationRequestToDto(*req), nil
+	return converters.ProtoCreateStationRequestToDto(req), nil
 
 	// Id:       req.User.Id,
 	// Username: req.User.Username,
@@ -143,17 +143,17 @@ func decodeGRPCCreateStationRequest(c context.Context, grpcReq interface{}) (int
 }
 func encodeGRPCCreateStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.CreateStationResponse)
-	return converters.CreateStationResponseToProto(*response), nil
+	return converters.CreateStationResponseToProto(response), nil
 }
 
 func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetAllStationsRequest)
 	if req != nil {
-		return dtos.GetAllStationsRequest{}, nil
+		return &dtos.GetAllStationsRequest{}, nil
 	}
 	return nil, errors.Str2err("cannot unmarshal GetAllStationsRequest")
 }
 func encodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetAllStationsResponse)
-	return converters.GetAllStationsResponseToProto(*response), nil
+	return converters.GetAllStationsResponseToProto(response), nil
 }

@@ -168,38 +168,38 @@ func decodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}
 }
 
 func encodeGRPCCreateShipRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.CreateShipRequest)
+	req := request.(*dtos.CreateShipRequest)
 	return converters.CreateShipRequestToProto(req), nil
 }
 func decodeGRPCCreateShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.CreateShipResponse)
-	return converters.ProtoCreateShipResponseToDto(*response), nil
+	return converters.ProtoCreateShipResponseToDto(response), nil
 }
 
 func encodeGRPCGetAllShipsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.GetAllShipsRequest)
+	req := request.(*dtos.GetAllShipsRequest)
 	return converters.GetAllShipsRequestToProto(req), nil
 }
 func decodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllShipsResponse)
-	return converters.ProtoGetAllShipsResponseToDto(*response), nil
+	return converters.ProtoGetAllShipsResponseToDto(response), nil
 }
 
 func encodeGRPCCreateStationRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.CreateStationRequest)
+	req := request.(*dtos.CreateStationRequest)
 	return converters.CreateStationRequestToProto(req), nil
 }
 
 func decodeGRPCCreateStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.CreateStationResponse)
-	return converters.ProtoCreateStationResponseToDto(*response), nil
+	return converters.ProtoCreateStationResponseToDto(response), nil
 }
 
 func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.GetAllStationsRequest)
+	req := request.(*dtos.GetAllStationsRequest)
 	return converters.GetAllStationsRequestToProto(req), nil
 }
 func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllStationsResponse)
-	return converters.ProtoGetAllStationsResponseToDto(*response), nil
+	return converters.ProtoGetAllStationsResponseToDto(response), nil
 }

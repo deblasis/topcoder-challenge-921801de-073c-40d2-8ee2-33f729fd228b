@@ -6,6 +6,7 @@ GOOS ?= linux
 SERVICES = auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
+INJECTPROTOTAGS = $(addprefix inject_prototags_,$(SERVICES))
 
 
 define compile_service
@@ -19,6 +20,10 @@ define make_docker_build
 	docker build --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=deblasis/stc_$(subst docker_,,$(1)) .
 endef
 
+define make_inject_prototags
+	protoc-go-inject-tag -input="gen/proto/go/$(subst inject_prototags_,,$(1))/v1/*.pb.go" -verbose
+endef
+
 all: $(SERVICES)
 
 deps:
@@ -28,10 +33,7 @@ deps:
 PHONY: proto
 proto: deps
 	buf generate
-#docker run --volume "$(shell pwd):/workspace" --workdir /workspace bufbuild/buf generate
-	protoc-go-inject-tag -input="gen/proto/go/centralcommand_dbsvc/v1/*.pb.go" -verbose
-	protoc-go-inject-tag -input="gen/proto/go/centralcommandsvc/v1/*.pb.go" -verbose	
-
+	make injectprototags
 
 .PHONY: migrate-auth_dbsvc
 migrate-auth_dbsvc: ## do migration
@@ -64,10 +66,10 @@ run-parallel: build-parallel
 services: $(SERVICES)
 docker-build: $(DOCKERBUILD)
 docker-cleanbuild: $(DOCKERCLEANBUILD)
+injectprototags: $(INJECTPROTOTAGS)
 
 $(SERVICES):
 	$(call compile_service,$(@))
-
 
 $(DOCKERBUILD):
 	$(call make_docker_build,$(@))
@@ -75,5 +77,5 @@ $(DOCKERBUILD):
 $(DOCKERCLEANBUILD):
 	$(call make_docker_cleanbuild,$(@))
 
-
-	
+$(INJECTPROTOTAGS):
+	$(call make_inject_prototags,$(@))

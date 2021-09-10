@@ -186,8 +186,8 @@ services:
       DEBLASIS_CONSULT_HOST: consul
       DEBLASIS_CONSULT_PORT: 8500
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    # ports:
-    #   - "5432:5432"
+    ports:
+      - "5432:5432"
     volumes:
       - data_auth:/var/lib/postgresql/data
     networks: 
@@ -213,11 +213,10 @@ services:
       DEBLASIS_CONSULT_PORT: 8500
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - data_centralcommand:/var/lib/postgresql/data
     networks: 
-      - centralcommand_backend    
       - net  
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]

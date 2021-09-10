@@ -5,9 +5,10 @@ import (
 	"net/http"
 
 	"deblasis.net/space-traffic-control/common/config"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	dbe "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/converters"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
@@ -23,11 +24,11 @@ var (
 type CentralCommandService interface {
 	ServiceStatus(ctx context.Context) (int64, error)
 
-	RegisterShip(ctx context.Context, request dtos.RegisterShipRequest) (*dtos.RegisterShipResponse, error)
-	GetAllShips(ctx context.Context, request dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error)
+	RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error)
+	GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (*pb.GetAllShipsResponse, error)
 
-	RegisterStation(ctx context.Context, request dtos.RegisterStationRequest) (*dtos.RegisterStationResponse, error)
-	GetAllStations(ctx context.Context, request dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error)
+	RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error)
+	GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error)
 }
 
 type centralCommandService struct {
@@ -50,65 +51,65 @@ func (u *centralCommandService) ServiceStatus(ctx context.Context) (int64, error
 	return http.StatusOK, nil
 }
 
-func (s *centralCommandService) RegisterShip(ctx context.Context, request dtos.RegisterShipRequest) (*dtos.RegisterShipResponse, error) {
+func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {
 	level.Info(s.logger).Log("handling request", "RegisterShip")
 	defer level.Info(s.logger).Log("handled request", "RegisterShip")
-	//var resp dtos.RegisterShipResponse
 
-	_, err := s.db_svc_endpointset.CreateShipEndpoint(ctx, converters.RegisterShipRequestToCreateShipRequestDBDto(request))
+	req := converters.RegisterShipRequestToCreateShipRequestDBDto(request)
+	ret, err := s.db_svc_endpointset.CreateShip(ctx, req)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "Failed to register ship ")
 	}
-
-	return &dtos.RegisterShipResponse{}, nil
+	return converters.DBDtoCreateShipResponseToProto(*ret), nil
 }
 
-func (s *centralCommandService) RegisterStation(ctx context.Context, request dtos.RegisterStationRequest) (*dtos.RegisterStationResponse, error) {
-	// level.Info(s.logger).Log("handling request", "RegisterStation")
-	// defer level.Info(s.logger).Log("handled request", "RegisterStation")
-	// var resp dtos.RegisterStationResponse
+func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error) {
+	level.Info(s.logger).Log("handling request", "RegisterStation")
+	defer level.Info(s.logger).Log("handled request", "RegisterStation")
 
-	// _, err := s.db_svc_endpointset.CreateStationEndpoint(ctx, request.ToDBDto())
-	// if err != nil {
-	// 	return resp, err
-	// }
-
-	// return resp, nil
-	return &dtos.RegisterStationResponse{}, nil
+	ret, err := s.db_svc_endpointset.CreateStation(ctx, converters.RegisterStationRequestToCreateStationRequestDBDto(request))
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to register station ")
+	}
+	return converters.DBDtoCreateStationResponseToProto(*ret), nil
 }
 
-func (u *centralCommandService) GetAllShips(ctx context.Context, request dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error) {
+func (u *centralCommandService) GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (*pb.GetAllShipsResponse, error) {
 	level.Info(u.logger).Log("handling request", "GetAllShips")
 	defer level.Info(u.logger).Log("handled request", "GetAllShips")
-	ret, err := u.db_svc_endpointset.GetAllShips(ctx, converters.GetAllShipsRequestToDBDto(request))
+	ret, err := u.db_svc_endpointset.GetAllShips(ctx,
+		&dtos.GetAllShipsRequest{},
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to retrieve ships ")
 	}
-	return converters.DBDtoGetAllShipsResponseToDto(*ret), nil
+	return converters.DBDtoGetAllShipsResponseToProto(*ret), nil
 }
 
-func (u *centralCommandService) GetAllStations(ctx context.Context, request dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error) {
+func (u *centralCommandService) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error) {
 	//TODO use middleware
 	level.Info(u.logger).Log("handling request", "GetAllStations")
 	defer level.Info(u.logger).Log("handled request", "GetAllStations")
-	ret, err := u.db_svc_endpointset.GetAllStations(ctx, converters.GetAllStationsRequestToDBDto(request))
+	ret, err := u.db_svc_endpointset.GetAllStations(ctx,
+		&dtos.GetAllStationsRequest{},
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to retrieve stations ")
 	}
 
-	return converters.DBDtoGetAllStationsResponseToDto(*ret), nil
+	return converters.DBDtoGetAllStationsResponseToProto(*ret), nil
 }
 
-// func (u *userManager) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {
+// func (u *userManager) Signup(ctx context.Context, request pb.SignupRequest) (pb.SignupResponse, error) {
 // 	level.Info(u.logger).Log("handling request", "Signup")
 // 	defer level.Info(u.logger).Log("handled request", "Signup")
 // 	return http.StatusOK, nil
 // }
 
-// func (u *userManager) GetUserByUsername(ctx context.Context, username string) (dtos.User, error) {
+// func (u *userManager) GetUserByUsername(ctx context.Context, username string) (pb.User, error) {
 // 	user, err := u.repository.GetUserByUsername(ctx, username)
 // 	if err != nil {
-// 		return dtos.User{}, errors.Wrap(err, "Failed to get user ")
+// 		return pb.User{}, errors.Wrap(err, "Failed to get user ")
 // 	}
 // 	return user, nil
 // }

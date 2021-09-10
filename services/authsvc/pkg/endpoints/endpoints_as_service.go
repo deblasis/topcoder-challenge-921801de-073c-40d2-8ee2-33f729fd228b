@@ -5,7 +5,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/errors"
 	"deblasis.net/space-traffic-control/common/healthcheck"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -19,10 +19,10 @@ func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
 	return response.Code, errors.Str2err(response.Err)
 }
 
-// Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error)
-func (s EndpointSet) Signup(ctx context.Context, request dtos.SignupRequest) (dtos.SignupResponse, error) {
-	var ret dtos.SignupResponse
-	resp, err := s.SignupEndpoint(ctx, dtos.SignupRequest{
+// Signup(ctx context.Context, request pb.SignupRequest) (pb.SignupResponse, error)
+func (s EndpointSet) Signup(ctx context.Context, request pb.SignupRequest) (pb.SignupResponse, error) {
+	var ret pb.SignupResponse
+	resp, err := s.SignupEndpoint(ctx, pb.SignupRequest{
 		Username: request.Username,
 		Password: request.Password,
 		Role:     request.Role,
@@ -30,25 +30,25 @@ func (s EndpointSet) Signup(ctx context.Context, request dtos.SignupRequest) (dt
 	if err != nil {
 		return ret, err
 	}
-	response := resp.(dtos.SignupResponse)
-	return response, errors.Str2err(response.Err)
+	response := resp.(pb.SignupResponse)
+	return response, errors.Str2err(response.Error)
 }
 
-// Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error)
-func (s EndpointSet) Login(ctx context.Context, request dtos.LoginRequest) (dtos.LoginResponse, error) {
-	var ret dtos.LoginResponse
-	resp, err := s.LoginEndpoint(ctx, dtos.LoginRequest{
+// Login(ctx context.Context, request pb.LoginRequest) (pb.LoginResponse, error)
+func (s EndpointSet) Login(ctx context.Context, request pb.LoginRequest) (pb.LoginResponse, error) {
+	var ret pb.LoginResponse
+	resp, err := s.LoginEndpoint(ctx, pb.LoginRequest{
 		Username: request.Username,
 		Password: request.Password,
 	})
 	if err != nil {
 		return ret, err
 	}
-	response := resp.(dtos.LoginResponse)
-	return response, errors.Str2err(response.Err)
+	response := resp.(pb.LoginResponse)
+	return response, errors.Str2err(response.Error)
 }
 
 var (
-	_ endpoint.Failer = dtos.SignupResponse{}
-	_ endpoint.Failer = dtos.LoginResponse{}
+	_ endpoint.Failer = pb.SignupResponse{}
+	_ endpoint.Failer = pb.LoginResponse{}
 )

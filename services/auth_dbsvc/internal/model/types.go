@@ -9,7 +9,7 @@ type User struct {
 }
 
 // Role represents an role entity
-type Role struct {
-	Id   int64  `json:"id,omitempty" db:"id"`
-	Role string `json:"role" db:"role"`
-}
+// type Role struct {
+// 	Id   int64  `json:"id,omitempty" db:"id"`
+// 	Role string `json:"role" db:"role"`
+// }

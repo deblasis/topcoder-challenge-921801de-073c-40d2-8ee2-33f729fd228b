@@ -2,13 +2,10 @@ package transport
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -124,47 +121,21 @@ func decodeGRPCServiceStatusReply(_ context.Context, grpcReply interface{}) (int
 }
 
 func encodeGRPCSignupRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.SignupRequest)
-
-	//TODO: centralise
-	roleId := pb.SignupRequest_Role_value[strings.ToUpper("ROLE_"+req.Role)]
-	if roleId <= 0 {
-		return nil, errors.New("cannot unmarshal role")
-	}
-
-	return &pb.SignupRequest{
-		Username: req.Username,
-		Password: req.Password,
-		Role:     pb.SignupRequest_Role(roleId),
-	}, nil
+	req := request.(pb.SignupRequest)
+	return req, nil
 }
 
 func decodeGRPCSignupReply(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.SignupResponse)
-	return dtos.SignupResponse{
-		Token: dtos.Token{
-			Token:     reply.Token.Token,
-			ExpiresAt: reply.Token.ExpiresAt,
-		},
-		Err: reply.Error,
-	}, nil
+	return reply, nil
 }
 
 func encodeGRPCLoginRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.LoginRequest)
-	return &pb.LoginRequest{
-		Username: req.Username,
-		Password: req.Password,
-	}, nil
+	req := request.(pb.LoginRequest)
+	return req, nil
 }
 
 func decodeGRPCLoginReply(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.LoginResponse)
-	return dtos.LoginResponse{
-		Token: dtos.Token{
-			Token:     reply.Token.Token,
-			ExpiresAt: reply.Token.ExpiresAt,
-		},
-		Err: reply.Error,
-	}, nil
+	return reply, nil
 }

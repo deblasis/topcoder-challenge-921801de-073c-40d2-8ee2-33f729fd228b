@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
+	pbsvc "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	m "gopkg.in/jeevatkm/go-model.v1"
@@ -223,6 +224,46 @@ func init() {
 			ret = append(ret, *r)
 		}
 
+		return reflect.ValueOf(ret), nil
+	})
+
+	m.AddConversion((*dtos.Station)(nil), (*pbsvc.Station)(nil), func(in reflect.Value) (reflect.Value, error) {
+		ret := &pbsvc.Station{}
+		v := in.Interface().(dtos.Station)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+		return reflect.ValueOf(ret), nil
+	})
+
+	m.AddConversion((*pbsvc.Station)(nil), (*dtos.Station)(nil), func(in reflect.Value) (reflect.Value, error) {
+		ret := &dtos.Station{}
+		v := in.Interface().(pbsvc.Station)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+		return reflect.ValueOf(ret), nil
+	})
+
+	m.AddConversion((*dtos.Ship)(nil), (*pbsvc.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+		ret := &pbsvc.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+		return reflect.ValueOf(ret), nil
+	})
+
+	m.AddConversion((*pbsvc.Ship)(nil), (*dtos.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+		ret := &dtos.Ship{}
+		v := in.Interface().(pbsvc.Ship)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
 		return reflect.ValueOf(ret), nil
 	})
 

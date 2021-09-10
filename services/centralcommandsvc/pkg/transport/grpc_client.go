@@ -6,8 +6,6 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/converters"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -165,43 +163,51 @@ func decodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}
 }
 
 func encodeGRPCRegisterShipRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.RegisterShipRequest)
-	return converters.RegisterShipRequestToProto(req), nil
+	req := request.(*pb.RegisterShipRequest)
+	//return converters.RegisterShipRequestToProto(req), nil
+	return req, nil
 }
 
 func decodeGRPCRegisterShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.RegisterShipResponse)
-	return converters.ProtoRegisterShipResponseToDto(*response), nil
+	//return converters.ProtoRegisterShipResponseToDto(*response), nil
+	return response, nil
 }
 
 func encodeGRPCGetAllShipsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.GetAllShipsRequest)
-	return converters.GetAllShipsRequestToProto(req), nil
+	req := request.(*pb.GetAllShipsRequest)
+	//return converters.GetAllShipsRequestToProto(req), nil
+	return req, nil
 }
 
 func decodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllShipsResponse)
-	return converters.ProtoGetAllShipsResponseToDto(*response), nil
+	//return converters.ProtoGetAllShipsResponseToDto(*response), nil
+	return response, nil
 }
 
 //
 
 func encodeGRPCRegisterStationRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.RegisterStationRequest)
-	return converters.RegisterStationRequestToProto(req), nil
+	req := request.(*pb.RegisterStationRequest)
+	//return converters.RegisterStationRequestToProto(req), nil
+	return req, nil
 }
 
 func decodeGRPCRegisterStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.RegisterStationResponse)
-	return converters.ProtoRegisterStationResponseToDto(*response), nil
+	//return converters.ProtoRegisterStationResponseToDto(*response), nil
+	return response, nil
 }
 
 func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.GetAllStationsRequest)
-	return converters.GetAllStationsRequestToProto(req), nil
+	req := request.(*pb.GetAllStationsRequest)
+	//return converters.GetAllStationsRequestToProto(req), nil
+	return req, nil
 }
 
 func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllStationsResponse)
-	return converters.ProtoGetAllStationsResponseToDto(*response), nil
+	//return converters.ProtoGetAllStationsResponseToDto(*response), nil
+	return response, nil
 }

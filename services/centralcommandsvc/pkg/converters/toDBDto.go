@@ -1,8 +1,8 @@
 package converters
 
 import (
-	dbdtos "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	m "gopkg.in/jeevatkm/go-model.v1"
 )
 
@@ -13,51 +13,66 @@ import (
 // 	m "gopkg.in/jeevatkm/go-model.v1"
 // )
 
-func RegisterShipRequestToCreateShipRequestDBDto(src dtos.RegisterShipRequest) dbdtos.CreateShipRequest {
-	ret := &dbdtos.CreateShipRequest{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
-	return *ret
-}
-
-func GetAllShipsRequestToDBDto(src dtos.GetAllShipsRequest) dbdtos.GetAllShipsRequest {
-	ret := &dbdtos.GetAllShipsRequest{}
-	if src == (dtos.GetAllShipsRequest{}) {
-		return *ret
-	}
-	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		panic(errs[0])
-	}
-	return *ret
-}
-func GetAllStationsRequestToDBDto(src dtos.GetAllStationsRequest) dbdtos.GetAllStationsRequest {
-	ret := &dbdtos.GetAllStationsRequest{}
-	if src == (dtos.GetAllStationsRequest{}) {
-		return *ret
-	}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
-	return *ret
-}
-
-func DBDtoGetAllShipsResponseToDto(src dbdtos.GetAllShipsResponse) *dtos.GetAllShipsResponse {
-	ret := &dtos.GetAllShipsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
+func RegisterShipRequestToCreateShipRequestDBDto(src *pb.RegisterShipRequest) *dtos.CreateShipRequest {
+	ret := &dtos.CreateShipRequest{}
+	if errs := m.Copy(ret, src.Ship); len(errs) > 0 {
 		panic(errs[0])
 	}
 	return ret
 }
 
-func DBDtoGetAllStationsResponseToDto(src dbdtos.GetAllStationsResponse) *dtos.GetAllStationsResponse {
-	ret := &dtos.GetAllStationsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
+func RegisterStationRequestToCreateStationRequestDBDto(src *pb.RegisterStationRequest) *dtos.CreateStationRequest {
+	ret := &dtos.CreateStationRequest{}
+	if errs := m.Copy(ret, src.Station); len(errs) > 0 {
 		panic(errs[0])
 	}
 	return ret
 }
 
+// func GetAllShipsRequestToDBDto(src dtos.GetAllShipsRequest) dtos.GetAllShipsRequest {
+// 	ret := &dtos.GetAllShipsRequest{}
+// 	if src == (dtos.GetAllShipsRequest{}) {
+// 		return *ret
+// 	}
+// 	if errs := m.Copy(ret, &src); len(errs) > 0 {
+// 		panic(errs[0])
+// 	}
+// 	return *ret
+// }
+// func GetAllStationsRequestToDBDto(src dtos.GetAllStationsRequest) dtos.GetAllStationsRequest {
+// 	ret := &dtos.GetAllStationsRequest{}
+// 	if src == (dtos.GetAllStationsRequest{}) {
+// 		return *ret
+// 	}
+// 	if errs := m.Copy(ret, src); len(errs) > 0 {
+// 		panic(errs[0])
+// 	}
+// 	return *ret
+// }
+
+// func DBDtoCreateShipResponseToDto(src dtos.CreateShipResponse) *dtos.RegisterShipResponse {
+// 	ret := &dtos.RegisterShipResponse{}
+// 	if errs := m.Copy(ret, src); len(errs) > 0 {
+// 		panic(errs[0])
+// 	}
+// 	return ret
+// }
+// func DBDtoGetAllShipsResponseToDto(src dtos.GetAllShipsResponse) *dtos.GetAllShipsResponse {
+// 	ret := &dtos.GetAllShipsResponse{}
+// 	if errs := m.Copy(ret, src); len(errs) > 0 {
+// 		panic(errs[0])
+// 	}
+// 	return ret
+// }
+
+// func DBDtoGetAllStationsResponseToDto(src dtos.GetAllStationsResponse) *dtos.GetAllStationsResponse {
+// 	ret := &dtos.GetAllStationsResponse{}
+// 	if errs := m.Copy(ret, src); len(errs) > 0 {
+// 		panic(errs[0])
+// 	}
+// 	return ret
+// }
+/////////////////////////////////////////////////////////////////////////
 // func StationToDto(src *model.Station) *dtos.Station {
 // 	ret := &dtos.Station{}
 // 	if errs := m.Copy(ret, src); len(errs) > 0 {

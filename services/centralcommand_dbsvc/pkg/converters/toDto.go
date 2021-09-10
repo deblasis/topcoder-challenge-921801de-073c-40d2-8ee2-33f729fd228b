@@ -55,23 +55,38 @@ func ShipsToDto(src []model.Ship) []dtos.Ship {
 	return ret
 }
 
-func ProtoCreateShipResponseToDto(src pb.CreateShipResponse) dtos.CreateShipResponse {
-	ret := dtos.CreateShipResponse{}
+func ProtoCreateStationRequestToDto(src *pb.CreateStationRequest) *dtos.CreateStationRequest {
+	ret := &dtos.CreateStationRequest{}
+	srcStuct := src.Station
+	if srcStuct == nil {
+		return ret
+	}
+
+	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}
+func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequest {
+	ret := &dtos.CreateShipRequest{}
+	srcStuct := src.Ship
+	if srcStuct == nil {
+		return ret
+	}
+	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}
+func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipResponse {
+	ret := &dtos.CreateShipResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
 	}
 	return ret
 }
 
-func ProtoCreateStationRequestToDto(src pb.CreateStationRequest) dtos.CreateStationRequest {
-	ret := &dtos.CreateStationRequest{}
-	if errs := m.Copy(ret, src.Station); len(errs) > 0 {
-		panic(errs[0])
-	}
-	return *ret
-}
-
-func ProtoCreateStationResponseToDto(src pb.CreateStationResponse) *dtos.CreateStationResponse {
+func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.CreateStationResponse {
 	ret := &dtos.CreateStationResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
@@ -79,7 +94,7 @@ func ProtoCreateStationResponseToDto(src pb.CreateStationResponse) *dtos.CreateS
 	return ret
 }
 
-func ProtoGetAllStationsResponseToDto(src pb.GetAllStationsResponse) *dtos.GetAllStationsResponse {
+func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetAllStationsResponse {
 	ret := &dtos.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
@@ -87,7 +102,7 @@ func ProtoGetAllStationsResponseToDto(src pb.GetAllStationsResponse) *dtos.GetAl
 	return ret
 }
 
-func ProtoGetAllShipsResponseToDto(src pb.GetAllShipsResponse) *dtos.GetAllShipsResponse {
+func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShipsResponse {
 	ret := &dtos.GetAllShipsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])

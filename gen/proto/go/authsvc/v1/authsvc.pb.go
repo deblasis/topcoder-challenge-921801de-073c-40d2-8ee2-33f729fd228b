@@ -54,9 +54,12 @@ func (SignupRequest_Role) EnumDescriptor() ([]byte, []int) {
 }
 
 type SignupRequest struct {
-	Username             string             `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password             string             `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	Role                 SignupRequest_Role `protobuf:"varint,3,opt,name=role,proto3,enum=authsvc.v1.SignupRequest_Role" json:"role,omitempty"`
+	//@gotags: validate:"required,notblank"
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty" validate:"required,notblank"`
+	//@gotags: validate:"required,notblank"
+	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty" validate:"required,notblank"`
+	//@gotags: validate:"required"
+	Role                 SignupRequest_Role `protobuf:"varint,3,opt,name=role,proto3,enum=authsvc.v1.SignupRequest_Role" json:"role,omitempty" validate:"required"`
 	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
 	XXX_unrecognized     []byte             `json:"-"`
 	XXX_sizecache        int32              `json:"-"`
@@ -172,8 +175,10 @@ func (m *SignupResponse) GetError() string {
 }
 
 type LoginRequest struct {
-	Username             string   `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password             string   `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	//@gotags: validate:"required,notblank"
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty" validate:"required,notblank"`
+	//@gotags: validate:"required,notblank"
+	Password             string   `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty" validate:"required,notblank"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

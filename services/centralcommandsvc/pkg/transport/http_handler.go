@@ -8,7 +8,7 @@ import (
 	"deblasis.net/space-traffic-control/common/encoding"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -67,7 +67,7 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 }
 
 func decodeHTTPRegisterShipRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.RegisterShipRequest
+	var req pb.RegisterShipRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil
@@ -80,12 +80,11 @@ func decodeHTTPRegisterShipRequest(_ context.Context, r *http.Request) (interfac
 }
 
 func decodeHTTPGetAllShipsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllShipsRequest
-	return req, nil
+	return &pb.GetAllShipsRequest{}, nil
 }
 
 func decodeHTTPRegisterStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.RegisterStationRequest
+	var req pb.RegisterStationRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil
@@ -98,8 +97,7 @@ func decodeHTTPRegisterStationRequest(_ context.Context, r *http.Request) (inter
 }
 
 func decodeHTTPGetAllStationsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllStationsRequest
-	return req, nil
+	return &pb.GetAllStationsRequest{}, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

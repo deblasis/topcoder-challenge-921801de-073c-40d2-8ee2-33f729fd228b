@@ -81,8 +81,7 @@ func decodeHTTPCreateShipRequest(_ context.Context, r *http.Request) (interface{
 }
 
 func decodeHTTPGetAllShipsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllShipsRequest
-	return req, nil
+	return &dtos.GetAllShipsRequest{}, nil
 }
 
 func decodeHTTPCreateStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -99,8 +98,7 @@ func decodeHTTPCreateStationRequest(_ context.Context, r *http.Request) (interfa
 }
 
 func decodeHTTPGetAllStationsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.GetAllStationsRequest
-	return req, nil
+	return &dtos.GetAllStationsRequest{}, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

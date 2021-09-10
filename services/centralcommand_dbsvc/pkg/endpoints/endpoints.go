@@ -102,8 +102,7 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 
 func MakeCreateShipEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.CreateShipRequest)
-
+		req := request.(*dtos.CreateShipRequest)
 		err := validate.Struct(req)
 		if err != nil {
 			validationErrors := err.(validator.ValidationErrors)
@@ -116,7 +115,7 @@ func MakeCreateShipEndpoint(s service.CentralCommandDBService) endpoint.Endpoint
 
 func MakeGetAllShipsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.GetAllShipsRequest)
+		req := request.(*dtos.GetAllShipsRequest)
 
 		err := validate.Struct(req)
 		if err != nil {
@@ -130,7 +129,7 @@ func MakeGetAllShipsEndpoint(s service.CentralCommandDBService) endpoint.Endpoin
 
 func MakeCreateStationEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.CreateStationRequest)
+		req := request.(*dtos.CreateStationRequest)
 
 		err := validate.Struct(req)
 		if err != nil {
@@ -144,7 +143,7 @@ func MakeCreateStationEndpoint(s service.CentralCommandDBService) endpoint.Endpo
 
 func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.GetAllStationsRequest)
+		req := request.(*dtos.GetAllStationsRequest)
 
 		err := validate.Struct(req)
 		if err != nil {

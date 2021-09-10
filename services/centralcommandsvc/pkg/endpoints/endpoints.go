@@ -8,7 +8,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/dtos"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
@@ -107,11 +107,11 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 func MakeRegisterShipEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp *dtos.RegisterShipResponse
+			resp *pb.RegisterShipResponse
 			err  error
 		)
 
-		req := request.(dtos.RegisterShipRequest)
+		req := request.(*pb.RegisterShipRequest)
 
 		err = validate.Struct(req)
 		if err != nil {
@@ -127,11 +127,11 @@ func MakeRegisterShipEndpoint(s service.CentralCommandService) endpoint.Endpoint
 func MakeGetAllShipsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp *dtos.GetAllShipsResponse
+			resp *pb.GetAllShipsResponse
 			err  error
 		)
 
-		req := request.(dtos.GetAllShipsRequest)
+		req := request.(*pb.GetAllShipsRequest)
 
 		err = validate.Struct(req)
 		if err != nil {
@@ -147,11 +147,11 @@ func MakeGetAllShipsEndpoint(s service.CentralCommandService) endpoint.Endpoint 
 func MakeRegisterStationEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp *dtos.RegisterStationResponse
+			resp *pb.RegisterStationResponse
 			err  error
 		)
 
-		req := request.(dtos.RegisterStationRequest)
+		req := request.(*pb.RegisterStationRequest)
 
 		err = validate.Struct(req)
 		if err != nil {
@@ -167,11 +167,11 @@ func MakeRegisterStationEndpoint(s service.CentralCommandService) endpoint.Endpo
 func MakeGetAllStationsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp *dtos.GetAllStationsResponse
+			resp *pb.GetAllStationsResponse
 			err  error
 		)
 
-		req := request.(dtos.GetAllStationsRequest)
+		req := request.(*pb.GetAllStationsRequest)
 
 		err = validate.Struct(req)
 		if err != nil {

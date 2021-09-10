@@ -20,8 +20,6 @@ COPY ./gen ./gen
 COPY ./scripts ./scripts
 COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
 COPY ./services/centralcommandsvc ./services/centralcommandsvc
-COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
-COPY ./services/centralcommandsvc ./services/centralcommandsvc
 
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe
