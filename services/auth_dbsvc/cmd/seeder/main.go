@@ -95,6 +95,19 @@ func (s *seeder) csvParse(filePath string, tableName string) (err error) {
 
 func (s *seeder) sqlInsert(cols []string, record []string, table string) (err error) {
 
+	//This table will be used only once for seeding in order to keep hashing responsility where it belongs
+	createTable := `
+	CREATE TABLE if not exists seeding_tmp(
+		 role VARCHAR(255),
+		 username VARCHAR(255) NOT NULL UNIQUE,
+		 password TEXT NOT NULL
+	)`
+
+	_, err = s.connection.Exec(createTable)
+	if err != nil {
+		return fmt.Errorf("cannot create table seeding_tmp: %v", err)
+	}
+
 	qry := fmt.Sprintf(`INSERT INTO %s (role, username, password) VALUES (?, ?, ?)`, table)
 
 	level.Info(s.logger).Log("msg", fmt.Sprintf("Executing Query (obfuscated): %v", qry))

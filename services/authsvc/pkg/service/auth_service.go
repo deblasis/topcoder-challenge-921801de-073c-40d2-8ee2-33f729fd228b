@@ -10,7 +10,7 @@ import (
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/converters"
+	//"deblasis.net/space-traffic-control/services/authsvc/pkg/converters"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	ServiceName = "authsvc.v1.AuthService"
-	Namespace   = "deblasis"
-	Tags        = []string{}
+	ServiceName      = "authsvc.v1.AuthService"
+	ShortServiceName = "authsvc"
+	Namespace        = "deblasis"
+	Tags             = []string{}
 )
 
 type AuthService interface {
@@ -52,14 +53,16 @@ func (s *authService) Signup(ctx context.Context, request pb.SignupRequest) (pb.
 	req := dtos.CreateUserRequest{
 		Username: request.Username,
 		Password: request.Password,
-		Role:     converters.ProtoToDTORole(request.Role),
+		//Role:     converters.ProtoToDTORole(request.Role),
+		Role:     request.Role,
 	}
 	_, err := s.db_svc_endpointset.CreateUserEndpoint(ctx, req)
 	if err != nil {
 		return resp, err
 	}
 
-	token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, request.Username, request.Role.String(), ServiceName)
+	//token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, request.Username, request.Role.String(), ServiceName)
+	token, expiresAt, err := ca.NewJWTToken(s.jwtConfig, request.Username, request.Role, ServiceName)
 
 	resp = pb.SignupResponse{
 		Token: &pb.Token{
