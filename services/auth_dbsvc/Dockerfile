@@ -21,9 +21,24 @@ COPY ./scripts ./scripts
 COPY ./services/auth_dbsvc ./services/auth_dbsvc
 
 
-RUN make $SVC_NAME \
+RUN make ${SVC_NAME} \
     && mv build/deblasis-$SVC_NAME /exe
 
-FROM scratch
-COPY --from=server_builder /exe /
-ENTRYPOINT ["/exe"]
+
+RUN make ${SVC_NAME}_migrator \
+    && mv build/deblasis-${SVC_NAME}_migrator /migrator
+
+RUN cp ./services/auth_dbsvc/scripts/entrypoint.sh / \
+    && mkdir -p /scripts/migrations \
+    && cp ./services/auth_dbsvc/scripts/migrations/* /scripts/migrations
+
+RUN make ${SVC_NAME}_seeder \
+    && mv build/deblasis-${SVC_NAME}_seeder /seeder
+
+RUN cp ./scripts/*.sh /
+
+FROM alpine:3.14.2
+RUN apk update && apk upgrade && apk add bash
+COPY --from=server_builder /entrypoint.sh /exe /migrator /seeder /wait-for-it.sh  /
+COPY --from=server_builder /scripts /scripts
+ENTRYPOINT ["/entrypoint.sh"]

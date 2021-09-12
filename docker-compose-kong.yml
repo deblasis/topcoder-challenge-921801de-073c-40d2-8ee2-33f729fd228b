@@ -1,0 +1,146 @@
+version: '3'
+
+services:
+  kong:
+    image: dbkong:2.5.0-alpine
+    build:
+      dockerfile: Dockerfile
+      context: ./services/kong/
+    environment: 
+     KONG_DATABASE: postgres
+     KONG_PG_HOST: kong_db
+     KONG_PG_USER: kong
+     KONG_PG_PASSWORD: kong
+     KONG_PROXY_ACCESS_LOG: /dev/stdout
+     KONG_ADMIN_ACCESS_LOG: /dev/stdout
+     KONG_PROXY_ERROR_LOG: /dev/stderr
+     KONG_ADMIN_ERROR_LOG: /dev/stderr
+     KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    ports:
+      - 8000:8000
+      - 8443:8443
+      - 8001:8001
+      - 8444:8444
+    volumes:
+      - ./services/authsvc/proto/authsvc:/proto/authsvc
+      - ./services/centralcommandsvc/proto/centralcommandsvc:/proto/centralcommandsvc
+
+      - ./common/proto:/proto
+      # - ./common/proto/google/protobuf/descriptor.proto:/proto/authsvc/v1/google/protobuf/descriptor.proto
+      # - ./common/proto/google/api/http.proto:/proto/authsvc/v1/google/api/http.proto
+      # - ./common/proto/google/api/annotations.proto:/proto/authsvc/v1/google/api/annotations.proto
+      # - ./common/proto/google/protobuf/descriptor.proto:/proto/centralcommandsvc/v1/google/protobuf/descriptor.proto
+      # - ./common/proto/google/api/http.proto:/proto/centralcommandsvc/v1/google/api/http.proto
+      # - ./common/proto/google/api/annotations.proto:/proto/centralcommandsvc/v1/google/api/annotations.proto
+    networks:
+      - net  
+      - kong-backend
+    depends_on:
+      - kong_init
+      - kong_db        
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001"]
+      interval: 5s
+      timeout: 2s
+      retries: 15
+
+  kong_init:
+    image: kong:2.5.0-alpine
+    command: "kong migrations bootstrap"
+    networks:
+      - net  
+      - kong-backend
+    restart: on-failure
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong_db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+    links:
+      - kong_db
+    depends_on:
+      - kong_db
+
+  kong_db:
+    image: postgres:13.4-alpine3.14
+    restart: always
+    environment:
+      PGUSER: postgres
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    ports:
+      - "5434:5432"
+    volumes:
+      - data_kong:/var/lib/postgresql/data
+    networks: 
+      - net  
+      - kong-backend
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  konga_db:
+    image: postgres:9.6
+    restart: always
+    environment:
+      PGUSER: postgres
+      POSTGRES_USER: konga
+      POSTGRES_PASSWORD: konga
+      POSTGRES_DB: konga
+    ports:
+      - "5435:5432"
+    volumes:
+      - data_konga:/var/lib/postgresql/data
+    networks: 
+      - net  
+      - kong-backend
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "konga"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+
+  konga:
+    image: pantsel/konga:0.14.9
+    environment: 
+     NODE_ENV: production
+     TOKEN_SECRET: aj3h4jhkajshdkjh4
+     DB_ADAPTER: postgres
+     DB_HOST: konga_db
+     DB_USER: konga
+     DB_PASSWORD: konga
+     DB_DATABASE: konga
+     KONGA_HOOK_TIMEOUT: "160000"
+     NO_AUTH: "true"
+    ports:
+      - "1337:1337"
+    networks:
+      - net  
+      - kong-backend      
+    depends_on:
+      - konga_db      
+      - kong       
+
+  konga_init:
+    image: pantsel/konga:0.14.9
+    command: "-c prepare -a postgres -u postgresql://konga:konga@konga_db:5432/konga"
+    networks:
+      - net  
+      - kong-backend
+    restart: on-failure
+    links:
+      - konga_db
+    depends_on:
+      - konga_db 
+
+volumes:
+  data_kong:      
+  data_konga:      
+
+
+networks: 
+  kong-backend:
+  net:

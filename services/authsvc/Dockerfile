@@ -24,6 +24,11 @@ COPY ./services/authsvc ./services/authsvc
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe
 
-FROM scratch
-COPY --from=server_builder /exe /
-ENTRYPOINT ["/exe"]
+RUN cp ./scripts/*.sh /   
+
+FROM alpine:3.14.2
+RUN apk update && apk upgrade && apk add bash
+COPY --from=server_builder /exe /wait-for-it.sh /
+ENTRYPOINT ["./wait-for-it.sh", "kong:8001", "--timeout=60", "--", "/exe"]
+
+#(WAIT4IT) $(F3_API_ENDPOINT_NOPROTOCOL) --timeout=10 --strict -- $(GINKGO) -race -cover -v -tags integration ./api/integrationtests

@@ -26,6 +26,7 @@ type Config struct {
 	SSL        SSLConfig        `mapstructure:"ssl"`
 	APIGateway APIGatewayConfig `mapstructure:"apigateway"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
+	Kong       KongConfig       `mapstructure:"kong"`
 
 	Logger log.Logger
 }
@@ -44,6 +45,10 @@ type ZipkinConfig struct {
 	V2Url          string
 	UseBridge      bool
 	LightstepToken string
+}
+
+type KongConfig struct {
+	BaseUrl string
 }
 
 // DbConfig declare database variables

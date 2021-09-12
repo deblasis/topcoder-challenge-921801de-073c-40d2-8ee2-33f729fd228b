@@ -2,8 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
@@ -78,7 +76,8 @@ func decodeGRPCCreateUserRequest(c context.Context, grpcReq interface{}) (interf
 		Username: req.User.Username,
 		Password: req.User.Password,
 		//TODO centralize
-		Role: strings.Title(strings.ToLower(strings.TrimLeft(req.User.Role.String(), "ROLE_"))),
+		// Role: strings.Title(strings.ToLower(strings.TrimLeft(req.User.Role.String(), "ROLE_"))),
+		Role: req.User.Role,
 	}, nil
 }
 func encodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
@@ -100,16 +99,16 @@ func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 	response := grpcResponse.(dtos.GetUserByUsernameResponse)
 
 	//TODO: centralise
-	roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+response.User.Role)]
-	if roleId <= 0 {
-		return nil, errors.New("cannot unmarshal role")
-	}
+	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+response.User.Role)]
+	// if roleId <= 0 {
+	// 	return nil, errors.New("cannot unmarshal role")
+	// }
 	return &pb.GetUserByUsernameResponse{
 		User: &pb.User{
 			Id:       response.User.Id,
 			Username: response.User.Username,
 			Password: response.User.Password,
-			Role:     pb.User_Role(roleId),
+			Role:     response.User.Role,
 		},
 		Error: response.Err,
 	}, nil
