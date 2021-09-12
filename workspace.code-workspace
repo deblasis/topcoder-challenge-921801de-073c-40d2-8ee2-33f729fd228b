@@ -8,6 +8,9 @@
 		// 	"path": "common"
 		// },
 		{
+			"path": "services/kong",
+		},
+		{
 			"path": "services/apigateway",
 		},
 		{
@@ -47,6 +50,30 @@
 			"titleBar.inactiveBackground": "#56a64699",
 			"titleBar.inactiveForeground": "#15202b99"
 		},
-		"peacock.remoteColor": "#56a646"
+		"peacock.remoteColor": "#56a646",
+		"sqltools.connections": [
+			{
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 5435,
+				"driver": "PostgreSQL",
+				"name": "Konga",
+				"group": "STC",
+				"database": "konga",
+				"username": "konga",
+				"password": "konga"
+			},
+			{
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 5432,
+				"driver": "PostgreSQL",
+				"group": "STC",
+				"name": "auth_db",
+				"database": "auth",
+				"username": "postgres",
+				"password": "secret"
+			}
+		]
 	}
 }

@@ -2,8 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -138,24 +136,25 @@ func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 		Id:       response.User.Id,
 		Username: response.User.Username,
 		Password: response.User.Password,
-		Role:     strings.Title(strings.ToLower(strings.TrimLeft(response.User.Role.String(), "ROLE_"))),
+		//Role:     strings.Title(strings.ToLower(strings.TrimLeft(response.User.Role.String(), "ROLE_"))),
+		Role: response.User.Role,
 	}}, nil
 }
 
 func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(dtos.CreateUserRequest)
 
-	//TODO: centralise
-	roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
-	if roleId <= 0 {
-		return nil, errors.New("cannot unmarshal role")
-	}
+	// //TODO: centralise
+	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
+	// if roleId <= 0 {
+	// 	return nil, errors.New("cannot unmarshal role")
+	// }
 	return &pb.CreateUserRequest{
 		User: &pb.User{
 			Id:       req.Id,
 			Username: req.Username,
 			Password: req.Password,
-			Role:     pb.User_Role(roleId),
+			Role:     req.Role,
 		},
 	}, nil
 }

@@ -1,11 +1,11 @@
 package converters
 
-import (
-	"strings"
+// import (
+// 	"strings"
 
-	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
-)
+// 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
+// )
 
-func ProtoToDTORole(src pb.SignupRequest_Role) string {
-	return strings.Title(strings.TrimLeft(strings.ToLower(src.String()), "role_"))
-}
+// func ProtoToDTORole(src pb.SignupRequest_Role) string {
+// 	return strings.Title(strings.TrimLeft(strings.ToLower(src.String()), "role_"))
+// }

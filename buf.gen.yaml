@@ -1,14 +1,18 @@
 version: v1beta1
 plugins:
-  # - name: go
-  #   out: gen/proto/go
-  #   opt: paths=source_relative
-  - name: gofast
+  - name: go
     out: gen/proto/go
     opt: paths=source_relative
+  # - name: gofast
+  #   out: gen/proto/go
+  #   opt: paths=source_relative
   - name: go-grpc
     out: gen/proto/go
     opt: 
       - paths=source_relative
       - require_unimplemented_servers=false
+  - name: grpc-gateway
+    out: gen/proto/go
+    opt:
+      - paths=source_relative      
 

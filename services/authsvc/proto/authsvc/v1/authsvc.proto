@@ -2,27 +2,48 @@ syntax = "proto3";
 
 package authsvc.v1;
 
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/authsvc/proto/v1;authsvc_v1";
+
 
 service AuthService {
   rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusResponse) {}
-  rpc Signup(SignupRequest) returns (SignupResponse) {}
-  rpc Login(LoginRequest) returns (LoginResponse) {}
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/auth/login"
+      body: "*"
+    };
+  };
+  rpc Signup(SignupRequest) returns (SignupResponse) {
+    option (google.api.http) = {
+      post: "/user/signup"
+      body: "*"
+    };
+  };
+
+}
+
+message LoginRequest {
+  //@gotags: validate:"required,notblank"
+  string username = 1[(google.api.field_behavior) = REQUIRED];
+  //@gotags: validate:"required,notblank"
+  string password = 2[(google.api.field_behavior) = REQUIRED];
+}
+
+message LoginResponse {
+  Token token = 1;
+  string error = 2;
 }
 
 message SignupRequest {
-  enum Role {
-    ROLE_UNSPECIFIED = 0;
-    ROLE_SHIP = 1;
-    ROLE_STATION = 2;
-    ROLE_COMMAND = 3;
-  }
   //@gotags: validate:"required,notblank"
-  string username = 1;
+  string username = 1[(google.api.field_behavior) = REQUIRED]; 
   //@gotags: validate:"required,notblank"
-  string password = 2;
-  //@gotags: validate:"required"
-  Role role = 3;
+  string password = 2[(google.api.field_behavior) = REQUIRED];
+  //@gotags: validate:"required,oneof=Ship Station Command"
+  string role = 3[(google.api.field_behavior) = REQUIRED];
 }
 
 message SignupResponse {
@@ -30,17 +51,6 @@ message SignupResponse {
   string error = 2;
 }
 
-message LoginRequest {
-  //@gotags: validate:"required,notblank"
-  string username = 1;
-  //@gotags: validate:"required,notblank"
-  string password = 2;
-}
-
-message LoginResponse {
-  Token token = 1;
-  string error = 2;
-}
 
 message Token {
   string token =1;

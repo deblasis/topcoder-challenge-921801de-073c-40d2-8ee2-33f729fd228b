@@ -22,7 +22,7 @@ import (
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/services/apigateway/internal/api"
 	api_v1 "deblasis.net/space-traffic-control/services/apigateway/internal/api/v1"
-	"deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
+	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
 	auth_endpoints "deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	auth_service "deblasis.net/space-traffic-control/services/authsvc/pkg/service"

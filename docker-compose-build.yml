@@ -36,13 +36,6 @@ services:
       context: .
       args: 
         SVC_NAME: auth_dbsvc
-
-  centralcommand_dbsvc:
-    build:
-      dockerfile: ./services/centralcommand_dbsvc/Dockerfile
-      context: .
-      args: 
-        SVC_NAME: centralcommand_dbsvc
    
   authsvc:
     build:
@@ -51,10 +44,17 @@ services:
       args: 
         SVC_NAME: authsvc
    
-  centralcommandsvc:
-    build:
-      dockerfile: ./services/centralcommandsvc/Dockerfile
-      context: .
-      args: 
-        SVC_NAME: centralcommandsvc
+
+  # centralcommand_dbsvc:
+  #   build:
+  #     dockerfile: ./services/centralcommand_dbsvc/Dockerfile
+  #     context: .
+  #     args: 
+  #       SVC_NAME: centralcommand_dbsvc
+  # centralcommandsvc:
+  #   build:
+  #     dockerfile: ./services/centralcommandsvc/Dockerfile
+  #     context: .
+  #     args: 
+  #       SVC_NAME: centralcommandsvc
    

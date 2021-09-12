@@ -104,6 +104,56 @@ func main() {
 		client = consulsd.NewClient(consulClient)
 	}
 
+	{
+		apiGwCfgr := bootstrap.NewApiGatewayConfigurator(cfg.Kong.BaseUrl, cfg.Logger)
+		apiGwCfgr.DeregisterGRPCService(service.ShortServiceName)
+		ks, err := apiGwCfgr.RegisterGRPCService(service.ShortServiceName, service.ShortServiceName, cfg.GrpcServerPort)
+		if err != nil {
+			ks = apiGwCfgr.GetGRPCService(service.ShortServiceName)
+			if ks == nil {
+				panic(err)
+			}
+		}
+
+		routes := []struct {
+			route   string
+			version string
+		}{
+			{
+				route:   "/auth/login",
+				version: "v1",
+			},
+			{
+				route:   "/user/signup",
+				version: "v1",
+			},
+		}
+
+		for _, r := range routes {
+			kr, err := apiGwCfgr.AddHTTPRoute(ks.ID, []string{r.route})
+			if err != nil {
+				kr := apiGwCfgr.GetHTTPRoute(service.ShortServiceName, []string{r.route})
+				if kr == nil {
+					panic(err)
+				}
+			}
+			kp, err := apiGwCfgr.AddRouteGRPCGatewayPlugin(kr, service.ShortServiceName+"/"+r.version+"/"+service.ShortServiceName+".proto") //TODO config
+			if err != nil {
+				kp = apiGwCfgr.GetGRPCGatewayPlugin(*kr.Name)
+			}
+			level.Info(cfg.Logger).Log(
+				"kongservice", fmt.Sprintf("[%v] %v", *ks.ID, *ks.Name),
+				"konroute", fmt.Sprintf("[%v] %v", *ks.ID, *kr.Name),
+				"kongplugin", fmt.Sprintf("[%v] %v", *ks.ID, *kp.Name),
+				"msg", "registration",
+				"err", err,
+			)
+
+		}
+
+		defer apiGwCfgr.DeregisterGRPCService(service.ShortServiceName)
+	}
+
 	// Transport domain.
 	// var (
 	// 	ctx = context.Background()
