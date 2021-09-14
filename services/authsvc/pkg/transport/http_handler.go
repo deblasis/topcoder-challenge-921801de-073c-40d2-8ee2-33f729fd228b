@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"deblasis.net/space-traffic-control/common/encoding"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
@@ -28,12 +27,12 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 		httptransport.ServerErrorEncoder(encoding.EncodeError),
 	}
 
-	r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
-		e.StatusEndpoint,
-		healthcheck.DecodeHTTPServiceStatusRequest,
-		encodeResponse,
-		options...,
-	))
+	// r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
+	// 	e.StatusEndpoint,
+	// 	healthcheck.DecodeHTTPServiceStatusRequest,
+	// 	encodeResponse,
+	// 	options...,
+	// ))
 
 	r.Methods("POST").Path("/signup").Handler(httptransport.NewServer(
 		e.SignupEndpoint,
@@ -62,7 +61,7 @@ func decodeHTTPSignupRequest(_ context.Context, r *http.Request) (interface{}, e
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }
 
 func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -75,7 +74,7 @@ func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

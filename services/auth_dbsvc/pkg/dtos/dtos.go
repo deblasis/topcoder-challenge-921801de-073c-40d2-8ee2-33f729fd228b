@@ -5,6 +5,7 @@ import (
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 )
 
+type User model.User
 type GetUserByUsernameRequest struct {
 	Username string `json:"username" validate:"required,notblank"`
 }
@@ -13,7 +14,7 @@ type GetUserByUsernameResponse struct {
 	Err  string     `json:"err,omitempty"`
 }
 
-type CreateUserRequest model.User
+type CreateUserRequest User
 type CreateUserResponse struct {
 	Id  int64  `json:"id"`
 	Err string `json:"err,omitempty"`

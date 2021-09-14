@@ -18,7 +18,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CentralCommandServiceClient interface {
-	ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error)
 	RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*RegisterStationResponse, error)
 	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*RegisterShipResponse, error)
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
@@ -31,15 +30,6 @@ type centralCommandServiceClient struct {
 
 func NewCentralCommandServiceClient(cc grpc.ClientConnInterface) CentralCommandServiceClient {
 	return &centralCommandServiceClient{cc}
-}
-
-func (c *centralCommandServiceClient) ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error) {
-	out := new(ServiceStatusResponse)
-	err := c.cc.Invoke(ctx, "/centralcommandsvc.v1.CentralCommandService/ServiceStatus", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *centralCommandServiceClient) RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*RegisterStationResponse, error) {
@@ -82,7 +72,6 @@ func (c *centralCommandServiceClient) GetAllStations(ctx context.Context, in *Ge
 // All implementations should embed UnimplementedCentralCommandServiceServer
 // for forward compatibility
 type CentralCommandServiceServer interface {
-	ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error)
 	RegisterStation(context.Context, *RegisterStationRequest) (*RegisterStationResponse, error)
 	RegisterShip(context.Context, *RegisterShipRequest) (*RegisterShipResponse, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
@@ -93,9 +82,6 @@ type CentralCommandServiceServer interface {
 type UnimplementedCentralCommandServiceServer struct {
 }
 
-func (UnimplementedCentralCommandServiceServer) ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ServiceStatus not implemented")
-}
 func (UnimplementedCentralCommandServiceServer) RegisterStation(context.Context, *RegisterStationRequest) (*RegisterStationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterStation not implemented")
 }
@@ -118,24 +104,6 @@ type UnsafeCentralCommandServiceServer interface {
 
 func RegisterCentralCommandServiceServer(s grpc.ServiceRegistrar, srv CentralCommandServiceServer) {
 	s.RegisterService(&CentralCommandService_ServiceDesc, srv)
-}
-
-func _CentralCommandService_ServiceStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ServiceStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CentralCommandServiceServer).ServiceStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/centralcommandsvc.v1.CentralCommandService/ServiceStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CentralCommandServiceServer).ServiceStatus(ctx, req.(*ServiceStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _CentralCommandService_RegisterStation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -217,10 +185,6 @@ var CentralCommandService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "centralcommandsvc.v1.CentralCommandService",
 	HandlerType: (*CentralCommandServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ServiceStatus",
-			Handler:    _CentralCommandService_ServiceStatus_Handler,
-		},
 		{
 			MethodName: "RegisterStation",
 			Handler:    _CentralCommandService_RegisterStation_Handler,

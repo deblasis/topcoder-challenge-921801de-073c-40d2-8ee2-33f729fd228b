@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"net/http"
 
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/repositories"
@@ -15,14 +14,12 @@ import (
 )
 
 var (
-	ServiceName = "centralcommand_dbsvc.v1.CentralCommandDBService"
-	Namespace   = "deblasis"
+	ServiceName = "deblasis-v1-CentralCommandDBService"
+	Namespace   = "stc"
 	Tags        = []string{}
 )
 
 type CentralCommandDBService interface {
-	ServiceStatus(context.Context) (int64, error)
-
 	CreateShip(context.Context, *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error)
 	GetAllShips(context.Context, *dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error)
 
@@ -48,12 +45,6 @@ func NewCentralCommandDBService(
 		logger:            logger,
 		validate:          validator.New(),
 	}
-}
-
-func (u *centralCommandDBService) ServiceStatus(ctx context.Context) (int64, error) {
-	level.Info(u.logger).Log("handling request", "ServiceStatus")
-	defer level.Info(u.logger).Log("handled request", "ServiceStatus")
-	return http.StatusOK, nil
 }
 
 func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {

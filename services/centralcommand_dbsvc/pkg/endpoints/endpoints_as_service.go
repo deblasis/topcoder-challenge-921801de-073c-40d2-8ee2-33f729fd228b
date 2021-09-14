@@ -3,20 +3,9 @@ package endpoints
 import (
 	"context"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/endpoint"
 )
-
-// ServiceStatus(ctx context.Context) (int64, error)
-func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
-	resp, err := s.StatusEndpoint(ctx, healthcheck.ServiceStatusRequest{})
-	if err != nil {
-		return 0, err
-	}
-	response := resp.(healthcheck.ServiceStatusResponse)
-	return response.Code, nil
-}
 
 // CreateShip(ctx context.Context, ship *model.Ship) (int64, error)
 func (s EndpointSet) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {

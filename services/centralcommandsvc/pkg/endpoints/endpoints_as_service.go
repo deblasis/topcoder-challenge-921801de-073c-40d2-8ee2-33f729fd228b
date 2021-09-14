@@ -4,20 +4,9 @@ import (
 	"context"
 
 	"deblasis.net/space-traffic-control/common/errors"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"github.com/go-kit/kit/endpoint"
 )
-
-//ServiceStatus(ctx context.Context) (int64, error)
-func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
-	resp, err := s.StatusEndpoint(ctx, healthcheck.ServiceStatusRequest{})
-	if err != nil {
-		return 0, err
-	}
-	response := resp.(healthcheck.ServiceStatusResponse)
-	return response.Code, errors.Str2err(response.Err)
-}
 
 // RegisterShip(ctx context.Context, request pb.RegisterShipRequest) (pb.RegisterShipResponse, error)
 func (s EndpointSet) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {

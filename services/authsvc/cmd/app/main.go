@@ -13,7 +13,9 @@ import (
 	"syscall"
 	"time"
 
+	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/bootstrap"
+	"deblasis.net/space-traffic-control/common/cache"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -21,6 +23,7 @@ import (
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
 	dbs "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/service"
 	dbt "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/transport"
+	"deblasis.net/space-traffic-control/services/authsvc/internal/acl"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/transport"
@@ -32,8 +35,7 @@ import (
 	"github.com/go-kit/kit/sd"
 	consulsd "github.com/go-kit/kit/sd/consul"
 	"github.com/go-kit/kit/sd/lb"
-	grpcgokit "github.com/go-kit/kit/transport/grpc"
-	"github.com/hashicorp/consul/api"
+	consul "github.com/hashicorp/consul/api"
 	"github.com/oklog/oklog/pkg/group"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
@@ -64,13 +66,13 @@ func main() {
 	// 	// Business-level metrics.
 	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "integers_summed", //TODO
 	// 		Help:      "Total count of integers summed via the Sum method.",
 	// 	}, []string{})
 	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "characters_concatenated", //TODO
 	// 		Help:      "Total count of characters concatenated via the Concat method.",
 	// 	}, []string{})
@@ -81,7 +83,7 @@ func main() {
 		// Endpoint-level metrics.
 		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, ".")[2],
+			Subsystem: strings.Split(service.ServiceName, "-")[2],
 			Name:      "request_duration_seconds",
 			Help:      "Request duration in seconds.",
 		}, []string{"method", "success"})
@@ -92,66 +94,16 @@ func main() {
 	// Service discovery domain. In this example we use Consul.
 	var client consulsd.Client
 	{
-		consulConfig := api.DefaultConfig()
+		consulConfig := consul.DefaultConfig()
 		if len(consulAddr) > 0 {
 			consulConfig.Address = consulAddr
 		}
-		consulClient, err := api.NewClient(consulConfig)
+		consulClient, err := consul.NewClient(consulConfig)
 		if err != nil {
 			cfg.Logger.Log("err", err)
 			os.Exit(1)
 		}
 		client = consulsd.NewClient(consulClient)
-	}
-
-	{
-		apiGwCfgr := bootstrap.NewApiGatewayConfigurator(cfg.Kong.BaseUrl, cfg.Logger)
-		apiGwCfgr.DeregisterGRPCService(service.ShortServiceName)
-		ks, err := apiGwCfgr.RegisterGRPCService(service.ShortServiceName, service.ShortServiceName, cfg.GrpcServerPort)
-		if err != nil {
-			ks = apiGwCfgr.GetGRPCService(service.ShortServiceName)
-			if ks == nil {
-				panic(err)
-			}
-		}
-
-		routes := []struct {
-			route   string
-			version string
-		}{
-			{
-				route:   "/auth/login",
-				version: "v1",
-			},
-			{
-				route:   "/user/signup",
-				version: "v1",
-			},
-		}
-
-		for _, r := range routes {
-			kr, err := apiGwCfgr.AddHTTPRoute(ks.ID, []string{r.route})
-			if err != nil {
-				kr := apiGwCfgr.GetHTTPRoute(service.ShortServiceName, []string{r.route})
-				if kr == nil {
-					panic(err)
-				}
-			}
-			kp, err := apiGwCfgr.AddRouteGRPCGatewayPlugin(kr, service.ShortServiceName+"/"+r.version+"/"+service.ShortServiceName+".proto") //TODO config
-			if err != nil {
-				kp = apiGwCfgr.GetGRPCGatewayPlugin(*kr.Name)
-			}
-			level.Info(cfg.Logger).Log(
-				"kongservice", fmt.Sprintf("[%v] %v", *ks.ID, *ks.Name),
-				"konroute", fmt.Sprintf("[%v] %v", *ks.ID, *kr.Name),
-				"kongplugin", fmt.Sprintf("[%v] %v", *ks.ID, *kp.Name),
-				"msg", "registration",
-				"err", err,
-			)
-
-		}
-
-		defer apiGwCfgr.DeregisterGRPCService(service.ShortServiceName)
 	}
 
 	// Transport domain.
@@ -165,7 +117,6 @@ func main() {
 	// addsvc client package to construct a complete service. We can then
 	// leverage the addsvc.Make{Sum,Concat}Endpoint constructors to convert
 	// the complete service to specific endpoint.
-
 	var (
 		logger       = cfg.Logger
 		retryMax     = cfg.APIGateway.RetryMax
@@ -178,24 +129,37 @@ func main() {
 	)
 	instancesChannel := make(chan sd.Event)
 
-	done := make(chan bool, 1)
-	go func(ok chan bool) {
-		for evt := range instancesChannel {
-			for _, i := range evt.Instances {
-				logger.Log("received_instance", i)
-			}
-			if len(evt.Instances) > 0 {
-				instancer.Stop()
-				instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-				ok <- true
+	go func() {
+		for event := range instancesChannel {
+			if len(event.Instances) > 0 {
+				logger.Log("received_instances", strings.Join(event.Instances, ","))
 				return
 			}
-			logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
-			time.Sleep(time.Second * 1)
 		}
-	}(done)
+	}()
+	// done := make(chan bool, 1)
+	// go func(ok chan bool) {
+	// 	for evt := range instancesChannel {
+	// 		for _, i := range evt.Instances {
+	// 			logger.Log("received_instance", i)
+	// 		}
+	// 		if len(evt.Instances) > 0 {
+	// 			instancer.Stop()
+	// 			instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+	// 			ok <- true
+	// 			return
+	// 		}
+	// 		logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
+	// 		time.Sleep(time.Second * 1)
+	// 		instancer.Stop()
+	// 		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+	// 		instancer.Register(instancesChannel)
+	// 	}
+	// }(done)
+
+	// <-done
+
 	instancer.Register(instancesChannel)
-	<-done
 
 	{
 		factory := authDBServiceFactory(dbe.MakeCreateUserEndpoint, cfg, tracer, zipkinTracer, logger)
@@ -221,13 +185,19 @@ func main() {
 	//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtransport.NewHTTPHandler(db_endpoints, tracer, zipkinTracer, logger)))
 
 	var (
-		g   group.Group
-		svc = service.NewAuthService(log.With(cfg.Logger, "component", "AuthService"), cfg.JWT, db_endpoints)
+		g group.Group
+
+		memTokensCache = cache.NewMemTokensCache()
+		jwtHandler     = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
+
+		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
+
+		svc = service.NewAuthService(log.With(cfg.Logger, "component", "AuthService"), cfg.JWT, db_endpoints, memTokensCache, jwtHandler)
 
 		eps = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
-		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
+		grpcServer  = transport.NewGRPCServer(log.With(cfg.Logger, "component", "GRPCServer"), eps)
 	)
 	fmt.Printf("svc %v", svc)
 
@@ -289,9 +259,13 @@ func main() {
 					os.Exit(1)
 				}
 				level.Info(cfg.Logger).Log("serviceName", service.ServiceName, "protocol", "GRPC", "exposed", cfg.GrpcServerPort, "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor), grpc.Creds(creds))
+				baseServer = grpc.NewServer(
+					grpc.UnaryInterceptor(grpcServerAuthInterceptor.Unary()), grpc.Creds(creds),
+				)
 			} else {
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+				baseServer = grpc.NewServer(
+					grpc.UnaryInterceptor(grpcServerAuthInterceptor.Unary()),
+				)
 			}
 			pb.RegisterAuthServiceServer(baseServer, grpcServer)
 

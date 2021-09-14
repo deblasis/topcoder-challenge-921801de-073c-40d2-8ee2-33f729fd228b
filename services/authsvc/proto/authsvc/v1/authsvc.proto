@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package authsvc.v1;
+package deblasis.v1;
 
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
@@ -9,7 +9,6 @@ option go_package = "deblasis.net/space-traffic-control/gen/proto/go/authsvc/pro
 
 
 service AuthService {
-  rpc ServiceStatus (ServiceStatusRequest) returns (ServiceStatusResponse) {}
   rpc Login(LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
       post: "/auth/login"
@@ -22,6 +21,8 @@ service AuthService {
       body: "*"
     };
   };
+
+
 
 }
 
@@ -51,16 +52,23 @@ message SignupResponse {
   string error = 2;
 }
 
-
-message Token {
-  string token =1;
-  int64 expires_at =2;
+message CheckTokenRequest {
+  string token = 1[(google.api.field_behavior) = REQUIRED];
 }
 
+message CheckTokenResponse {
+  TokenPayload token_payload = 1;
+  string error = 2;
+}
 
-message ServiceStatusRequest {}
+message Token {
+  string token = 1;
+  int64 expires_at = 2;
+}
 
-message ServiceStatusResponse {
-  int64 code = 1;
-  string err = 2;
+message TokenPayload {
+  string token_id = 1;
+  int64 user_id = 2;
+  string username = 3;
+  string role = 4;
 }

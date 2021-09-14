@@ -1,12 +1,14 @@
 package api
 
-import "net/http"
+import (
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+)
 
 type Route struct {
 	Name        string
 	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
+	Pattern     runtime.Pattern
+	HandlerFunc runtime.HandlerFunc
 }
 
 type Routes []Route

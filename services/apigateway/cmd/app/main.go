@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -18,35 +14,25 @@ import (
 
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
-	"deblasis.net/space-traffic-control/common/encoding"
-	"deblasis.net/space-traffic-control/common/healthcheck"
-	"deblasis.net/space-traffic-control/services/apigateway/internal/api"
-	api_v1 "deblasis.net/space-traffic-control/services/apigateway/internal/api/v1"
+	authpb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
+	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+
 	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
-	auth_endpoints "deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
+
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	auth_service "deblasis.net/space-traffic-control/services/authsvc/pkg/service"
-	auth_transport "deblasis.net/space-traffic-control/services/authsvc/pkg/transport"
-	"github.com/go-kit/kit/endpoint"
+	cc_service "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/metrics/prometheus"
-	"github.com/go-kit/kit/sd"
-	consulsd "github.com/go-kit/kit/sd/consul"
-	"github.com/go-kit/kit/sd/lb"
-	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/go-kit/log/level"
+	"github.com/golang/glog"
 	"github.com/gorilla/mux"
-	capi "github.com/hashicorp/consul/api"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	stdzipkin "github.com/openzipkin/zipkin-go"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 )
 
 const (
-	ServiceName = "APIGateway"
+	ServiceName = "deblasis-v1-APIGateway"
 )
 
 func main() {
@@ -56,11 +42,11 @@ func main() {
 		os.Exit(-1)
 	}
 	var (
-		httpAddr   = net.JoinHostPort(cfg.ListenAddr, cfg.HttpServerPort)
-		consulAddr = net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
+		httpAddr = net.JoinHostPort(cfg.ListenAddr, cfg.HttpServerPort)
+		// consulAddr = net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
 
-		retryMax     = cfg.APIGateway.RetryMax
-		retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond)
+		// retryMax     = cfg.APIGateway.RetryMax
+		// retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond)
 	)
 
 	// Logging domain.
@@ -72,191 +58,44 @@ func main() {
 	}
 
 	// Service discovery domain. In this example we use Consul.
-	var client consulsd.Client
-	{
-		consulConfig := capi.DefaultConfig()
-		if len(consulAddr) > 0 {
-			consulConfig.Address = consulAddr
-		}
-		consulClient, err := capi.NewClient(consulConfig)
-		if err != nil {
-			logger.Log("err", err)
-			os.Exit(1)
-		}
-		client = consulsd.NewClient(consulClient)
-	}
+	// var client consulsd.Client
+	// {
+	// 	consulConfig := capi.DefaultConfig()
+	// 	if len(consulAddr) > 0 {
+	// 		consulConfig.Address = consulAddr
+	// 	}
+	// 	consulClient, err := capi.NewClient(consulConfig)
+	// 	if err != nil {
+	// 		logger.Log("err", err)
+	// 		os.Exit(1)
+	// 	}
+	// 	client = consulsd.NewClient(consulClient)
+
+	// }
 
 	// Transport domain.
 	var (
-		tracer          = stdopentracing.GlobalTracer() // no-op
-		zipkinTracer, _ = stdzipkin.NewTracer(nil, stdzipkin.WithNoopTracer(true))
-		//ctx             = context.Background()
+		// tracer          = stdopentracing.GlobalTracer() // no-op
+		// zipkinTracer, _ = stdzipkin.NewTracer(nil, stdzipkin.WithNoopTracer(true))
+		ctx = context.Background()
 	)
 
-	var duration metrics.Histogram
-	{
-		// Endpoint-level metrics.
-		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, ".")[2],
-			Name:      "request_duration_seconds",
-			Help:      "Request duration in seconds.",
-		}, []string{"method", "success"})
-	}
-	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
+	// var duration metrics.Histogram
+	// {
+	// 	// Endpoint-level metrics.
+	// 	duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+	// 		Namespace: service.Namespace,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
+	// 		Name:      "request_duration_seconds",
+	// 		Help:      "Request duration in seconds.",
+	// 	}, []string{"method", "success"})
+	// }
+	// http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
 
 	// Now we begin installing the routes. Each route corresponds to a single
 	// method: sum, concat, uppercase, and count.
 
 	{
-		// Each method gets constructed with a factory. Factories take an
-		// instance string, and return a specific endpoint. In the factory we
-		// dial the instance string we get from Consul, and then leverage an
-		// addsvc client package to construct a complete service. We can then
-		// leverage the addsvc.Make{Sum,Concat}Endpoint constructors to convert
-		// the complete service to specific endpoint.
-		var (
-			passingOnly   = true
-			authEndpoints = auth_endpoints.EndpointSet{}
-			authInstancer = consulsd.NewInstancer(client, logger, auth_service.ServiceName, auth_service.Tags, passingOnly)
-		)
-		instancesChannel := make(chan sd.Event)
-
-		done := make(chan bool, 1)
-		go func(ok chan bool) {
-			for evt := range instancesChannel {
-				for _, i := range evt.Instances {
-					logger.Log("received_instance", i)
-				}
-				if len(evt.Instances) > 0 {
-					authInstancer.Stop()
-					authInstancer = consulsd.NewInstancer(client, logger, auth_service.ServiceName, auth_service.Tags, passingOnly)
-					ok <- true
-					return
-				}
-				logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul",auth_service.ServiceName, auth_service.tags)
-				time.Sleep(time.Second * 1)
-			}
-		}(done)
-		authInstancer.Register(instancesChannel)
-		<-done
-
-		{
-			factory := authServiceFactory(auth_endpoints.MakeSignupEndpoint, cfg, tracer, zipkinTracer, logger)
-			endpointer := sd.NewEndpointer(authInstancer, factory, logger)
-			balancer := lb.NewRoundRobin(endpointer)
-			retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
-			authEndpoints.SignupEndpoint = retry
-		}
-		{
-			factory := authServiceFactory(auth_endpoints.MakeLoginEndpoint, cfg, tracer, zipkinTracer, logger)
-			endpointer := sd.NewEndpointer(authInstancer, factory, logger)
-			balancer := lb.NewRoundRobin(endpointer)
-			retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
-			authEndpoints.LoginEndpoint = retry
-		}
-
-		// Here we leverage the fact that addsvc comes with a constructor for an
-		// HTTP handler, and just install it under a particular path prefix in
-		// our router.
-
-		//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtra nsport.NewHTTPHandler(endpoints, tracer, zipkinTracer, logger)))
-
-		var routes = api.Routes{
-
-			api.Route{
-				Name:        "Index",
-				Method:      http.MethodGet,
-				Pattern:     "/v1",
-				HandlerFunc: Index,
-			},
-
-			api.Route{
-				"Healthcheck",
-				http.MethodGet,
-				"/health",
-				httptransport.NewServer(
-					healthcheck.MakeStatusEndpoint(logger, duration, tracer, zipkinTracer),
-					healthcheck.DecodeHTTPServiceStatusRequest,
-					encodeJSONResponse,
-				).ServeHTTP,
-			},
-
-			api.Route{
-				Name:        "metrics",
-				Method:      http.MethodGet,
-				Pattern:     "/metrics",
-				HandlerFunc: promhttp.Handler().ServeHTTP,
-			},
-
-			api.Route{
-				"Login",
-				http.MethodPost,
-				"/v1/auth/login",
-				httptransport.NewServer(
-					authEndpoints.LoginEndpoint,
-					decodeHTTPLoginRequest,
-					encodeJSONResponse,
-				).ServeHTTP,
-			},
-
-			api.Route{
-				"Signup",
-				http.MethodPost,
-				"/v1/user/signup",
-				httptransport.NewServer(
-					authEndpoints.SignupEndpoint,
-					decodeHTTPSignupRequest,
-					encodeJSONResponse,
-				).ServeHTTP,
-			},
-
-			api.Route{
-				"ShipRegister",
-				http.MethodPost,
-				"/v1/centcom/ship/register",
-				api_v1.ShipRegister,
-			},
-
-			api.Route{
-				"ShipsList",
-				http.MethodGet,
-				"/v1/centcom/ship/all",
-				api_v1.ShipsList,
-			},
-
-			api.Route{
-				"StationRegister",
-				http.MethodPost,
-				"/v1/centcom/station/register",
-				api_v1.StationRegister,
-			},
-
-			api.Route{
-				"StationsList",
-				http.MethodGet,
-				"/v1/centcom/station/all",
-				api_v1.StationsList,
-			},
-
-			api.Route{
-				"ShipLand",
-				http.MethodPost,
-				"/v1/shipping-station/land",
-				api_v1.ShipLand,
-			},
-
-			api.Route{
-				"ShipRequestLanding",
-				http.MethodPost,
-				"/v1/shipping-station/request-landing",
-				api_v1.ShipRequestLanding,
-			},
-		}
-
-		var (
-			r = NewRouter(cfg.Logger, routes)
-		)
 
 		{
 			if cfg.Consul.Host != "" && cfg.Consul.Port != "" {
@@ -279,80 +118,112 @@ func main() {
 				svcRegistar.Register()
 			}
 		}
+		{
 
-		// Interrupt handler.
-		errc := make(chan error)
-		go func() {
-			c := make(chan os.Signal)
-			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-			errc <- fmt.Errorf("%s", <-c)
-		}()
+			ctx, cancel := context.WithCancel(ctx)
+			defer cancel()
+			//mux := http.NewServeMux()
 
-		// HTTP transport.
-		go func() {
-			logger.Log("transport", "HTTP", "addr", httpAddr)
-			errc <- http.ListenAndServe(httpAddr, r)
-		}()
+			authGw, err := newAuthSvcGateway(ctx, []runtime.ServeMuxOption{})
+			if err != nil {
+				panic(err)
+			}
+			//mux.Handle("/", authGw)
 
-		// Run!
-		logger.Log("exit", <-errc)
+			ccGw, err := newCentralCommandSvcGateway(ctx, []runtime.ServeMuxOption{})
+			if err != nil {
+				panic(err)
+			}
+
+			//mux.Handle("/centcom", ccGw)
+
+			// s := &http.Server{
+			// 	Addr:    httpAddr,
+			// 	Handler: allowCORS(mux),
+			// }
+
+			//mux.HandleFunc("/openapiv2/", openAPIServer(opts.OpenAPIDir))
+			//mux.HandleFunc("/healthz", healthzServer(conn))
+
+			// gw, err := newGateway(ctx, conn, opts.Mux)
+			// if err != nil {
+			// 	return err
+			// }
+			// mux.Handle("/", gw)
+
+			// Interrupt handler.
+			errc := make(chan error)
+			go func() {
+				c := make(chan os.Signal)
+				signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+				errc <- fmt.Errorf("%s", <-c)
+			}()
+
+			go func() {
+				logger.Log("transport", "HTTP", "addr", httpAddr)
+
+				router := LoggerMw(logger, allowCORS(NewRouter(authGw, ccGw)), "grpc-gw")
+
+				errc <- http.ListenAndServe(fmt.Sprintf(":%v", cfg.HttpServerPort), router)
+
+			}()
+
+			logger.Log("exit", <-errc)
+		}
 
 	}
-	// // stringsvc routes.
-	// {
-	// 	// addsvc had lots of nice importable Go packages we could leverage.
-	// 	// With stringsvc we are not so fortunate, it just has some endpoints
-	// 	// that we assume will exist. So we have to write that logic here. This
-	// 	// is by design, so you can see two totally different methods of
-	// 	// proxying to a remote service.
-
-	// 	var (
-	// 		tags        = []string{}
-	// 		passingOnly = true
-	// 		uppercase   endpoint.Endpoint
-	// 		count       endpoint.Endpoint
-	// 		instancer   = consulsd.NewInstancer(client, logger, "stringsvc", tags, passingOnly)
-	// 	)
-	// 	{
-	// 		factory := stringsvcFactory(ctx, "GET", "/uppercase")
-	// 		endpointer := sd.NewEndpointer(instancer, factory, logger)
-	// 		balancer := lb.NewRoundRobin(endpointer)
-	// 		retry := lb.Retry(*retryMax, *retryTimeout, balancer)
-	// 		uppercase = retry
-	// 	}
-	// 	{
-	// 		factory := stringsvcFactory(ctx, "GET", "/count")
-	// 		endpointer := sd.NewEndpointer(instancer, factory, logger)
-	// 		balancer := lb.NewRoundRobin(endpointer)
-	// 		retry := lb.Retry(*retryMax, *retryTimeout, balancer)
-	// 		count = retry
-	// 	}
-
-	// 	// We can use the transport/http.Server to act as our handler, all we
-	// 	// have to do provide it with the encode and decode functions for our
-	// 	// stringsvc methods.
-
-	// 	r.Handle("/stringsvc/uppercase", httptransport.NewServer(uppercase, decodeUppercaseRequest, encodeJSONResponse))
-	// 	r.Handle("/stringsvc/count", httptransport.NewServer(count, decodeCountRequest, encodeJSONResponse))
-	// }
-
 }
 
-func NewRouter(logger log.Logger, routes api.Routes) *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
-		var handler http.Handler
-		handler = route.HandlerFunc
-		handler = LoggerMw(logger, handler, route.Name)
+// newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
+func newAuthSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http.Handler, error) {
 
-		router.
-			Methods(route.Method).
-			Path(route.Pattern).
-			Name(route.Name).
-			Handler(handler)
+	conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", auth_service.ServiceName, auth_service.GrpcServerPort))
+	if err != nil {
+		panic(err)
 	}
+	go func() {
+		<-ctx.Done()
+		if err := conn.Close(); err != nil {
+			glog.Errorf("Failed to close a client connection to the gRPC server: %v", err)
+		}
+	}()
 
-	return router
+	mux := runtime.NewServeMux(opts...)
+
+	for _, f := range []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
+		authpb.RegisterAuthServiceHandler,
+	} {
+		if err := f(ctx, mux, conn); err != nil {
+			return nil, err
+		}
+	}
+	return mux, nil
+}
+
+// newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
+func newCentralCommandSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http.Handler, error) {
+
+	conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		<-ctx.Done()
+		if err := conn.Close(); err != nil {
+			glog.Errorf("Failed to close a client connection to the gRPC server: %v", err)
+		}
+	}()
+
+	mux := runtime.NewServeMux(opts...)
+
+	for _, f := range []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
+		ccpb.RegisterCentralCommandServiceHandler,
+	} {
+		if err := f(ctx, mux, conn); err != nil {
+			return nil, err
+		}
+	}
+	return mux, nil
 }
 
 func LoggerMw(logger log.Logger, inner http.Handler, name string) http.Handler {
@@ -370,209 +241,140 @@ func LoggerMw(logger log.Logger, inner http.Handler, name string) http.Handler {
 	})
 }
 
-// func addsvcFactory(makeEndpoint func(auth_dbsvc_service.UserManager) endpoint.Endpoint, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
-// 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-// 		// We could just as easily use the HTTP or Thrift client package to make
-// 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
-// 		// the transport is an implementation detail: it doesn't leak out of
-// 		// this function. Nice!
+func dial(ctx context.Context, addr string) (*grpc.ClientConn, error) {
+	return grpc.DialContext(ctx, addr, grpc.WithInsecure())
+}
 
-// 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		service := addtransport.NewGRPCClient(conn, tracer, zipkinTracer, logger)
-// 		endpoint := makeEndpoint(service)
+// allowCORS allows Cross Origin Resoruce Sharing from any origin.
+// Don't do this without consideration in production systems.
+func allowCORS(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
+				preflightHandler(w, r)
+				return
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
 
-// 		// Notice that the addsvc gRPC client converts the connection to a
-// 		// complete addsvc, and we just throw away everything except the method
-// 		// we're interested in. A smarter factory would mux multiple methods
-// 		// over the same connection. But that would require more work to manage
-// 		// the returned io.Closer, e.g. reference counting. Since this is for
-// 		// the purposes of demonstration, we'll just keep it simple.
+// preflightHandler adds the necessary headers in order to serve
+// CORS from any origin using the methods "GET", "HEAD", "POST", "PUT", "DELETE"
+// We insist, don't do this without consideration in production systems.
+func preflightHandler(w http.ResponseWriter, r *http.Request) {
+	headers := []string{"Content-Type", "Accept", "Authorization"}
+	w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers, ","))
+	methods := []string{"GET", "HEAD", "POST", "PUT", "DELETE"}
+	w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
+	glog.Infof("preflight request for %s", r.URL.Path)
+}
 
-// 		return endpoint, conn, nil
-// 	}
-// }
-
-// func stringsvcFactory(ctx context.Context, method, path string) sd.Factory {
-// 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-// 		if !strings.HasPrefix(instance, "http") {
-// 			instance = "http://" + instance
-// 		}
-// 		tgt, err := url.Parse(instance)
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		tgt.Path = path
-
-// 		// Since stringsvc doesn't have any kind of package we can import, or
-// 		// any formal spec, we are forced to just assert where the endpoints
-// 		// live, and write our own code to encode and decode requests and
-// 		// responses. Ideally, if you write the service, you will want to
-// 		// provide stronger guarantees to your clients.
-
-// 		var (
-// 			enc httptransport.EncodeRequestFunc
-// 			dec httptransport.DecodeResponseFunc
-// 		)
-// 		switch path {
-// 		case "/uppercase":
-// 			enc, dec = encodeJSONRequest, decodeUppercaseResponse
-// 		case "/count":
-// 			enc, dec = encodeJSONRequest, decodeCountResponse
-// 		default:
-// 			return nil, nil, fmt.Errorf("unknown stringsvc path %q", path)
-// 		}
-
-// 		return httptransport.NewClient(method, tgt, enc, dec).Endpoint(), nil, nil
-// 	}
-// }
-
-func encodeJSONRequest(_ context.Context, req *http.Request, request interface{}) error {
-	// Both uppercase and count requests are encoded in the same way:
-	// simple JSON serialization to the request body.
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(request); err != nil {
-		return err
+// healthzServer returns a simple health handler which returns ok.
+func healthzServer(conn *grpc.ClientConn) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		if s := conn.GetState(); s != connectivity.Ready {
+			http.Error(w, fmt.Sprintf("grpc server is %s", s), http.StatusBadGateway)
+			return
+		}
+		fmt.Fprintln(w, "ok")
 	}
-	req.Body = ioutil.NopCloser(&buf)
-	return nil
 }
 
-func encodeJSONResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	return json.NewEncoder(w).Encode(response)
+type Route struct {
+	Name        string
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
 }
 
-// I've just copied these functions from stringsvc3/transport.go, inlining the
-// struct definitions.
+type Routes []Route
 
-// func decodeUppercaseResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
-// 	var response struct {
-// 		V   string `json:"v"`
-// 		Err string `json:"err,omitempty"`
-// 	}
-// 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-// 		return nil, err
-// 	}
-// 	return response, nil
-// }
+func NewRouter(authGw http.Handler, ccGw http.Handler) *mux.Router {
+	router := mux.NewRouter().StrictSlash(true)
 
-// func decodeCountResponse(ctx context.Context, resp *http.Response) (interface{}, error) {
-// 	var response struct {
-// 		V int `json:"v"`
-// 	}
-// 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-// 		return nil, err
-// 	}
-// 	return response, nil
-// }
+	var routes = Routes{
+		Route{
+			"Index",
+			"GET",
+			"/",
+			Index,
+		},
 
-// func decodeUppercaseRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-// 	var request struct {
-// 		S string `json:"s"`
-// 	}
-// 	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
-// 		return nil, err
-// 	}
-// 	return request, nil
-// }
+		Route{
+			"Login",
+			strings.ToUpper("Post"),
+			"/auth/login",
+			authGw.ServeHTTP,
+		},
 
-// func decodeCountRequest(ctx context.Context, req *http.Request) (interface{}, error) {
-// 	var request struct {
-// 		S string `json:"s"`
-// 	}
-// 	if err := json.NewDecoder(req.Body).Decode(&request); err != nil {
-// 		return nil, err
-// 	}
-// 	return request, nil
-// }
+		Route{
+			"Signup",
+			strings.ToUpper("Post"),
+			"/user/signup",
+			authGw.ServeHTTP,
+		},
+
+		Route{
+			"ShipRegister",
+			strings.ToUpper("Post"),
+			"/centcom/ship/register",
+			ccGw.ServeHTTP,
+		},
+
+		Route{
+			"ShipsList",
+			strings.ToUpper("Get"),
+			"/centcom/ship/all",
+			ccGw.ServeHTTP,
+		},
+
+		Route{
+			"StationRegister",
+			strings.ToUpper("Post"),
+			"/centcom/station/register",
+			ccGw.ServeHTTP,
+		},
+
+		Route{
+			"StationsList",
+			strings.ToUpper("Get"),
+			"/centcom/station/all",
+			ccGw.ServeHTTP,
+		},
+
+		// Route{
+		// 	"ShipLand",
+		// 	strings.ToUpper("Post"),
+		// 	"/shipping-station/land",
+		// 	ShipLand,
+		// },
+
+		// Route{
+		// 	"ShipRequestLanding",
+		// 	strings.ToUpper("Post"),
+		// 	"/shipping-station/request-landing",
+		// 	ShipRequestLanding,
+		// },
+	}
+
+	for _, route := range routes {
+		var handler http.Handler
+		handler = route.HandlerFunc
+		//handler = Logger(handler, route.Name)
+
+		router.
+			Methods(route.Method).
+			Path(route.Pattern).
+			Name(route.Name).
+			Handler(handler)
+	}
+
+	return router
+}
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World!")
-}
-
-func authServiceFactory(makeEndpoint func(auth_service.AuthService) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
-	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-		// We could just as easily use the HTTP or Thrift client package to make
-		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
-		// the transport is an implementation detail: it doesn't leak out of
-		// this function. Nice!
-
-		var (
-			conn *grpc.ClientConn
-			err  error
-		)
-
-		// if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
-		// 	creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
-		// 	if err != nil {
-		// 		level.Error(cfg.Logger).Log("client", "userManagerServiceFactory", "certificates", creds, "err", err)
-		// 		os.Exit(1)
-		// 	}
-		// 	level.Info(cfg.Logger).Log("client", "userManagerServiceFactory", "protocol", "GRPC", "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
-
-		// 	conn, err = grpc.Dial(instance, grpc.WithTransportCredentials(creds))
-		// 	if err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// } else {
-		conn, err = grpc.Dial(instance, grpc.WithInsecure())
-		//}
-
-		if err != nil {
-			return nil, nil, err
-		}
-		service := auth_transport.NewGRPCClient(conn, tracer, zipkinTracer, logger)
-		endpoint := makeEndpoint(service)
-		level.Debug(logger).Log(
-			"method", "authServiceFactory",
-			"instance", instance,
-			"conn", conn,
-		)
-
-		// Notice that the addsvc gRPC client converts the connection to a
-		// complete addsvc, and we just throw away everything except the method
-		// we're interested in. A smarter factory would mux multiple methods
-		// over the same connection. But that would require more work to manage
-		// the returned io.Closer, e.g. reference counting. Since this is for
-		// the purposes of demonstration, we'll just keep it simple.
-
-		return endpoint, conn, nil
-	}
-}
-
-func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.LoginRequest
-	if r.ContentLength == 0 {
-		//logger.Log("Post request with no body")
-		return req, nil
-	}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return nil, err
-	}
-	return req, nil
-}
-
-func decodeHTTPSignupRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req dtos.SignupRequest
-	if r.ContentLength == 0 {
-		//logger.Log("Post request with no body")
-		return req, nil
-	}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return nil, err
-	}
-	return req, nil
-}
-
-func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
-	if e, ok := response.(error); ok && e != nil {
-		encoding.EncodeError(ctx, e, w)
-		return nil
-	}
-	return json.NewEncoder(w).Encode(response)
 }

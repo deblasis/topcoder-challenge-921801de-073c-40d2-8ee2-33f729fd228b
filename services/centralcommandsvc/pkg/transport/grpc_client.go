@@ -2,9 +2,9 @@ package transport
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
@@ -44,31 +44,12 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		options = append(options, zipkin.GRPCClientTrace(zipkinTracer))
 
 	}
-	var statusEndpoint endpoint.Endpoint
-	{
-		statusEndpoint = grpctransport.NewClient(
-			conn,
-			service.ServiceName,
-			"ServiceStatus",
-			encodeGRPCServiceStatusRequest,
-			decodeGRPCServiceStatusResponse,
-			pb.ServiceStatusResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
-		).Endpoint()
-
-		statusEndpoint = opentracing.TraceClient(otTracer, "ServiceStatus")(statusEndpoint)
-		statusEndpoint = limiter(statusEndpoint)
-		statusEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "ServiceStatus",
-			Timeout: 30 * time.Second,
-		}))(statusEndpoint)
-	}
 
 	var registerShipEndpoint endpoint.Endpoint
 	{
 		registerShipEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"RegisterShip",
 			encodeGRPCRegisterShipRequest,
 			decodeGRPCRegisterShipResponse,
@@ -87,7 +68,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	{
 		getAllShipsEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"GetAllShips",
 			encodeGRPCGetAllShipsRequest,
 			decodeGRPCGetAllShipsResponse,
@@ -107,7 +88,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	{
 		registerStationEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"RegisterStation",
 			encodeGRPCRegisterStationRequest,
 			decodeGRPCRegisterStationResponse,
@@ -126,7 +107,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	{
 		getAllStationsEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"GetAllStations",
 			encodeGRPCGetAllStationsRequest,
 			decodeGRPCGetAllStationsResponse,
@@ -143,7 +124,6 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	return endpoints.EndpointSet{
-		StatusEndpoint:       statusEndpoint,
 		RegisterShipEndpoint: registerShipEndpoint,
 		GetAllShipsEndpoint:  getAllShipsEndpoint,
 
@@ -151,15 +131,6 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		GetAllStationsEndpoint:  getAllStationsEndpoint,
 	}
 
-}
-
-func encodeGRPCServiceStatusRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return &pb.ServiceStatusRequest{}, nil
-}
-
-func decodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	reply := grpcResponse.(*pb.ServiceStatusResponse)
-	return healthcheck.ServiceStatusResponse{Code: reply.Code, Err: reply.Err}, nil
 }
 
 func encodeGRPCRegisterShipRequest(_ context.Context, request interface{}) (interface{}, error) {

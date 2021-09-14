@@ -3,7 +3,6 @@ package transport
 import (
 	"context"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
@@ -11,18 +10,13 @@ import (
 )
 
 type grpcServer struct {
-	serviceStatus grpctransport.Handler
-	signup        grpctransport.Handler
-	login         grpctransport.Handler
+	signup     grpctransport.Handler
+	login      grpctransport.Handler
+	checkToken grpctransport.Handler
 }
 
-func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.AuthServiceServer {
+func NewGRPCServer(l log.Logger, e endpoints.EndpointSet) pb.AuthServiceServer {
 	return &grpcServer{
-		serviceStatus: grpctransport.NewServer(
-			e.StatusEndpoint,
-			decodeGRPCServiceStatusRequest,
-			encodeGRPCServiceStatusResponse,
-		),
 		signup: grpctransport.NewServer(
 			e.SignupEndpoint,
 			decodeGRPCSignupRequest,
@@ -33,23 +27,12 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.AuthServiceServer {
 			decodeGRPCLoginRequest,
 			encodeGRPCLoginResponse,
 		),
+		checkToken: grpctransport.NewServer(
+			e.CheckTokenEndpoint,
+			decodeGRPCCheckTokenRequest,
+			encodeGRPCCheckTokenResponse,
+		),
 	}
-}
-
-func (g *grpcServer) ServiceStatus(ctx context.Context, r *pb.ServiceStatusRequest) (*pb.ServiceStatusResponse, error) {
-	_, rep, err := g.serviceStatus.ServeGRPC(ctx, r)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.ServiceStatusResponse), nil
-}
-func decodeGRPCServiceStatusRequest(_ context.Context, _ interface{}) (interface{}, error) {
-	var req healthcheck.ServiceStatusRequest
-	return req, nil
-}
-func encodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	Response := grpcResponse.(healthcheck.ServiceStatusResponse)
-	return &pb.ServiceStatusResponse{Code: Response.Code, Err: Response.Err}, nil
 }
 
 func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*pb.SignupResponse, error) {
@@ -57,33 +40,42 @@ func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*pb.Signu
 	if err != nil {
 		return nil, err
 	}
-	res := rep.(pb.SignupResponse)
-	return &res, nil
+	return rep.(*pb.SignupResponse), nil
 }
+
+func decodeGRPCSignupRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*pb.SignupRequest), nil
+}
+func encodeGRPCSignupResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	return grpcResponse.(*pb.SignupResponse), nil
+}
+
 func (g *grpcServer) Login(ctx context.Context, r *pb.LoginRequest) (*pb.LoginResponse, error) {
 	_, rep, err := g.login.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	res := rep.(pb.LoginResponse)
-	return &res, nil
+	return rep.(*pb.LoginResponse), nil
 }
-
-func decodeGRPCSignupRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.SignupRequest)
-	return req, nil
-}
-func encodeGRPCSignupResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(pb.SignupResponse)
-	return response, nil
-}
-
 func decodeGRPCLoginRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.LoginRequest)
-	return req, nil
+	return grpcReq.(*pb.LoginRequest), nil
 }
 
 func encodeGRPCLoginResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(pb.LoginResponse)
-	return response, nil
+	return grpcResponse.(*pb.LoginResponse), nil
+}
+
+func (g *grpcServer) CheckToken(ctx context.Context, r *pb.CheckTokenRequest) (*pb.CheckTokenResponse, error) {
+	_, rep, err := g.login.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.CheckTokenResponse), nil
+}
+func decodeGRPCCheckTokenRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	return grpcReq.(*pb.CheckTokenRequest), nil
+}
+
+func encodeGRPCCheckTokenResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	return grpcResponse.(*pb.CheckTokenResponse), nil
 }
