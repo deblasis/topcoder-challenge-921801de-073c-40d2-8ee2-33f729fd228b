@@ -3,73 +3,31 @@ package endpoints
 import (
 	"context"
 
-	"deblasis.net/space-traffic-control/common/errors"
-	"deblasis.net/space-traffic-control/common/healthcheck"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/endpoint"
 )
 
-// ServiceStatus(ctx context.Context) (int64, error)
-func (s EndpointSet) ServiceStatus(ctx context.Context) (int64, error) {
-	resp, err := s.StatusEndpoint(ctx, healthcheck.ServiceStatusRequest{})
-	if err != nil {
-		return 0, err
-	}
-	response := resp.(healthcheck.ServiceStatusResponse)
-	return response.Code, errors.Str2err(response.Err)
-}
-
 // GetUserByUsername(ctx context.Context, username string) (model.User, error)
-func (s EndpointSet) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
-	var user model.User
-	resp, err := s.GetUserByUsernameEndpoint(ctx, dtos.GetUserByUsernameRequest{Username: username})
+func (s EndpointSet) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (*dtos.GetUserByUsernameResponse, error) {
+	resp, err := s.GetUserByUsernameEndpoint(ctx, request)
 	if err != nil {
-		return user, err
+		return nil, err
 	}
-	response := resp.(dtos.GetUserByUsernameResponse)
-	return response.User, errors.Str2err(response.Err)
+	response := resp.(*dtos.GetUserByUsernameResponse)
+	return response, nil
 }
 
 // CreateUser(ctx context.Context, user *model.User) (int64, error)
-func (s EndpointSet) CreateUser(ctx context.Context, user *model.User) (int64, error) {
-	resp, err := s.CreateUserEndpoint(ctx, dtos.CreateUserRequest{
-		Username: user.Username,
-		Password: user.Password,
-		Role:     user.Role,
-	})
+func (s EndpointSet) CreateUser(ctx context.Context, request *dtos.CreateUserRequest) (*dtos.CreateUserResponse, error) {
+	resp, err := s.CreateUserEndpoint(ctx, request)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	response := resp.(dtos.CreateUserResponse)
-	return response.Id, errors.Str2err(response.Err)
+	response := resp.(*dtos.CreateUserResponse)
+	return response, nil
 }
 
 var (
 	_ endpoint.Failer = dtos.GetUserByUsernameResponse{}
 	_ endpoint.Failer = dtos.CreateUserResponse{}
 )
-
-// type ServiceStatusRequest struct{}
-// type ServiceStatusResponse struct {
-// 	Code int64 `json:"code"`
-// 	Err  error `json:"-"`
-// }
-
-// type GetUserByUsernameRequest struct {
-// 	Username string `json:"username" validate:"required,notblank"`
-// }
-// type GetUserByUsernameResponse struct {
-// 	User model.User `json:"user"`
-// 	Err  error      `json:"-"`
-// }
-
-// type CreateUserRequest model.User
-// type CreateUserResponse struct {
-// 	Id  int64 `json:"id"`
-// 	Err error `json:"-"`
-// }
-
-//func (r ServiceStatusResponse) Failed() error { return r.Err }
-//func (r GetUserByUsernameResponse) Failed() error { return r.Err }
-//func (r CreateUserResponse) Failed() error { return r.Err }

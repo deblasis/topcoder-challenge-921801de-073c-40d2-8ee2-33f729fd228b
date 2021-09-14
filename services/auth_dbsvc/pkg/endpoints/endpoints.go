@@ -13,7 +13,6 @@ import (
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
-	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -72,7 +71,7 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 
 func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.GetUserByUsernameRequest)
+		req := request.(*dtos.GetUserByUsernameRequest)
 
 		var err error
 		err = validate.Struct(req)
@@ -81,23 +80,13 @@ func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		user, err := s.GetUserByUsername(ctx, req.Username)
-		if err != nil {
-			return dtos.GetUserByUsernameResponse{
-				User: user,
-				Err:  err.Error(),
-			}, nil
-		}
-		return dtos.GetUserByUsernameResponse{
-			User: user,
-			Err:  "",
-		}, nil
+		return s.GetUserByUsername(ctx, req)
 	}
 }
 
 func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(dtos.CreateUserRequest)
+		req := request.(*dtos.CreateUserRequest)
 
 		var err error
 		err = validate.Struct(req)
@@ -106,23 +95,7 @@ func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 			return -1, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		id, err := s.CreateUser(ctx, &model.User{
-			Id:       req.Id,
-			Username: req.Username,
-			Password: req.Password,
-			Role:     req.Role,
-		})
-
-		if err != nil {
-			return dtos.CreateUserResponse{
-				Id:  -1,
-				Err: err.Error(),
-			}, err
-		}
-		return dtos.CreateUserResponse{
-			Id:  id,
-			Err: "",
-		}, nil
+		return s.CreateUser(ctx, req)
 	}
 }
 

@@ -22,6 +22,12 @@ db:
   drivername: postgres
   sslmode: disable
 
+jwt:
+  privkeypath: /certs/jwt.pem.key
+  pubkeypath: /certs/jwt.pem.pub
+#one day  
+  tokenduration: 86400 
+
 # ssl:
 #   serverCert: ../../../../certs/deblasis-stc.pem
 #   serverKey: ../../../../certs/deblasis-stc-key.pem

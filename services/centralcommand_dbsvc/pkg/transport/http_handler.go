@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"deblasis.net/space-traffic-control/common/encoding"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
@@ -29,12 +28,12 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 		httptransport.ServerErrorEncoder(encoding.EncodeError),
 	}
 
-	r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
-		e.StatusEndpoint,
-		healthcheck.DecodeHTTPServiceStatusRequest,
-		encodeResponse,
-		options...,
-	))
+	// r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
+	// 	e.StatusEndpoint,
+	// 	healthcheck.DecodeHTTPServiceStatusRequest,
+	// 	encodeResponse,
+	// 	options...,
+	// ))
 
 	r.Methods("POST").Path("/ship").Handler(httptransport.NewServer(
 		e.CreateShipEndpoint,

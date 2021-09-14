@@ -26,7 +26,6 @@ type Config struct {
 	SSL        SSLConfig        `mapstructure:"ssl"`
 	APIGateway APIGatewayConfig `mapstructure:"apigateway"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
-	Kong       KongConfig       `mapstructure:"kong"`
 
 	Logger log.Logger
 }
@@ -47,10 +46,6 @@ type ZipkinConfig struct {
 	LightstepToken string
 }
 
-type KongConfig struct {
-	BaseUrl string
-}
-
 // DbConfig declare database variables
 type DbConfig struct {
 	Address    string
@@ -64,6 +59,9 @@ type DbConfig struct {
 type JWTConfig struct {
 	Secret        string
 	TokenDuration int
+
+	PrivKeyPath string //= "../../certs/jwt.pem.key"
+	PubKeyPath  string //= "../../certs/jwt.pem.pub"
 }
 
 type APIGatewayConfig struct {
@@ -74,6 +72,7 @@ type APIGatewayConfig struct {
 // LoadConfig load config from file
 func LoadConfig() (Config, error) {
 	v := viper.New()
+
 	v.SetConfigName(configFileName)
 	v.SetEnvPrefix("deblasis")
 	v.SetConfigType("yaml")

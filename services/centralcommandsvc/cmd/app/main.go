@@ -64,13 +64,13 @@ func main() {
 	// 	// Business-level metrics.
 	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "integers_summed", //TODO
 	// 		Help:      "Total count of integers summed via the Sum method.",
 	// 	}, []string{})
 	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "characters_concatenated", //TODO
 	// 		Help:      "Total count of characters concatenated via the Concat method.",
 	// 	}, []string{})
@@ -81,7 +81,7 @@ func main() {
 		// Endpoint-level metrics.
 		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, ".")[2],
+			Subsystem: strings.Split(service.ServiceName, "-")[2],
 			Name:      "request_duration_seconds",
 			Help:      "Request duration in seconds.",
 		}, []string{"method", "success"})
@@ -123,29 +123,35 @@ func main() {
 		tags         = []string{"centralCommandDBService"}
 		passingOnly  = true
 		db_endpoints = dbe.EndpointSet{}
-
-		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+		instancer    = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
 	)
 	instancesChannel := make(chan sd.Event)
-
-	done := make(chan bool, 1)
-	go func(ok chan bool) {
-		for evt := range instancesChannel {
-			for _, i := range evt.Instances {
-				logger.Log("received_instance", i)
-			}
-			if len(evt.Instances) > 0 {
-				instancer.Stop()
-				instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-				ok <- true
+	go func() {
+		for event := range instancesChannel {
+			if len(event.Instances) > 0 {
+				logger.Log("received_instances", strings.Join(event.Instances, ","))
 				return
 			}
-			logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
-			time.Sleep(time.Second * 1)
 		}
-	}(done)
-	instancer.Register(instancesChannel)
-	<-done
+	}()
+	// done := make(chan bool, 1)
+	// go func(ok chan bool) {
+	// 	for evt := range instancesChannel {
+	// 		for _, i := range evt.Instances {
+	// 			logger.Log("received_instance", i)
+	// 		}
+	// 		if len(evt.Instances) > 0 {
+	// 			instancer.Stop()
+	// 			instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+	// 			ok <- true
+	// 			return
+	// 		}
+	// 		logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
+	// 		time.Sleep(time.Second * 1)
+	// 	}
+	// }(done)
+	// instancer.Register(instancesChannel)
+	// <-done
 
 	{
 		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, tracer, zipkinTracer, logger)

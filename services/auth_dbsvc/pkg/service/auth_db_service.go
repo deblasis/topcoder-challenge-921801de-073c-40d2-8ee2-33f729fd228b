@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"net/http"
 
 	ca "deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/repositories"
+	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-playground/validator/v10"
@@ -14,15 +14,14 @@ import (
 )
 
 var (
-	ServiceName = "auth_dbsvc.v1.AuthDBService"
-	Namespace   = "deblasis"
+	ServiceName = "deblasis-v1-AuthDBService"
+	Namespace   = "stc"
 	Tags        = []string{}
 )
 
 type AuthDBService interface {
-	ServiceStatus(ctx context.Context) (int64, error)
-	GetUserByUsername(ctx context.Context, username string) (model.User, error)
-	CreateUser(ctx context.Context, user *model.User) (int64, error)
+	GetUserByUsername(context.Context, *dtos.GetUserByUsernameRequest) (*dtos.GetUserByUsernameResponse, error)
+	CreateUser(context.Context, *dtos.CreateUserRequest) (*dtos.CreateUserResponse, error)
 }
 
 type authDbService struct {
@@ -39,40 +38,39 @@ func NewAuthDBService(repository repositories.UserRepository, logger log.Logger)
 	}
 }
 
-func (u *authDbService) ServiceStatus(ctx context.Context) (int64, error) {
-	level.Info(u.logger).Log("handling request", "ServiceStatus")
-	defer level.Info(u.logger).Log("handled request", "ServiceStatus")
-	return http.StatusOK, nil
-}
-
-func (u *authDbService) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
+func (u *authDbService) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (*dtos.GetUserByUsernameResponse, error) {
 	level.Info(u.logger).Log("handling request", "GetUserByUsername")
 	defer level.Info(u.logger).Log("handled request", "GetUserByUsername")
-	user, err := u.repository.GetUserByUsername(ctx, username)
+	user, err := u.repository.GetUserByUsername(ctx, request.Username)
 	if err != nil {
-		return model.User{}, errors.Wrap(err, "Failed to get user ")
+		return nil, errors.Wrap(err, "Failed to get user ")
 	}
-	return user, nil
+	return &dtos.GetUserByUsernameResponse{
+		User: user,
+	}, nil
 }
 
-func (u *authDbService) CreateUser(ctx context.Context, user *model.User) (int64, error) {
+func (u *authDbService) CreateUser(ctx context.Context, request *dtos.CreateUserRequest) (*dtos.CreateUserResponse, error) {
 	level.Info(u.logger).Log("handling request", "CreateUser")
 	defer level.Info(u.logger).Log("handled request", "CreateUser")
-	err := u.validate.Struct(user)
+	err := u.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return -1, errors.Wrap(validationErrors, "Failed to create user")
+		return nil, errors.Wrap(validationErrors, "Failed to create user")
 	}
 
-	hashedPassword, err := ca.HashPwd(user.Password)
+	hashedPassword, err := ca.HashPwd(request.Password)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	user.Password = hashedPassword
+	request.Password = hashedPassword
+	user := model.User(*request)
 
-	id, err := u.repository.CreateUser(ctx, user)
+	id, err := u.repository.CreateUser(ctx, &user)
 	if err != nil {
-		return -1, errors.Wrap(err, "Failed to create user")
+		return nil, errors.Wrap(err, "Failed to create user")
 	}
-	return id, nil
+	return &dtos.CreateUserResponse{
+		Id: id,
+	}, nil
 }

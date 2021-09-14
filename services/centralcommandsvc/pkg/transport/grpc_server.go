@@ -3,7 +3,6 @@ package transport
 import (
 	"context"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
@@ -11,8 +10,6 @@ import (
 )
 
 type grpcServer struct {
-	serviceStatus grpctransport.Handler
-
 	registerShip grpctransport.Handler
 	getAllShips  grpctransport.Handler
 
@@ -22,11 +19,7 @@ type grpcServer struct {
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServiceServer {
 	return &grpcServer{
-		serviceStatus: grpctransport.NewServer(
-			e.StatusEndpoint,
-			decodeGRPCServiceStatusRequest,
-			encodeGRPCServiceStatusResponse,
-		),
+
 		registerShip: grpctransport.NewServer(
 			e.RegisterShipEndpoint,
 			decodeGRPCRegisterShipRequest,
@@ -48,22 +41,6 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			encodeGRPCGetAllStationsResponse,
 		),
 	}
-}
-
-func (g *grpcServer) ServiceStatus(ctx context.Context, r *pb.ServiceStatusRequest) (*pb.ServiceStatusResponse, error) {
-	_, rep, err := g.serviceStatus.ServeGRPC(ctx, r)
-	if err != nil {
-		return nil, err
-	}
-	return rep.(*pb.ServiceStatusResponse), nil
-}
-func decodeGRPCServiceStatusRequest(_ context.Context, _ interface{}) (interface{}, error) {
-	var req healthcheck.ServiceStatusRequest
-	return req, nil
-}
-func encodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	Response := grpcResponse.(healthcheck.ServiceStatusResponse)
-	return &pb.ServiceStatusResponse{Code: Response.Code, Err: Response.Err}, nil
 }
 
 func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {

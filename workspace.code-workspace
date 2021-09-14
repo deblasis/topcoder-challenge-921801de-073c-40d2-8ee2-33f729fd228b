@@ -8,9 +8,6 @@
 		// 	"path": "common"
 		// },
 		{
-			"path": "services/kong",
-		},
-		{
 			"path": "services/apigateway",
 		},
 		{

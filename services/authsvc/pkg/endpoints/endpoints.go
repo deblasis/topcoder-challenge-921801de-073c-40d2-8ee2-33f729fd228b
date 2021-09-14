@@ -26,10 +26,12 @@ import (
 )
 
 type EndpointSet struct {
-	StatusEndpoint endpoint.Endpoint
-	SignupEndpoint endpoint.Endpoint
-	LoginEndpoint  endpoint.Endpoint
-	logger         log.Logger
+	StatusEndpoint     endpoint.Endpoint
+	SignupEndpoint     endpoint.Endpoint
+	LoginEndpoint      endpoint.Endpoint
+	CheckTokenEndpoint endpoint.Endpoint
+
+	logger log.Logger
 }
 
 func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer) EndpointSet {
@@ -60,18 +62,32 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 		loginEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Login"))(loginEndpoint)
 	}
 
+	var checkTokenEndpoint endpoint.Endpoint
+	{
+		checkTokenEndpoint = MakeCheckTokenEndpoint(s)
+		checkTokenEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(checkTokenEndpoint)
+		checkTokenEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkTokenEndpoint)
+		checkTokenEndpoint = opentracing.TraceServer(otTracer, "CheckToken")(checkTokenEndpoint)
+		if zipkinTracer != nil {
+			checkTokenEndpoint = zipkin.TraceEndpoint(zipkinTracer, "CheckToken")(checkTokenEndpoint)
+		}
+		checkTokenEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "CheckToken"))(checkTokenEndpoint)
+		checkTokenEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "CheckToken"))(checkTokenEndpoint)
+	}
+
 	return EndpointSet{
-		StatusEndpoint: healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
-		SignupEndpoint: signupEndpoint,
-		LoginEndpoint:  loginEndpoint,
-		logger:         logger,
+		StatusEndpoint:     healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
+		SignupEndpoint:     signupEndpoint,
+		LoginEndpoint:      loginEndpoint,
+		CheckTokenEndpoint: checkTokenEndpoint,
+		logger:             logger,
 	}
 }
 
 func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp pb.SignupResponse
+			resp *pb.SignupResponse
 			err  error
 		)
 
@@ -83,7 +99,7 @@ func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 			return resp, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		resp, err = s.Signup(ctx, *req)
+		resp, err = s.Signup(ctx, req)
 		return resp, err
 	}
 }
@@ -91,7 +107,7 @@ func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var (
-			resp pb.LoginResponse
+			resp *pb.LoginResponse
 			err  error
 		)
 
@@ -103,7 +119,27 @@ func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 			return resp, errors.Wrap(validationErrors, "Validation failed")
 		}
 
-		resp, err = s.Login(ctx, *req)
+		resp, err = s.Login(ctx, req)
+		return resp, err
+	}
+}
+
+func MakeCheckTokenEndpoint(s service.AuthService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		var (
+			resp *pb.CheckTokenResponse
+			err  error
+		)
+
+		req := request.(*pb.CheckTokenRequest)
+
+		err = validate.Struct(req)
+		if err != nil {
+			validationErrors := err.(validator.ValidationErrors)
+			return resp, errors.Wrap(validationErrors, "Validation failed")
+		}
+
+		resp, err = s.CheckToken(ctx, req)
 		return resp, err
 	}
 }

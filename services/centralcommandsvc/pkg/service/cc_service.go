@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"net/http"
 
 	"deblasis.net/space-traffic-control/common/config"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
@@ -16,14 +15,13 @@ import (
 )
 
 var (
-	ServiceName = "centralcommandsvc.v1.CentralCommandService"
-	Namespace   = "deblasis"
-	Tags        = []string{}
+	ServiceName    = "deblasis-v1-CentralCommandService"
+	Namespace      = "stc"
+	Tags           = []string{}
+	GrpcServerPort = 9482 //TODO config
 )
 
 type CentralCommandService interface {
-	ServiceStatus(ctx context.Context) (int64, error)
-
 	RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error)
 	GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (*pb.GetAllShipsResponse, error)
 
@@ -43,12 +41,6 @@ func NewCentralCommandService(logger log.Logger, jwtConfig config.JWTConfig, db_
 		validate:           validator.New(),
 		db_svc_endpointset: db_svc_endpointset,
 	}
-}
-
-func (u *centralCommandService) ServiceStatus(ctx context.Context) (int64, error) {
-	level.Info(u.logger).Log("handling request", "ServiceStatus")
-	defer level.Info(u.logger).Log("handled request", "ServiceStatus")
-	return http.StatusOK, nil
 }
 
 func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {

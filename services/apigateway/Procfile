@@ -1,0 +1,5 @@
+# apigateway
+apigateway: /entrypoint.sh
+
+# Consul Agent
+consul: /consul-agent.sh

@@ -18,7 +18,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthDBServiceClient interface {
-	ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error)
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error)
 }
@@ -31,18 +30,9 @@ func NewAuthDBServiceClient(cc grpc.ClientConnInterface) AuthDBServiceClient {
 	return &authDBServiceClient{cc}
 }
 
-func (c *authDBServiceClient) ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error) {
-	out := new(ServiceStatusResponse)
-	err := c.cc.Invoke(ctx, "/auth_dbsvc.v1.AuthDBService/ServiceStatus", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *authDBServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
 	out := new(CreateUserResponse)
-	err := c.cc.Invoke(ctx, "/auth_dbsvc.v1.AuthDBService/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthDBService/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +41,7 @@ func (c *authDBServiceClient) CreateUser(ctx context.Context, in *CreateUserRequ
 
 func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error) {
 	out := new(GetUserByUsernameResponse)
-	err := c.cc.Invoke(ctx, "/auth_dbsvc.v1.AuthDBService/GetUserByUsername", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthDBService/GetUserByUsername", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +52,6 @@ func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUser
 // All implementations should embed UnimplementedAuthDBServiceServer
 // for forward compatibility
 type AuthDBServiceServer interface {
-	ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error)
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error)
 }
@@ -71,9 +60,6 @@ type AuthDBServiceServer interface {
 type UnimplementedAuthDBServiceServer struct {
 }
 
-func (UnimplementedAuthDBServiceServer) ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ServiceStatus not implemented")
-}
 func (UnimplementedAuthDBServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
@@ -92,24 +78,6 @@ func RegisterAuthDBServiceServer(s grpc.ServiceRegistrar, srv AuthDBServiceServe
 	s.RegisterService(&AuthDBService_ServiceDesc, srv)
 }
 
-func _AuthDBService_ServiceStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ServiceStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthDBServiceServer).ServiceStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/auth_dbsvc.v1.AuthDBService/ServiceStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthDBServiceServer).ServiceStatus(ctx, req.(*ServiceStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AuthDBService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateUserRequest)
 	if err := dec(in); err != nil {
@@ -120,7 +88,7 @@ func _AuthDBService_CreateUser_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/auth_dbsvc.v1.AuthDBService/CreateUser",
+		FullMethod: "/deblasis.v1.AuthDBService/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthDBServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
@@ -138,7 +106,7 @@ func _AuthDBService_GetUserByUsername_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/auth_dbsvc.v1.AuthDBService/GetUserByUsername",
+		FullMethod: "/deblasis.v1.AuthDBService/GetUserByUsername",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthDBServiceServer).GetUserByUsername(ctx, req.(*GetUserByUsernameRequest))
@@ -150,13 +118,9 @@ func _AuthDBService_GetUserByUsername_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthDBService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "auth_dbsvc.v1.AuthDBService",
+	ServiceName: "deblasis.v1.AuthDBService",
 	HandlerType: (*AuthDBServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ServiceStatus",
-			Handler:    _AuthDBService_ServiceStatus_Handler,
-		},
 		{
 			MethodName: "CreateUser",
 			Handler:    _AuthDBService_CreateUser_Handler,

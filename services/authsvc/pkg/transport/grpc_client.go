@@ -2,9 +2,9 @@ package transport
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
@@ -44,31 +44,12 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		options = append(options, zipkin.GRPCClientTrace(zipkinTracer))
 
 	}
-	var statusEndpoint endpoint.Endpoint
-	{
-		statusEndpoint = grpctransport.NewClient(
-			conn,
-			service.ServiceName,
-			"ServiceStatus",
-			encodeGRPCServiceStatusRequest,
-			decodeGRPCServiceStatusReply,
-			pb.ServiceStatusResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
-		).Endpoint()
-
-		statusEndpoint = opentracing.TraceClient(otTracer, "ServiceStatus")(statusEndpoint)
-		statusEndpoint = limiter(statusEndpoint)
-		statusEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "ServiceStatus",
-			Timeout: 30 * time.Second,
-		}))(statusEndpoint)
-	}
 
 	var signupEndpoint endpoint.Endpoint
 	{
 		signupEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"Signup",
 			encodeGRPCSignupRequest,
 			decodeGRPCSignupReply,
@@ -87,7 +68,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	{
 		loginEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"Login",
 			encodeGRPCLoginRequest,
 			decodeGRPCLoginReply,
@@ -102,26 +83,36 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			Timeout: 30 * time.Second,
 		}))(loginEndpoint)
 	}
+	var checkTokenEndpoint endpoint.Endpoint
+	{
+		checkTokenEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"CheckToken",
+			encodeGRPCCheckTokenRequest,
+			decodeGRPCCheckTokenReply,
+			pb.CheckTokenResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		checkTokenEndpoint = opentracing.TraceClient(otTracer, "Login")(checkTokenEndpoint)
+		checkTokenEndpoint = limiter(checkTokenEndpoint)
+		checkTokenEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Login",
+			Timeout: 30 * time.Second,
+		}))(checkTokenEndpoint)
+	}
 
 	return endpoints.EndpointSet{
-		StatusEndpoint: statusEndpoint,
-		SignupEndpoint: signupEndpoint,
-		LoginEndpoint:  loginEndpoint,
+		SignupEndpoint:     signupEndpoint,
+		LoginEndpoint:      loginEndpoint,
+		CheckTokenEndpoint: checkTokenEndpoint,
 	}
 
 }
 
-func encodeGRPCServiceStatusRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return &pb.ServiceStatusRequest{}, nil
-}
-
-func decodeGRPCServiceStatusReply(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*pb.ServiceStatusResponse)
-	return healthcheck.ServiceStatusResponse{Code: reply.Code, Err: reply.Err}, nil
-}
-
 func encodeGRPCSignupRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(pb.SignupRequest)
+	req := request.(*pb.SignupRequest)
 	return req, nil
 }
 
@@ -131,11 +122,21 @@ func decodeGRPCSignupReply(_ context.Context, grpcReply interface{}) (interface{
 }
 
 func encodeGRPCLoginRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(pb.LoginRequest)
+	req := request.(*pb.LoginRequest)
 	return req, nil
 }
 
 func decodeGRPCLoginReply(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*pb.LoginResponse)
+	return reply, nil
+}
+
+func encodeGRPCCheckTokenRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.CheckTokenRequest)
+	return req, nil
+}
+
+func decodeGRPCCheckTokenReply(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*pb.CheckTokenResponse)
 	return reply, nil
 }

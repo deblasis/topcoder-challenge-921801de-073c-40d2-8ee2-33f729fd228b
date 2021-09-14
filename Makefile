@@ -3,7 +3,7 @@
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
-SERVICES = auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc
+SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc
 MIGRATORS = auth_dbsvc_migrator centralcommand_dbsvc_migrator
 SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
@@ -28,8 +28,8 @@ define make_docker_build
 	docker build --build-arg SVC_NAME=$(subst docker_,,$(1)) --tag=deblasis/stc_$(subst docker_,,$(1)) .
 endef
 
-define make_inject_prototags
-	protoc-go-inject-tag -input="gen/proto/go/$(subst inject_prototags_,,$(1))/v1/*.pb.go" -verbose
+define make_inject_prototags ## FIX THIS FOR apigateway
+	protoc-go-inject-tag -input="gen/proto/go/$(subst inject_prototags_,,$(1))/v1/*.pb.go" -verbose || true
 endef
 
 all: $(SERVICES)
@@ -51,20 +51,11 @@ proto: protodeps
 migrate-auth_dbsvc: ## do migration
 	cd ./services/auth_dbsvc/cmd/migrator && go run main.go -dir ../../scripts/migrations -init
 
-# .PHONY: auth_dbsvc_migrator
-# auth_dbsvc_migrator:
-# 	cd ./services/auth_dbsvc/cmd/migrator && \
-# 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(1)_migrator services/$(1)/cmd/migrator/main.go
-
 
 .PHONY: migrate-centralcommand_dbsvc
 migrate-centralcommand_dbsvc: ## do migration
 	cd ./services/centralcommand_dbsvc/cmd/migrator && go run main.go -dir ../../scripts/migrations -init	
 
-
-.PHONY: migrate-kong
-migrate-kong:
-	docker-compose run --rm kong kong migrations bootstrap
 
 .PHONY: seed-auth_dbsvc
 seed-auth_dbsvc: ## do migration
@@ -78,21 +69,26 @@ seed-auth_dbsvc: ## do migration
 
 .PHONY: gencert
 gencert:
-	cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 auth_dbsvc 
+	docker build -f ./common/tools/jose-jwk/Dockerfile ./common/tools/jose-jwk -t jose-jwt \
+	&& docker run jose-jwt -c "jose jwk gen -i '{\"alg\": \"RS256\"}'" > ./certs/jwk-private.json \
+	&& cat ./certs/jwk-private.json | jq '{kid: "$(shell openssl rand -base64 32)", alg: .alg, kty: .kty , use: "sig", n: .n , e: .e }'  > ./certs/jwk.json \
+	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
+	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
+	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
+
+	 
 
 .PHONY: build-parallel
 build-parallel: proto
-	docker-compose -f docker-compose.yml -f docker-compose-kong.yml -f docker-compose-build.yml build --parallel
+	docker-compose -f docker-compose.yml -f docker-compose-build.yml build --parallel
 
 .PHONY: run-parallel
 run-parallel: build-parallel
-	docker-compose -f docker-compose.yml -f docker-compose-kong.yml up --force-recreate --remove-orphans
+	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
 # auth_dbsvc:
 # 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-auth_dbsvc services/auth_dbsvc/cmd/app/main.go
 # && cp services/auth_dbsvc/app.yaml build
-.PHONY: run-kong
-run-kong:
-	docker-compose -f docker-compose-kong.yml up --force-recreate
+
 
 
 

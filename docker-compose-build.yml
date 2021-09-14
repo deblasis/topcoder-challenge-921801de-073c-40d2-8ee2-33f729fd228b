@@ -1,34 +1,13 @@
-version: '3'
+version: '3.6'
 
 services:
 
-  # apigateway:
-  #   build:
-  #     dockerfile: ./services/apigateway/Dockerfile
-  #     context: .
-  #     args: 
-  #       SVC_NAME: apigateway
-  #   ports:
-  #     - 8081:8081
-  #     - 8082:8082
-  #   depends_on: 
-  #     - consul
-  #     - authsvc
-  #   volumes:
-  #     - ./certs:/certs
-  #     - ./services/apigateway/app.yaml:/app.yaml
-  #   environment: 
-  #    DEBLASIS_BINDONLOCALHOST: "false"
-  #    DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-  #    DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-  #   networks:
-  #     - net      
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-
+  apigateway:
+    build:
+      dockerfile: ./services/apigateway/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: apigateway
 
   auth_dbsvc:
     build:
@@ -45,16 +24,16 @@ services:
         SVC_NAME: authsvc
    
 
-  # centralcommand_dbsvc:
-  #   build:
-  #     dockerfile: ./services/centralcommand_dbsvc/Dockerfile
-  #     context: .
-  #     args: 
-  #       SVC_NAME: centralcommand_dbsvc
-  # centralcommandsvc:
-  #   build:
-  #     dockerfile: ./services/centralcommandsvc/Dockerfile
-  #     context: .
-  #     args: 
-  #       SVC_NAME: centralcommandsvc
+  centralcommand_dbsvc:
+    build:
+      dockerfile: ./services/centralcommand_dbsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: centralcommand_dbsvc
+  centralcommandsvc:
+    build:
+      dockerfile: ./services/centralcommandsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: centralcommandsvc
    

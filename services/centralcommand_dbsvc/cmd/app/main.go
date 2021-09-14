@@ -63,13 +63,13 @@ func main() {
 	// 	// Business-level metrics.
 	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "integers_summed", //TODO
 	// 		Help:      "Total count of integers summed via the Sum method.",
 	// 	}, []string{})
 	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
 	// 		Namespace: service.Namespace,
-	// 		Subsystem: service.ServiceName,
+	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
 	// 		Name:      "characters_concatenated", //TODO
 	// 		Help:      "Total count of characters concatenated via the Concat method.",
 	// 	}, []string{})
@@ -80,7 +80,7 @@ func main() {
 		// Endpoint-level metrics.
 		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
 			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, ".")[2],
+			Subsystem: strings.Split(service.ServiceName, "-")[2],
 			Name:      "request_duration_seconds",
 			Help:      "Request duration in seconds.",
 		}, []string{"method", "success"})

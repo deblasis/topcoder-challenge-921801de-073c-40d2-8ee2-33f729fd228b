@@ -111,7 +111,7 @@ func RegisterAuthServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/authsvc.v1.AuthService/Login", runtime.WithHTTPPathPattern("/auth/login"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.AuthService/Login", runtime.WithHTTPPathPattern("/auth/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -134,7 +134,7 @@ func RegisterAuthServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/authsvc.v1.AuthService/Signup", runtime.WithHTTPPathPattern("/user/signup"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.AuthService/Signup", runtime.WithHTTPPathPattern("/user/signup"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -196,7 +196,7 @@ func RegisterAuthServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/authsvc.v1.AuthService/Login", runtime.WithHTTPPathPattern("/auth/login"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.AuthService/Login", runtime.WithHTTPPathPattern("/auth/login"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -216,7 +216,7 @@ func RegisterAuthServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/authsvc.v1.AuthService/Signup", runtime.WithHTTPPathPattern("/user/signup"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.AuthService/Signup", runtime.WithHTTPPathPattern("/user/signup"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

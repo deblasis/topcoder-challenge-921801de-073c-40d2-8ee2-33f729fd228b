@@ -2,9 +2,9 @@ package transport
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
@@ -47,31 +47,11 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 
 	}
 
-	var statusEndpoint endpoint.Endpoint
-	{
-		statusEndpoint = grpctransport.NewClient(
-			conn,
-			service.ServiceName,
-			"ServiceStatus",
-			encodeGRPCServiceStatusRequest,
-			decodeGRPCServiceStatusResponse,
-			pb.ServiceStatusResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
-		).Endpoint()
-
-		statusEndpoint = opentracing.TraceClient(otTracer, "ServiceStatus")(statusEndpoint)
-		statusEndpoint = limiter(statusEndpoint)
-		statusEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "ServiceStatus",
-			Timeout: 30 * time.Second,
-		}))(statusEndpoint)
-	}
-
 	var getUserByUsernameEndpoint endpoint.Endpoint
 	{
 		getUserByUsernameEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"GetUserByUsername",
 			encodeGRPCGetUserByUsernameRequest,
 			decodeGRPCGetUserByUsernameResponse,
@@ -90,7 +70,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	{
 		createUserEndpoint = grpctransport.NewClient(
 			conn,
-			service.ServiceName,
+			strings.Replace(service.ServiceName, "-", ".", -1),
 			"CreateUser",
 			encodeGRPCCreateUserRequest,
 			decodeGRPCCreateUserResponse,
@@ -107,24 +87,15 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 	}
 
 	return endpoints.EndpointSet{
-		StatusEndpoint:            statusEndpoint,
 		GetUserByUsernameEndpoint: getUserByUsernameEndpoint,
 		CreateUserEndpoint:        createUserEndpoint,
 	}
 
 }
 
-func encodeGRPCServiceStatusRequest(_ context.Context, request interface{}) (interface{}, error) {
-	return &pb.ServiceStatusRequest{}, nil
-}
-
-func decodeGRPCServiceStatusResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.ServiceStatusResponse)
-	return healthcheck.ServiceStatusResponse{Code: response.Code, Err: response.Err}, nil
-}
-
 func encodeGRPCGetUserByUsernameRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.GetUserByUsernameRequest)
+	//TODO converters
+	req := request.(*dtos.GetUserByUsernameRequest)
 	return &pb.GetUserByUsernameRequest{
 		Username: req.Username,
 	}, nil
@@ -132,7 +103,7 @@ func encodeGRPCGetUserByUsernameRequest(_ context.Context, request interface{}) 
 
 func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetUserByUsernameResponse)
-	return dtos.GetUserByUsernameResponse{User: model.User{
+	return &dtos.GetUserByUsernameResponse{User: model.User{
 		Id:       response.User.Id,
 		Username: response.User.Username,
 		Password: response.User.Password,
@@ -142,7 +113,7 @@ func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 }
 
 func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(dtos.CreateUserRequest)
+	req := request.(*dtos.CreateUserRequest)
 
 	// //TODO: centralise
 	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
@@ -160,7 +131,7 @@ func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interf
 }
 func decodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	Response := grpcResponse.(*pb.CreateUserResponse)
-	return dtos.CreateUserResponse{
+	return &dtos.CreateUserResponse{
 		Id:  Response.Id,
 		Err: Response.Error,
 	}, nil

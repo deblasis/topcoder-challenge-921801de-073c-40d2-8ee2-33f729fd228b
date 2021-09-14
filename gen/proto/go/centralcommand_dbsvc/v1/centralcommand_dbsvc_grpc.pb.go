@@ -18,7 +18,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CentralCommandDBServiceClient interface {
-	ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error)
 	CreateShip(ctx context.Context, in *CreateShipRequest, opts ...grpc.CallOption) (*CreateShipResponse, error)
 	CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error)
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
@@ -33,18 +32,9 @@ func NewCentralCommandDBServiceClient(cc grpc.ClientConnInterface) CentralComman
 	return &centralCommandDBServiceClient{cc}
 }
 
-func (c *centralCommandDBServiceClient) ServiceStatus(ctx context.Context, in *ServiceStatusRequest, opts ...grpc.CallOption) (*ServiceStatusResponse, error) {
-	out := new(ServiceStatusResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/ServiceStatus", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *centralCommandDBServiceClient) CreateShip(ctx context.Context, in *CreateShipRequest, opts ...grpc.CallOption) (*CreateShipResponse, error) {
 	out := new(CreateShipResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateShip", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/CreateShip", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +43,7 @@ func (c *centralCommandDBServiceClient) CreateShip(ctx context.Context, in *Crea
 
 func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error) {
 	out := new(CreateStationResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateStation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/CreateStation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +52,7 @@ func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *C
 
 func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error) {
 	out := new(GetAllShipsResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +61,7 @@ func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *Get
 
 func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error) {
 	out := new(GetAllStationsResponse)
-	err := c.cc.Invoke(ctx, "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllStations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/GetAllStations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +72,6 @@ func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *
 // All implementations should embed UnimplementedCentralCommandDBServiceServer
 // for forward compatibility
 type CentralCommandDBServiceServer interface {
-	ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error)
 	CreateShip(context.Context, *CreateShipRequest) (*CreateShipResponse, error)
 	CreateStation(context.Context, *CreateStationRequest) (*CreateStationResponse, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
@@ -93,9 +82,6 @@ type CentralCommandDBServiceServer interface {
 type UnimplementedCentralCommandDBServiceServer struct {
 }
 
-func (UnimplementedCentralCommandDBServiceServer) ServiceStatus(context.Context, *ServiceStatusRequest) (*ServiceStatusResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ServiceStatus not implemented")
-}
 func (UnimplementedCentralCommandDBServiceServer) CreateShip(context.Context, *CreateShipRequest) (*CreateShipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateShip not implemented")
 }
@@ -120,24 +106,6 @@ func RegisterCentralCommandDBServiceServer(s grpc.ServiceRegistrar, srv CentralC
 	s.RegisterService(&CentralCommandDBService_ServiceDesc, srv)
 }
 
-func _CentralCommandDBService_ServiceStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ServiceStatusRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CentralCommandDBServiceServer).ServiceStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/ServiceStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CentralCommandDBServiceServer).ServiceStatus(ctx, req.(*ServiceStatusRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _CentralCommandDBService_CreateShip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateShipRequest)
 	if err := dec(in); err != nil {
@@ -148,7 +116,7 @@ func _CentralCommandDBService_CreateShip_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateShip",
+		FullMethod: "/deblasis.v1.CentralCommandDBService/CreateShip",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).CreateShip(ctx, req.(*CreateShipRequest))
@@ -166,7 +134,7 @@ func _CentralCommandDBService_CreateStation_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/CreateStation",
+		FullMethod: "/deblasis.v1.CentralCommandDBService/CreateStation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).CreateStation(ctx, req.(*CreateStationRequest))
@@ -184,7 +152,7 @@ func _CentralCommandDBService_GetAllShips_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllShips",
+		FullMethod: "/deblasis.v1.CentralCommandDBService/GetAllShips",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, req.(*GetAllShipsRequest))
@@ -202,7 +170,7 @@ func _CentralCommandDBService_GetAllStations_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommand_dbsvc.v1.CentralCommandDBService/GetAllStations",
+		FullMethod: "/deblasis.v1.CentralCommandDBService/GetAllStations",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).GetAllStations(ctx, req.(*GetAllStationsRequest))
@@ -214,13 +182,9 @@ func _CentralCommandDBService_GetAllStations_Handler(srv interface{}, ctx contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CentralCommandDBService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "centralcommand_dbsvc.v1.CentralCommandDBService",
+	ServiceName: "deblasis.v1.CentralCommandDBService",
 	HandlerType: (*CentralCommandDBServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ServiceStatus",
-			Handler:    _CentralCommandDBService_ServiceStatus_Handler,
-		},
 		{
 			MethodName: "CreateShip",
 			Handler:    _CentralCommandDBService_CreateShip_Handler,

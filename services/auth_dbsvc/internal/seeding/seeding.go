@@ -2,80 +2,17 @@ package seeding
 
 import (
 	"context"
-	"fmt"
 
 	ca "deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/config"
 	"deblasis.net/space-traffic-control/common/db"
-	. "deblasis.net/space-traffic-control/common/utils"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"github.com/go-kit/kit/log/level"
-	"github.com/kong/go-kong/kong"
 )
-
-func Seed(cfg config.Config) {
-	SeedDB(cfg)
-	SeedKong(cfg)
-}
-
-func SeedKong(cfg config.Config) {
-	ctx := context.Background()
-	logger := cfg.Logger
-	// prepare pg connection
-	pgClient := db.NewPostgresClientFromConfig(cfg)
-	dbConn := pgClient.GetConnection()
-	defer dbConn.Close()
-	kongClient, err := kong.NewClient(String(cfg.Kong.BaseUrl), nil)
-	if err != nil {
-		level.Debug(logger).Log("kong_seeding_err", err)
-	}
-
-	var unsynchedUsers []model.User
-	err = dbConn.WithContext(ctx).Model(&unsynchedUsers).Where("kong_id is null").Select()
-	level.Error(logger).Log(
-		"kong_seeding_err", err,
-	)
-
-	for _, user := range unsynchedUsers {
-
-		kc, err := kongClient.Consumers.Create(ctx, &kong.Consumer{
-			CustomID: String(fmt.Sprintf("%v", user.Id)),
-			Username: String(user.Username),
-			Tags:     StringSlice("seeded"),
-		})
-		if err != nil {
-			level.Error(logger).Log(
-				"username", user.Username,
-				"user_id", user.Id,
-				"kong_seeding_err", err,
-			)
-		}
-		kongClient.ACLs.Create(ctx, kc.ID, &kong.ACLGroup{
-			Group: &user.Role,
-			Tags:  StringSlice("seeded"),
-		})
-
-		user.KongId = *kc.ID
-
-		_, err = dbConn.WithContext(ctx).Model(user).Update()
-		if err != nil {
-			level.Error(logger).Log(
-				"username", user.Username,
-				"user_id", user.Id,
-				"kong_consumer_id", *kc.ID,
-				"seeding_err", err,
-			)
-		}
-		level.Info(logger).Log(
-			"username", user.Username,
-			"user_id", user.Id,
-			"kong_consumer_id", *kc.ID,
-		)
-	}
-}
 
 func SeedDB(cfg config.Config) {
 
+	ctx := context.Background()
 	logger := cfg.Logger
 	// prepare pg connection
 	pgClient := db.NewPostgresClientFromConfig(cfg)
@@ -104,10 +41,7 @@ func SeedDB(cfg config.Config) {
 			"seeding_err", err,
 		)
 	}
-	kongClient, err := kong.NewClient(String(cfg.Kong.BaseUrl), nil)
-	if err != nil {
-		level.Debug(logger).Log("kong_seeding_err", err)
-	}
+
 	for _, u := range users {
 
 		hashedPwd, err := ca.HashPwd(u.Password)
@@ -131,34 +65,6 @@ func SeedDB(cfg config.Config) {
 				"seeding_err", err,
 			)
 		}
-		kc, err := kongClient.Consumers.Create(ctx, &kong.Consumer{
-			CustomID: String(fmt.Sprintf("%v", user.Id)),
-			Username: String(u.Username),
-			Tags:     StringSlice("seeded"),
-		})
-		if err != nil {
-			level.Error(logger).Log(
-				"username", u.Username,
-				"user_id", user.Id,
-				"kong_seeding_err", err,
-			)
-		}
-		user.KongId = *kc.ID
-
-		_, err = dbConn.Model(user).Update()
-		if err != nil {
-			level.Error(logger).Log(
-				"username", u.Username,
-				"user_id", user.Id,
-				"kong_consumer_id", *kc.ID,
-				"seeding_err", err,
-			)
-		}
-		level.Info(logger).Log(
-			"username", u.Username,
-			"user_id", user.Id,
-			"kong_consumer_id", *kc.ID,
-		)
 
 	}
 	//burn after reading
