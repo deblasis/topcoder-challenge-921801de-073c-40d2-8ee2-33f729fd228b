@@ -18,7 +18,7 @@ COPY ./Makefile ./Makefile
 COPY ./common ./common
 COPY ./gen ./gen
 COPY ./scripts ./scripts
-COPY ./services/auth_dbsvc ./services/auth_dbsvc
+COPY ./services/${SVC_NAME} ./services/${SVC_NAME}
 
 
 RUN make ${SVC_NAME} \
@@ -28,9 +28,9 @@ RUN make ${SVC_NAME} \
 RUN make ${SVC_NAME}_migrator \
     && mv build/deblasis-${SVC_NAME}_migrator /migrator
 
-RUN cp ./services/auth_dbsvc/scripts/entrypoint.sh / \
+RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh / \
     && mkdir -p /scripts/migrations \
-    && cp ./services/auth_dbsvc/scripts/migrations/* /scripts/migrations
+    && cp ./services/${SVC_NAME}/scripts/migrations/* /scripts/migrations
 
 RUN make ${SVC_NAME}_seeder \
     && mv build/deblasis-${SVC_NAME}_seeder /seeder

@@ -18,11 +18,25 @@ COPY ./Makefile ./Makefile
 COPY ./common ./common
 COPY ./gen ./gen
 COPY ./scripts ./scripts
-COPY ./services/centralcommand_dbsvc ./services/centralcommand_dbsvc
+COPY ./services/${SVC_NAME} ./services/${SVC_NAME}
 
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe
 
-FROM scratch
-COPY --from=server_builder /exe /
-ENTRYPOINT ["/exe"]
+RUN make ${SVC_NAME}_migrator \
+    && mv build/deblasis-${SVC_NAME}_migrator /migrator    
+
+RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh / \
+    && mkdir -p /scripts/migrations \
+    && cp ./services/${SVC_NAME}/scripts/migrations/* /scripts/migrations    
+
+RUN cp ./scripts/*.sh /
+
+
+FROM alpine:3.14.2
+RUN apk update && apk upgrade && apk add bash
+
+COPY --from=server_builder /entrypoint.sh /exe /migrator /wait-for-it.sh /
+COPY --from=server_builder /scripts /scripts
+
+ENTRYPOINT ["/entrypoint.sh"]
