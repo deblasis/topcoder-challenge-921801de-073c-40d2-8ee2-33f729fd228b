@@ -67,7 +67,7 @@ CREATE OR REPLACE VIEW docks_view AS
 	SELECT d.id as id, d.station_id as station_id, 
    d.num_docking_ports as num_docking_ports,
    d.occupied as occupied,
-   d.weight as weight   
+   COALESCE(d.weight,0) as weight   
 	from docked as d;   
 	
 

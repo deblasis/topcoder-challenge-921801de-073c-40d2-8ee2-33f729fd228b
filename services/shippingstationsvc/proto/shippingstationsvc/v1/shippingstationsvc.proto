@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package deblasis.v1;
+
+import "google/protobuf/empty.proto";
+import "google/api/httpbody.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+
+option go_package = "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/proto/v1;shippingstationsvc_v1";
+
+service ShippingStationService {
+  rpc RequestLanding(RequestLandingRequest) returns (RequestLandingResponse) {
+    option (google.api.http) = {
+      post: "/shipping-station/request-landing"
+      body: "*"
+    };
+  }
+  rpc Landing(LandingRequest) returns (LandingResponse) {
+    option (google.api.http) = {
+      post: "/shipping-station/land"
+      body: "*"
+    };    
+  }
+}
+
+
+message RequestLandingRequest {
+  string id = 1;
+  int64 time =2;
+}
+
+message RequestLandingResponse {
+  enum Command {
+    WAIT = 0;
+    LAND = 1;
+  }
+  Command command = 1;
+  oneof docking_station_id_or_duration {
+    string docking_station_id = 2;
+    int64 duration = 3;
+  }
+}
+
+message LandingRequest {
+  string id = 1;
+  int64 time = 2;
+}
+
+message LandingResponse {
+  bool ok = 1;
+}
