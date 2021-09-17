@@ -1,18 +1,18 @@
 syntax = "proto3";
 
-package deblasis.v1;
+package deblasis.state.v1;
 
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/proto/v1;auth_dbsvc_v1";
 
 service AuthDBService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
-  rpc GetUserByUsername (GetUserByUsernameRequest) returns (GetUserByUsernameResponse) {}
+  rpc GetUserByUsername (GetUserByUsernameRequest) returns (GetUserResponse) {}
+  rpc GetUserById (GetUserByIdRequest) returns (GetUserResponse) {}
 }
 
 
 message User {
-  int64 id = 1;
-  string kong_id = 2;
+  string id = 1;
   string username = 3;
   string password = 4;
   string role = 5;
@@ -24,14 +24,18 @@ message CreateUserRequest {
 
 
 message CreateUserResponse {
-  int64 id = 1;
+  string id = 1;
   string error = 2;
 }
 
 message GetUserByUsernameRequest {
   string username = 1;
 }
-message GetUserByUsernameResponse {
+
+message GetUserByIdRequest {
+  string id = 1;
+}
+message GetUserResponse {
   User user = 1;
   string error = 2;
 }

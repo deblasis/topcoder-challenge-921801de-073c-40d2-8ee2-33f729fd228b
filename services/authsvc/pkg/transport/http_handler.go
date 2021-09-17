@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"deblasis.net/space-traffic-control/common/encoding"
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/middlewares"
+	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
@@ -22,11 +23,7 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 	r := mux.NewRouter().StrictSlash(false)
 	r.Use(middlewares.JsonHeaderMiddleware)
 
-	options := []httptransport.ServerOption{
-		httptransport.ServerErrorLogger(logger),
-		httptransport.ServerErrorEncoder(encoding.EncodeError),
-	}
-
+	options := transport_conf.GetCommonHTTPServerOptions(l)
 	// r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
 	// 	e.StatusEndpoint,
 	// 	healthcheck.DecodeHTTPServiceStatusRequest,
@@ -79,7 +76,7 @@ func decodeHTTPLoginRequest(_ context.Context, r *http.Request) (interface{}, er
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	if e, ok := response.(error); ok && e != nil {
-		encoding.EncodeError(ctx, e, w)
+		errs.EncodeErrorHTTP(ctx, e, w)
 		return nil
 	}
 	return json.NewEncoder(w).Encode(response)

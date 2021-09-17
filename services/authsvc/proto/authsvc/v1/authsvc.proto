@@ -34,6 +34,7 @@ message LoginRequest {
 }
 
 message LoginResponse {
+  //@gotags: json:"token,omitempty"
   Token token = 1;
   string error = 2;
 }
@@ -48,6 +49,7 @@ message SignupRequest {
 }
 
 message SignupResponse {
+  //@gotags: json:"token,omitempty"
   Token token = 1;
   string error = 2;
 }
@@ -68,7 +70,7 @@ message Token {
 
 message TokenPayload {
   string token_id = 1;
-  int64 user_id = 2;
+  string user_id = 2;
   string username = 3;
   string role = 4;
 }

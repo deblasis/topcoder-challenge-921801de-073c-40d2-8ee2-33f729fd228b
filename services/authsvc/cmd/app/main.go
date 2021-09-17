@@ -18,6 +18,7 @@ import (
 	"deblasis.net/space-traffic-control/common/cache"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
@@ -44,6 +45,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -137,27 +139,6 @@ func main() {
 			}
 		}
 	}()
-	// done := make(chan bool, 1)
-	// go func(ok chan bool) {
-	// 	for evt := range instancesChannel {
-	// 		for _, i := range evt.Instances {
-	// 			logger.Log("received_instance", i)
-	// 		}
-	// 		if len(evt.Instances) > 0 {
-	// 			instancer.Stop()
-	// 			instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-	// 			ok <- true
-	// 			return
-	// 		}
-	// 		logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
-	// 		time.Sleep(time.Second * 1)
-	// 		instancer.Stop()
-	// 		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-	// 		instancer.Register(instancesChannel)
-	// 	}
-	// }(done)
-
-	// <-done
 
 	instancer.Register(instancesChannel)
 
@@ -165,7 +146,13 @@ func main() {
 		factory := authDBServiceFactory(dbe.MakeCreateUserEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
+			logger.Log("received_err", received)
+			if st, ok := status.FromError(received); !ok && st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
+				return false, nil
+			}
+			return n < retryMax, nil
+		})
 		db_endpoints.CreateUserEndpoint = retry
 	}
 	{
@@ -176,30 +163,20 @@ func main() {
 		db_endpoints.GetUserByUsernameEndpoint = retry
 	}
 
-	// Here we leverage the fact that addsvc comes with a constructor for an
-	// HTTP handler, and just install it under a particular path prefix in
-	// our router.
-
-	logger.Log("retryMax", retryMax, "retryTimeout", retryTimeout)
-
-	//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtransport.NewHTTPHandler(db_endpoints, tracer, zipkinTracer, logger)))
-
 	var (
 		g group.Group
 
-		memTokensCache = cache.NewMemTokensCache()
-		jwtHandler     = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
-
+		jwtHandler                = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
 		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
 
-		svc = service.NewAuthService(log.With(cfg.Logger, "component", "AuthService"), cfg.JWT, db_endpoints, memTokensCache, jwtHandler)
+		memTokensCache = cache.NewMemTokensCache()
+		svc            = service.NewAuthService(log.With(cfg.Logger, "component", "AuthService"), cfg.JWT, db_endpoints, memTokensCache, jwtHandler)
 
 		eps = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(log.With(cfg.Logger, "component", "GRPCServer"), eps)
 	)
-	fmt.Printf("svc %v", svc)
 
 	// consul
 	{
@@ -320,7 +297,11 @@ func authDBServiceFactory(makeEndpoint func(dbs.AuthDBService) endpoint.Endpoint
 		// 		return nil, nil, err
 		// 	}
 		// } else {
-		conn, err = grpc.Dial(instance, grpc.WithInsecure())
+		if cfg.BindOnLocalhost {
+			conn, err = grpc.Dial("localhost:"+strings.Split(instance, ":")[1], grpc.WithInsecure())
+		} else {
+			conn, err = grpc.Dial(instance, grpc.WithInsecure())
+		}
 		//}
 
 		if err != nil {

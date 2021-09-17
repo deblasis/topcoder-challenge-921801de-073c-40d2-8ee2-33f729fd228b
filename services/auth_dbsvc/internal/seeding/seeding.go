@@ -8,6 +8,7 @@ import (
 	"deblasis.net/space-traffic-control/common/db"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"github.com/go-kit/kit/log/level"
+	"github.com/google/uuid"
 )
 
 func SeedDB(cfg config.Config) {
@@ -53,6 +54,7 @@ func SeedDB(cfg config.Config) {
 		}
 
 		user := &model.User{
+			Id:       uuid.NewString(),
 			Username: u.Username,
 			Password: hashedPwd,
 			Role:     u.Role,

@@ -123,7 +123,6 @@ func main() {
 			svcRegistar.Register()
 		}
 	}
-
 	{
 		httpListener, err := net.Listen("tcp", httpAddr)
 		if err != nil {

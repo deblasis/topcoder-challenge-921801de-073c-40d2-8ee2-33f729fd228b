@@ -3,18 +3,19 @@ package service
 import (
 	"context"
 
+	"deblasis.net/space-traffic-control/common"
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/repositories"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 )
 
 var (
-	ServiceName = "deblasis-v1-CentralCommandDBService"
+	ServiceName = "deblasis-state-v1-CentralCommandDBService"
 	Namespace   = "stc"
 	Tags        = []string{}
 )
@@ -43,19 +44,34 @@ func NewCentralCommandDBService(
 		shipRepository:    shipRepository,
 		stationRepository: stationRepository,
 		logger:            logger,
-		validate:          validator.New(),
+		validate:          common.GetValidator(),
 	}
 }
 
 func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {
-	//TODO use middleware
-	level.Info(u.logger).Log("handling request", "CreateShip")
-	defer level.Info(u.logger).Log("handled request", "CreateShip")
+	err := u.validate.Struct(request)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return &dtos.CreateShipResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+
+	existing, err := u.shipRepository.GetById(ctx, request.Id)
+	if existing != nil {
+		return &dtos.CreateShipResponse{
+			Error: errs.ErrCannotInsertAlreadyExistingEntity.Error(),
+		}, nil
+	}
+
 	ret, err := u.shipRepository.Create(ctx, model.Ship{
+		Id:     request.Id,
 		Weight: request.Weight,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to create ship ")
+		return &dtos.CreateShipResponse{
+			Error: errs.Err2str(err),
+		}, nil
 	}
 
 	return &dtos.CreateShipResponse{
@@ -64,12 +80,19 @@ func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.
 }
 
 func (u *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error) {
-	//TODO use middleware
-	level.Info(u.logger).Log("handling request", "GetAllShips")
-	defer level.Info(u.logger).Log("handled request", "GetAllShips")
+	err := u.validate.Struct(request)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return &dtos.GetAllShipsResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+
 	ret, err := u.shipRepository.GetAll(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to retrieve ships ")
+		return &dtos.GetAllShipsResponse{
+			Error: errs.Err2str(err),
+		}, nil
 	}
 
 	return &dtos.GetAllShipsResponse{
@@ -78,17 +101,26 @@ func (u *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos
 }
 
 func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error) {
-	level.Info(u.logger).Log("handling request", "CreateStation")
-	defer level.Info(u.logger).Log("handled request", "CreateStation")
 	err := u.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return nil, errors.Wrap(validationErrors, "Failed to create station")
+		return &dtos.CreateStationResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+
+	existing, err := u.stationRepository.GetById(ctx, request.Id)
+	if existing != nil {
+		return &dtos.CreateStationResponse{
+			Error: errs.ErrCannotInsertAlreadyExistingEntity.Error(),
+		}, nil
 	}
 
 	ret, err := u.stationRepository.Create(ctx, converters.StationToModel(dtos.Station(*request)))
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to create station")
+		return &dtos.CreateStationResponse{
+			Error: errs.Err2str(err),
+		}, nil
 	}
 
 	return &dtos.CreateStationResponse{
@@ -97,14 +129,20 @@ func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dt
 }
 
 func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error) {
-	//TODO use middleware
-	level.Info(u.logger).Log("handling request", "GetAllStations")
-	defer level.Info(u.logger).Log("handled request", "GetAllStations")
-	ret, err := u.stationRepository.GetAll(ctx)
+	err := u.validate.Struct(request)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to retrieve stations ")
+		validationErrors := err.(validator.ValidationErrors)
+		return &dtos.GetAllStationsResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
 	}
 
+	ret, err := u.stationRepository.GetAll(ctx)
+	if err != nil {
+		return &dtos.GetAllStationsResponse{
+			Error: errs.Err2str(err),
+		}, nil
+	}
 	return &dtos.GetAllStationsResponse{
 		Stations: converters.StationsToDto(ret),
 	}, nil

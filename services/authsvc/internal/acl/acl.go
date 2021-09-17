@@ -21,8 +21,10 @@ func AclRules() map[string]auth.ACLRule {
 			}
 			return auth.NewMustCheckTokenDescriptor(func(t *jwt.Token) error {
 
-				claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
-				role := claims["role"]
+				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
+				// role := claims["role"]
+				claims := t.Claims.(*auth.STCClaims)
+				role := claims.Role
 
 				if role == consts.ROLE_COMMAND {
 					return nil
@@ -33,24 +35,3 @@ func AclRules() map[string]auth.ACLRule {
 		},
 	}
 }
-
-// func(req interface{}) auth.TokenValidator {
-// 	request := req.(*pb.SignupRequest)
-
-// 	if request.Role == consts.ROLE_SHIP {
-// 		return struct{
-// 			allGood
-// 		}
-// 	}
-
-// 	return func(t *jwt.Token) error {
-
-// 		claims := t.Claims.(auth.STCClaims)
-// 		role := claims.Role
-
-// 		if request.Role == consts.ROLE_SHIP || role == consts.ROLE_COMMAND {
-// 			return nil
-// 		}
-// 		return fmt.Errorf("unauthorized: you must be a member of %v to perform this operation", consts.ROLE_COMMAND)
-// 	}
-// },

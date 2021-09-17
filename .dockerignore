@@ -23,6 +23,5 @@
 **/values.dev.yaml
 README.md
 certs/*
-build/*
 extra/*
 esdata/*

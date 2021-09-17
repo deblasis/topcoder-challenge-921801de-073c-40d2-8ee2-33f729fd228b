@@ -2,8 +2,6 @@ package endpoints
 
 import (
 	"context"
-	"reflect"
-	"strings"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -17,10 +15,8 @@ import (
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
-	"github.com/go-playground/validator"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
-	"github.com/pkg/errors"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 )
@@ -44,12 +40,12 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		registerShipEndpoint = MakeRegisterShipEndpoint(s)
 		registerShipEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerShipEndpoint)
 		registerShipEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerShipEndpoint)
-		registerShipEndpoint = opentracing.TraceServer(otTracer, "Signup")(registerShipEndpoint)
+		registerShipEndpoint = opentracing.TraceServer(otTracer, "RegisterShip")(registerShipEndpoint)
 		if zipkinTracer != nil {
-			registerShipEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Signup")(registerShipEndpoint)
+			registerShipEndpoint = zipkin.TraceEndpoint(zipkinTracer, "RegisterShip")(registerShipEndpoint)
 		}
-		registerShipEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Signup"))(registerShipEndpoint)
-		registerShipEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Signup"))(registerShipEndpoint)
+		registerShipEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "RegisterShip"))(registerShipEndpoint)
+		registerShipEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "RegisterShip"))(registerShipEndpoint)
 	}
 
 	var getAllShipsEndpoint endpoint.Endpoint
@@ -57,12 +53,12 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		getAllShipsEndpoint = MakeGetAllShipsEndpoint(s)
 		getAllShipsEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getAllShipsEndpoint)
 		getAllShipsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getAllShipsEndpoint)
-		getAllShipsEndpoint = opentracing.TraceServer(otTracer, "Login")(getAllShipsEndpoint)
+		getAllShipsEndpoint = opentracing.TraceServer(otTracer, "GetAllShips")(getAllShipsEndpoint)
 		if zipkinTracer != nil {
-			getAllShipsEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Login")(getAllShipsEndpoint)
+			getAllShipsEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetAllShips")(getAllShipsEndpoint)
 		}
-		getAllShipsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Login"))(getAllShipsEndpoint)
-		getAllShipsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Login"))(getAllShipsEndpoint)
+		getAllShipsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetAllShips"))(getAllShipsEndpoint)
+		getAllShipsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetAllShips"))(getAllShipsEndpoint)
 	}
 
 	var registerStationEndpoint endpoint.Endpoint
@@ -70,12 +66,12 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		registerStationEndpoint = MakeRegisterStationEndpoint(s)
 		registerStationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerStationEndpoint)
 		registerStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerStationEndpoint)
-		registerStationEndpoint = opentracing.TraceServer(otTracer, "Signup")(registerStationEndpoint)
+		registerStationEndpoint = opentracing.TraceServer(otTracer, "RegisterStation")(registerStationEndpoint)
 		if zipkinTracer != nil {
-			registerStationEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Signup")(registerStationEndpoint)
+			registerStationEndpoint = zipkin.TraceEndpoint(zipkinTracer, "RegisterStation")(registerStationEndpoint)
 		}
-		registerStationEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Signup"))(registerStationEndpoint)
-		registerStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Signup"))(registerStationEndpoint)
+		registerStationEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "RegisterStation"))(registerStationEndpoint)
+		registerStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "RegisterStation"))(registerStationEndpoint)
 	}
 
 	var getAllStationsEndpoint endpoint.Endpoint
@@ -83,12 +79,12 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		getAllStationsEndpoint = MakeGetAllStationsEndpoint(s)
 		getAllStationsEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getAllStationsEndpoint)
 		getAllStationsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getAllStationsEndpoint)
-		getAllStationsEndpoint = opentracing.TraceServer(otTracer, "Login")(getAllStationsEndpoint)
+		getAllStationsEndpoint = opentracing.TraceServer(otTracer, "GetAllStations")(getAllStationsEndpoint)
 		if zipkinTracer != nil {
-			getAllStationsEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Login")(getAllStationsEndpoint)
+			getAllStationsEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetAllStations")(getAllStationsEndpoint)
 		}
-		getAllStationsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Login"))(getAllStationsEndpoint)
-		getAllStationsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Login"))(getAllStationsEndpoint)
+		getAllStationsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetAllStations"))(getAllStationsEndpoint)
+		getAllStationsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetAllStations"))(getAllStationsEndpoint)
 	}
 
 	return EndpointSet{
@@ -106,100 +102,28 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 
 func MakeRegisterShipEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.RegisterShipResponse
-			err  error
-		)
-
 		req := request.(*pb.RegisterShipRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.RegisterShip(ctx, req)
-		return resp, err
+		return s.RegisterShip(ctx, req)
 	}
 }
 
 func MakeGetAllShipsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.GetAllShipsResponse
-			err  error
-		)
-
 		req := request.(*pb.GetAllShipsRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.GetAllShips(ctx, req)
-		return resp, err
+		return s.GetAllShips(ctx, req)
 	}
 }
 
 func MakeRegisterStationEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.RegisterStationResponse
-			err  error
-		)
-
 		req := request.(*pb.RegisterStationRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.RegisterStation(ctx, req)
-		return resp, err
+		return s.RegisterStation(ctx, req)
 	}
 }
 
 func MakeGetAllStationsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.GetAllStationsResponse
-			err  error
-		)
-
 		req := request.(*pb.GetAllStationsRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.GetAllStations(ctx, req)
-		return resp, err
+		return s.GetAllStations(ctx, req)
 	}
-}
-
-//TODO see singleton init
-var validate *validator.Validate
-
-func init() {
-	validate = validator.New()
-	validate.RegisterValidation("notblank", func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		switch field.Kind() {
-		case reflect.String:
-			return len(strings.TrimSpace(field.String())) > 0
-		case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
-			return field.Len() > 0
-		case reflect.Ptr, reflect.Interface, reflect.Func:
-			return !field.IsNil()
-		default:
-			return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
-		}
-	})
 }

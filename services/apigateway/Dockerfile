@@ -12,14 +12,13 @@ RUN go mod download
 RUN echo $SVC_NAME
 
 FROM build_base AS server_builder
-ARG SVC_NAME
-
-
 
 ADD https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip /tmp/consul.zip
 RUN cd /bin && unzip /tmp/consul.zip && chmod +x /bin/consul && rm /tmp/consul.zip
 
 RUN go install github.com/mattn/goreman@v0.3.7 && cp /go/bin/goreman /bin
+ARG SVC_NAME
+
 
 COPY ./Makefile ./Makefile
 COPY ./common ./common
@@ -46,8 +45,6 @@ RUN apk update && apk upgrade && apk add bash && apk add supervisor
 RUN mkdir -p /var/log/supervisor
 COPY --from=server_builder /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh /Procfile  /
 COPY --from=server_builder /bin/consul /bin/goreman /bin/
-COPY --from=server_builder /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh   /
-COPY --from=server_builder /bin/consul /bin/
 # COPY --from=server_builder /supervisord.conf /
 
 # ENTRYPOINT ["/usr/bin/supervisord", "-c", "/supervisord.conf"]

@@ -17,6 +17,7 @@ import (
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/google/uuid"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
@@ -54,8 +55,8 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			strings.Replace(service.ServiceName, "-", ".", -1),
 			"GetUserByUsername",
 			encodeGRPCGetUserByUsernameRequest,
-			decodeGRPCGetUserByUsernameResponse,
-			pb.GetUserByUsernameResponse{},
+			decodeGRPCGetUserResponse,
+			pb.GetUserResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
@@ -101,15 +102,24 @@ func encodeGRPCGetUserByUsernameRequest(_ context.Context, request interface{}) 
 	}, nil
 }
 
-func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetUserByUsernameResponse)
-	return &dtos.GetUserByUsernameResponse{User: model.User{
-		Id:       response.User.Id,
-		Username: response.User.Username,
-		Password: response.User.Password,
-		//Role:     strings.Title(strings.ToLower(strings.TrimLeft(response.User.Role.String(), "ROLE_"))),
-		Role: response.User.Role,
-	}}, nil
+func decodeGRPCGetUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.GetUserResponse)
+
+	var user *model.User
+	if response.User != nil {
+		user = &model.User{
+			Id:       response.User.Id,
+			Username: response.User.Username,
+			Password: response.User.Password,
+			//Role:     strings.Title(strings.ToLower(strings.TrimLeft(response.User.Role.String(), "ROLE_"))),
+			Role: response.User.Role,
+		}
+	}
+
+	return &dtos.GetUserResponse{
+		User:  user,
+		Error: response.Error,
+	}, nil
 }
 
 func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
@@ -130,9 +140,12 @@ func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interf
 	}, nil
 }
 func decodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	Response := grpcResponse.(*pb.CreateUserResponse)
+	response := grpcResponse.(*pb.CreateUserResponse)
+
+	id, _ := uuid.Parse(response.Id)
+
 	return &dtos.CreateUserResponse{
-		Id:  Response.Id,
-		Err: Response.Error,
+		Id:    &id,
+		Error: response.Error,
 	}, nil
 }

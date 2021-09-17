@@ -1,34 +1,44 @@
 syntax = "proto3";
 
-package centralcommandsvc.v1;
+package deblasis.v1;
 
+import "google/protobuf/empty.proto";
+import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/proto/v1;centralcommandsvc_v1";
 
 service CentralCommandService {
-  rpc RegisterStation(RegisterStationRequest) returns (RegisterStationResponse) {
+  rpc RegisterStation(RegisterStationRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/centcom/station/register"
-      body: "station"
+      body: "*"
+      //this would be the correct way to return the struct but we want a custom serialization so it has to be HttpBody
+      //response_body: "station"
     };
   }
-  rpc RegisterShip(RegisterShipRequest) returns (RegisterShipResponse) {
+  rpc RegisterShip(RegisterShipRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/centcom/ship/register"
-      body: "ship"
+      body: "*"
+      //this would be the correct way to return the struct but we want a custom serialization so it has to be HttpBody
+      //response_body: "ship"
     };    
   }
 
-  rpc GetAllShips (GetAllShipsRequest) returns (GetAllShipsResponse) {
+  rpc GetAllShips (GetAllShipsRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       get: "/centcom/ship/all"
+      //this would be the correct way to promote the field to the body but since it's a repeated field, it's not allowed.
+      //response_body: "ships"
     };    
   }
-  rpc GetAllStations (GetAllStationsRequest) returns (GetAllStationsResponse) {
+  rpc GetAllStations (GetAllStationsRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       get: "/centcom/station/all"
+      //this would be the correct way to promote the field to the body but since it's a repeated field, it's not allowed.
+      //response_body: "stations"
     };    
   }
 }
@@ -36,6 +46,7 @@ service CentralCommandService {
 
 message Dock {
   string id = 1;
+  //@gotags: json:"-"
   string station_id =2;
   int64 num_docking_ports = 3[(google.api.field_behavior) = REQUIRED];
   int64 occupied = 4;
@@ -58,9 +69,12 @@ message Ship {
   float weight = 3[(google.api.field_behavior) = REQUIRED];
 }
 
-
+message DockSpec {
+  int64 num_docking_ports = 1[(google.api.field_behavior) = REQUIRED];
+}
 message RegisterStationRequest {
-  Station station = 1;
+  float capacity = 1[(google.api.field_behavior) = REQUIRED];
+  repeated DockSpec docks = 2[(google.api.field_behavior) = REQUIRED];
 }
 message RegisterStationResponse {
   Station station = 1;
@@ -68,7 +82,7 @@ message RegisterStationResponse {
 }
 
 message RegisterShipRequest {
-  Ship ship = 1;
+  float weight = 1[(google.api.field_behavior) = REQUIRED];
 }
 message RegisterShipResponse {
   Ship ship = 1;

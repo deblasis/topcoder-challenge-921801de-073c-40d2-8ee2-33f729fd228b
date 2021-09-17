@@ -4,9 +4,11 @@ package centralcommandsvc_v1
 
 import (
 	context "context"
+	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -18,10 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CentralCommandServiceClient interface {
-	RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*RegisterStationResponse, error)
-	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*RegisterShipResponse, error)
-	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
-	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error)
+	RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type centralCommandServiceClient struct {
@@ -32,36 +34,36 @@ func NewCentralCommandServiceClient(cc grpc.ClientConnInterface) CentralCommandS
 	return &centralCommandServiceClient{cc}
 }
 
-func (c *centralCommandServiceClient) RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*RegisterStationResponse, error) {
-	out := new(RegisterStationResponse)
-	err := c.cc.Invoke(ctx, "/centralcommandsvc.v1.CentralCommandService/RegisterStation", in, out, opts...)
+func (c *centralCommandServiceClient) RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/RegisterStation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *centralCommandServiceClient) RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*RegisterShipResponse, error) {
-	out := new(RegisterShipResponse)
-	err := c.cc.Invoke(ctx, "/centralcommandsvc.v1.CentralCommandService/RegisterShip", in, out, opts...)
+func (c *centralCommandServiceClient) RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/RegisterShip", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *centralCommandServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error) {
-	out := new(GetAllShipsResponse)
-	err := c.cc.Invoke(ctx, "/centralcommandsvc.v1.CentralCommandService/GetAllShips", in, out, opts...)
+func (c *centralCommandServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/GetAllShips", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *centralCommandServiceClient) GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error) {
-	out := new(GetAllStationsResponse)
-	err := c.cc.Invoke(ctx, "/centralcommandsvc.v1.CentralCommandService/GetAllStations", in, out, opts...)
+func (c *centralCommandServiceClient) GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/GetAllStations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,31 +71,33 @@ func (c *centralCommandServiceClient) GetAllStations(ctx context.Context, in *Ge
 }
 
 // CentralCommandServiceServer is the server API for CentralCommandService service.
-// All implementations should embed UnimplementedCentralCommandServiceServer
+// All implementations must embed UnimplementedCentralCommandServiceServer
 // for forward compatibility
 type CentralCommandServiceServer interface {
-	RegisterStation(context.Context, *RegisterStationRequest) (*RegisterStationResponse, error)
-	RegisterShip(context.Context, *RegisterShipRequest) (*RegisterShipResponse, error)
-	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
-	GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error)
+	RegisterStation(context.Context, *RegisterStationRequest) (*httpbody.HttpBody, error)
+	RegisterShip(context.Context, *RegisterShipRequest) (*emptypb.Empty, error)
+	GetAllShips(context.Context, *GetAllShipsRequest) (*httpbody.HttpBody, error)
+	GetAllStations(context.Context, *GetAllStationsRequest) (*httpbody.HttpBody, error)
+	mustEmbedUnimplementedCentralCommandServiceServer()
 }
 
-// UnimplementedCentralCommandServiceServer should be embedded to have forward compatible implementations.
+// UnimplementedCentralCommandServiceServer must be embedded to have forward compatible implementations.
 type UnimplementedCentralCommandServiceServer struct {
 }
 
-func (UnimplementedCentralCommandServiceServer) RegisterStation(context.Context, *RegisterStationRequest) (*RegisterStationResponse, error) {
+func (UnimplementedCentralCommandServiceServer) RegisterStation(context.Context, *RegisterStationRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterStation not implemented")
 }
-func (UnimplementedCentralCommandServiceServer) RegisterShip(context.Context, *RegisterShipRequest) (*RegisterShipResponse, error) {
+func (UnimplementedCentralCommandServiceServer) RegisterShip(context.Context, *RegisterShipRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterShip not implemented")
 }
-func (UnimplementedCentralCommandServiceServer) GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error) {
+func (UnimplementedCentralCommandServiceServer) GetAllShips(context.Context, *GetAllShipsRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllShips not implemented")
 }
-func (UnimplementedCentralCommandServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error) {
+func (UnimplementedCentralCommandServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllStations not implemented")
 }
+func (UnimplementedCentralCommandServiceServer) mustEmbedUnimplementedCentralCommandServiceServer() {}
 
 // UnsafeCentralCommandServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to CentralCommandServiceServer will
@@ -116,7 +120,7 @@ func _CentralCommandService_RegisterStation_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommandsvc.v1.CentralCommandService/RegisterStation",
+		FullMethod: "/deblasis.v1.CentralCommandService/RegisterStation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandServiceServer).RegisterStation(ctx, req.(*RegisterStationRequest))
@@ -134,7 +138,7 @@ func _CentralCommandService_RegisterShip_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommandsvc.v1.CentralCommandService/RegisterShip",
+		FullMethod: "/deblasis.v1.CentralCommandService/RegisterShip",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandServiceServer).RegisterShip(ctx, req.(*RegisterShipRequest))
@@ -152,7 +156,7 @@ func _CentralCommandService_GetAllShips_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommandsvc.v1.CentralCommandService/GetAllShips",
+		FullMethod: "/deblasis.v1.CentralCommandService/GetAllShips",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandServiceServer).GetAllShips(ctx, req.(*GetAllShipsRequest))
@@ -170,7 +174,7 @@ func _CentralCommandService_GetAllStations_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/centralcommandsvc.v1.CentralCommandService/GetAllStations",
+		FullMethod: "/deblasis.v1.CentralCommandService/GetAllStations",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandServiceServer).GetAllStations(ctx, req.(*GetAllStationsRequest))
@@ -182,7 +186,7 @@ func _CentralCommandService_GetAllStations_Handler(srv interface{}, ctx context.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CentralCommandService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "centralcommandsvc.v1.CentralCommandService",
+	ServiceName: "deblasis.v1.CentralCommandService",
 	HandlerType: (*CentralCommandServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

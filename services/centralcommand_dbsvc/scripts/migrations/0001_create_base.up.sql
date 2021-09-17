@@ -1,13 +1,13 @@
 CREATE TABLE if not exists stations(
-   id VARCHAR(255),
+   id UUID NOT NULL,
    capacity FLOAT NOT NULL,
   
    PRIMARY KEY(id)
 );
 
 CREATE TABLE if not exists docks(
-   id VARCHAR(255) ,
-   station_id VARCHAR(255) NOT NULL,
+   id UUID NOT NULL,
+   station_id UUID NOT NULL,
    num_docking_ports INTEGER NOT NULL,
    weight FLOAT NOT NULL DEFAULT(0),
  
@@ -20,8 +20,8 @@ CREATE TABLE if not exists docks(
 
 
 CREATE TABLE if not exists docked_ships(
-   dock_id VARCHAR(255),
-   ship_id VARCHAR(255) UNIQUE,
+   dock_id UUID NOT NULL,
+   ship_id UUID NOT NULL UNIQUE,
    docked_since TIMESTAMP,
    dock_duration INT,
 
@@ -44,7 +44,7 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TABLE if not exists ships(
-   id VARCHAR(255),
+   id UUID NOT NULL,
    weight FLOAT NOT NULL,
 
    PRIMARY KEY(id)

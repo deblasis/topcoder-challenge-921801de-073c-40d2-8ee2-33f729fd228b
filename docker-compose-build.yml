@@ -9,19 +9,19 @@ services:
       args: 
         SVC_NAME: apigateway
 
-  auth_dbsvc:
-    build:
-      dockerfile: ./services/auth_dbsvc/Dockerfile
-      context: .
-      args: 
-        SVC_NAME: auth_dbsvc
+  # auth_dbsvc:
+  #   build:
+  #     dockerfile: ./services/auth_dbsvc/Dockerfile
+  #     context: .
+  #     args: 
+  #       SVC_NAME: auth_dbsvc
    
-  authsvc:
-    build:
-      dockerfile: ./services/authsvc/Dockerfile
-      context: .
-      args: 
-        SVC_NAME: authsvc
+  # authsvc:
+  #   build:
+  #     dockerfile: ./services/authsvc/Dockerfile
+  #     context: .
+  #     args: 
+  #       SVC_NAME: authsvc
    
 
   centralcommand_dbsvc:

@@ -51,15 +51,15 @@ type jwtTokenClaims struct {
 	Claims STCClaims
 }
 
-func (h *JwtHandler) NewJWTToken(userId int64, username, role, issuer string) (tokenClaims jwtTokenClaims, expiresAt int64, err error) {
+func (h *JwtHandler) NewJWTToken(userId uuid.UUID, username, role, issuer string) (tokenClaims jwtTokenClaims, expiresAt int64, err error) {
 	now := time.Now().Unix()
 	expiresAt = now + int64(h.jwtConfig.TokenDuration)
 	claims := STCClaims{
-		UserId:   userId,
+		UserId:   userId.String(),
 		Username: username,
 		Role:     role,
 		StandardClaims: jwt.StandardClaims{
-			Id:        uuid.New().String(),
+			Id:        uuid.NewString(),
 			Audience:  "deblasis.SpaceTrafficControl",
 			ExpiresAt: expiresAt,
 			IssuedAt:  now,
@@ -87,7 +87,7 @@ func (h *JwtHandler) ExtractTokenFromHTTPRequest(r *http.Request) string {
 
 func (h *JwtHandler) VerifyToken(tokenString string) (*jwt.Token, error) {
 	//tokenString := h.ExtractToken(r)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &STCClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return h.publicKey, nil
 	})
 	if err != nil {
@@ -101,7 +101,7 @@ func (h *JwtHandler) ValidateToken(tokenString string, validatorFn func(*jwt.Tok
 	if err != nil {
 		return err
 	}
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+	if _, ok := token.Claims.(STCClaims); !ok && !token.Valid {
 		return err
 	}
 

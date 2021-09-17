@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"deblasis.net/space-traffic-control/common"
 	"github.com/go-kit/kit/log"
 	gk "github.com/go-kit/kit/transport/grpc"
 	"github.com/go-kit/log/level"
@@ -39,7 +40,12 @@ func (interceptor *AuthServerInterceptor) Unary() grpc.UnaryServerInterceptor {
 	) (interface{}, error) {
 		interceptor.logger.Log("server_unaryinterceptor", info.FullMethod)
 
-		err := interceptor.checkAuth(ctx, info.FullMethod, req, log.With(interceptor.logger, "component", "checkAuth"))
+		//heathcheck, it's ok anyway, let's not flood logs and stuff
+		if info.FullMethod == "/grpc.health.v1.Health/Check" {
+			return handler(ctx, req)
+		}
+
+		ctx, err := interceptor.checkAuth(ctx, info.FullMethod, req, log.With(interceptor.logger, "component", "checkAuth"))
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +57,7 @@ func (interceptor *AuthServerInterceptor) Unary() grpc.UnaryServerInterceptor {
 	}
 }
 
-func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method string, req interface{}, logger log.Logger) error {
+func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method string, req interface{}, logger log.Logger) (context.Context, error) {
 
 	reqType := fmt.Sprintf("%T", req)
 	aclRule, ok := interceptor.aclRules[method]
@@ -60,26 +66,27 @@ func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method 
 	if !ok {
 		level.Debug(logger).Log("msg", "everyone can access")
 		// everyone can access
-		return nil
+		return ctx, nil
 	}
 
 	acl := aclRule(req, log.With(interceptor.logger, "component", "aclRule"))
 	if acl.allGood {
-		return nil
+		return ctx, nil
 	}
 
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Errorf(codes.Unauthenticated, "metadata is not provided")
+		return ctx, status.Errorf(codes.Unauthenticated, "metadata is not provided")
 	}
 
 	values := md["authorization"]
 	if len(values) == 0 {
-		return status.Errorf(codes.Unauthenticated, "authorization token is not provided")
+		return ctx, status.Errorf(codes.Unauthenticated, "authorization token is not provided")
 	}
 
 	accessToken := values[0]
-	level.Debug(logger).Log("accessToken", accessToken)
+	//I don't want to have the token in logs, just flagging its presence is fine for debugging purposes
+	level.Debug(logger).Log("accessToken_len", len(accessToken))
 
 	if len(strings.TrimLeft(accessToken, "Bearer ")) < len(accessToken) {
 		accessToken = strings.Split(accessToken, "Bearer ")[1]
@@ -87,16 +94,22 @@ func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method 
 
 	token, err := interceptor.jwtHandler.VerifyToken(accessToken)
 	if err != nil {
-		return status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
+		return ctx, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
 	}
 
 	aclRuleErr := acl.tokenValidator(token)
 	if aclRuleErr == nil {
 		level.Debug(logger).Log("aclRuleErr", "SUCCESS")
-		return nil
+		claims, ok := token.Claims.(*STCClaims)
+		if ok {
+			level.Debug(logger).Log("msg", "setting creds into context")
+			ctx = context.WithValue(ctx, common.ContextKeyUserId, claims.UserId)
+			ctx = context.WithValue(ctx, common.ContextKeyUserRole, claims.Role)
+		}
+		return ctx, nil
 	}
 
-	return status.Error(codes.PermissionDenied, "you are not allowed to do that")
+	return ctx, status.Error(codes.PermissionDenied, "you are not allowed to do that")
 }
 
 type ACLRule func(req interface{}, logger log.Logger) ACLDescriptor

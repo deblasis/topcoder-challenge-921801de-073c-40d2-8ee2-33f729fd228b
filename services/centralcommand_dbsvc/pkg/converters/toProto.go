@@ -11,7 +11,7 @@ func CreateStationRequestToProto(src *dtos.CreateStationRequest) *pb.CreateStati
 		Station: &pb.Station{},
 	}
 	if errs := m.Copy(ret.Station, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -19,7 +19,7 @@ func CreateStationRequestToProto(src *dtos.CreateStationRequest) *pb.CreateStati
 func CreateStationResponseToProto(src *dtos.CreateStationResponse) *pb.CreateStationResponse {
 	ret := &pb.CreateStationResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -28,7 +28,7 @@ func CreateShipRequestToProto(src *dtos.CreateShipRequest) *pb.CreateShipRequest
 		Ship: &pb.Ship{},
 	}
 	if errs := m.Copy(ret.Ship, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -36,7 +36,7 @@ func CreateShipRequestToProto(src *dtos.CreateShipRequest) *pb.CreateShipRequest
 func CreateShipResponseToProto(src *dtos.CreateShipResponse) *pb.CreateShipResponse {
 	ret := &pb.CreateShipResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -46,7 +46,7 @@ func GetAllShipsRequestToProto(src *dtos.GetAllShipsRequest) *pb.GetAllShipsRequ
 		return ret
 	}
 	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -55,7 +55,7 @@ func GetAllShipsResponseToProto(src *dtos.GetAllShipsResponse) *pb.GetAllShipsRe
 	ret := &pb.GetAllShipsResponse{}
 
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -65,7 +65,7 @@ func GetAllStationsRequestToProto(src *dtos.GetAllStationsRequest) *pb.GetAllSta
 		return ret
 	}
 	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -73,7 +73,7 @@ func GetAllStationsRequestToProto(src *dtos.GetAllStationsRequest) *pb.GetAllSta
 func GetAllStationsResponseToProto(src *dtos.GetAllStationsResponse) *pb.GetAllStationsResponse {
 	ret := &pb.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }

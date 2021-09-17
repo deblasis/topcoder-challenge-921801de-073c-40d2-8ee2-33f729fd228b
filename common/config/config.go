@@ -65,8 +65,10 @@ type JWTConfig struct {
 }
 
 type APIGatewayConfig struct {
-	RetryMax       int
-	RetryTimeoutMs int
+	RetryMax                          int
+	RetryTimeoutMs                    int
+	AUTHSERVICEGRPCENDPOINT           string
+	CENTRALCOMMANDSERVICEGRPCENDPOINT string
 }
 
 // LoadConfig load config from file

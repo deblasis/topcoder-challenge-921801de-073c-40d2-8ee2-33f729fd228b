@@ -2,8 +2,6 @@ package endpoints
 
 import (
 	"context"
-	"reflect"
-	"strings"
 	"time"
 
 	stdopentracing "github.com/opentracing/opentracing-go"
@@ -22,8 +20,6 @@ import (
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
-	"github.com/go-playground/validator"
-	"github.com/pkg/errors"
 )
 
 type EndpointSet struct {
@@ -103,12 +99,6 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 func MakeCreateShipEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.CreateShipRequest)
-		err := validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.CreateShip(ctx, req)
 	}
 }
@@ -116,13 +106,6 @@ func MakeCreateShipEndpoint(s service.CentralCommandDBService) endpoint.Endpoint
 func MakeGetAllShipsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetAllShipsRequest)
-
-		err := validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.GetAllShips(ctx, req)
 	}
 }
@@ -130,13 +113,6 @@ func MakeGetAllShipsEndpoint(s service.CentralCommandDBService) endpoint.Endpoin
 func MakeCreateStationEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.CreateStationRequest)
-
-		err := validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.CreateStation(ctx, req)
 	}
 }
@@ -144,13 +120,6 @@ func MakeCreateStationEndpoint(s service.CentralCommandDBService) endpoint.Endpo
 func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetAllStationsRequest)
-
-		err := validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.GetAllStations(ctx, req)
 
 		// 	if err != nil {
@@ -176,24 +145,4 @@ func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endp
 		// }
 
 	}
-}
-
-//TODO see singleton init
-var validate *validator.Validate
-
-func init() {
-	validate = validator.New()
-	validate.RegisterValidation("notblank", func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		switch field.Kind() {
-		case reflect.String:
-			return len(strings.TrimSpace(field.String())) > 0
-		case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
-			return field.Len() > 0
-		case reflect.Ptr, reflect.Interface, reflect.Func:
-			return !field.IsNil()
-		default:
-			return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
-		}
-	})
 }
