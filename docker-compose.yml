@@ -41,8 +41,8 @@ services:
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
      DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-     DEBLASIS_AUTHSERVICE_GRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
-     DEBLASIS_CENTRALCOMMANDERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
+     DEBLASIS_APIGATEWAY_AUTHSERVICEGRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
+     DEBLASIS_CENTRALCOMMANSERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
     networks:
       net:
     dns:
@@ -54,6 +54,31 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      
+  auth_db:
+    image: postgres:13.4-alpine3.14
+    command: ["postgres", "-c", "log_statement=all"]
+    restart: always
+    environment:
+      PGUSER: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: auth
+      DEBLASIS_CONSULT_HOST: consul
+      DEBLASIS_CONSULT_PORT: 8500
+      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
+    ports:
+      - "5432:5432"
+    volumes:
+      - data_auth:/var/lib/postgresql/data
+    networks: 
+      - auth_backend    
+      - net  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5              
 
 
   auth_dbsvc:
@@ -109,30 +134,6 @@ services:
 
 
 
-  auth_db:
-    image: postgres:13.4-alpine3.14
-    command: ["postgres", "-c", "log_statement=all"]
-    restart: always
-    environment:
-      PGUSER: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: auth
-      DEBLASIS_CONSULT_HOST: consul
-      DEBLASIS_CONSULT_PORT: 8500
-      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    ports:
-      - "5432:5432"
-    volumes:
-      - data_auth:/var/lib/postgresql/data
-    networks: 
-      - auth_backend    
-      - net  
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5              
 
 
   centralcommand_db:

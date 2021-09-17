@@ -10,7 +10,7 @@ import (
 func StationToDto(src *model.Station) *dtos.Station {
 	ret := &dtos.Station{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -26,7 +26,7 @@ func StationsToDto(src []model.Station) []dtos.Station {
 func DockToDto(src model.Dock) dtos.Dock {
 	ret := &dtos.Dock{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return *ret
 }
@@ -42,7 +42,7 @@ func DocksToDto(src []model.Dock) []dtos.Dock {
 func ShipToDto(src *model.Ship) *dtos.Ship {
 	ret := &dtos.Ship{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -63,7 +63,7 @@ func ProtoCreateStationRequestToDto(src *pb.CreateStationRequest) *dtos.CreateSt
 	}
 
 	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
@@ -74,38 +74,50 @@ func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequ
 		return ret
 	}
 	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
 func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipResponse {
+	if src.Error != "" {
+		return &dtos.CreateShipResponse{Error: src.Error}
+	}
 	ret := &dtos.CreateShipResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.CreateStationResponse {
+	if src.Error != "" {
+		return &dtos.CreateStationResponse{Error: src.Error}
+	}
 	ret := &dtos.CreateStationResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetAllStationsResponse {
+	if src.Error != "" {
+		return &dtos.GetAllStationsResponse{Error: src.Error}
+	}
 	ret := &dtos.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShipsResponse {
+	if src.Error != "" {
+		return &dtos.GetAllShipsResponse{Error: src.Error}
+	}
 	ret := &dtos.GetAllShipsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }

@@ -24,7 +24,6 @@ COPY ./services/${SVC_NAME} ./services/${SVC_NAME}
 RUN make ${SVC_NAME} \
     && mv build/deblasis-$SVC_NAME /exe
 
-
 RUN make ${SVC_NAME}_migrator \
     && mv build/deblasis-${SVC_NAME}_migrator /migrator
 

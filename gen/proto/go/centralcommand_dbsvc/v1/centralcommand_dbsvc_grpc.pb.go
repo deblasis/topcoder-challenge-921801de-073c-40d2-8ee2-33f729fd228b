@@ -34,7 +34,7 @@ func NewCentralCommandDBServiceClient(cc grpc.ClientConnInterface) CentralComman
 
 func (c *centralCommandDBServiceClient) CreateShip(ctx context.Context, in *CreateShipRequest, opts ...grpc.CallOption) (*CreateShipResponse, error) {
 	out := new(CreateShipResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/CreateShip", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/CreateShip", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (c *centralCommandDBServiceClient) CreateShip(ctx context.Context, in *Crea
 
 func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error) {
 	out := new(CreateStationResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/CreateStation", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/CreateStation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func (c *centralCommandDBServiceClient) CreateStation(ctx context.Context, in *C
 
 func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error) {
 	out := new(GetAllShipsResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/GetAllShips", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (c *centralCommandDBServiceClient) GetAllShips(ctx context.Context, in *Get
 
 func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error) {
 	out := new(GetAllStationsResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandDBService/GetAllStations", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/GetAllStations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,16 +69,17 @@ func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *
 }
 
 // CentralCommandDBServiceServer is the server API for CentralCommandDBService service.
-// All implementations should embed UnimplementedCentralCommandDBServiceServer
+// All implementations must embed UnimplementedCentralCommandDBServiceServer
 // for forward compatibility
 type CentralCommandDBServiceServer interface {
 	CreateShip(context.Context, *CreateShipRequest) (*CreateShipResponse, error)
 	CreateStation(context.Context, *CreateStationRequest) (*CreateStationResponse, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error)
+	mustEmbedUnimplementedCentralCommandDBServiceServer()
 }
 
-// UnimplementedCentralCommandDBServiceServer should be embedded to have forward compatible implementations.
+// UnimplementedCentralCommandDBServiceServer must be embedded to have forward compatible implementations.
 type UnimplementedCentralCommandDBServiceServer struct {
 }
 
@@ -93,6 +94,8 @@ func (UnimplementedCentralCommandDBServiceServer) GetAllShips(context.Context, *
 }
 func (UnimplementedCentralCommandDBServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllStations not implemented")
+}
+func (UnimplementedCentralCommandDBServiceServer) mustEmbedUnimplementedCentralCommandDBServiceServer() {
 }
 
 // UnsafeCentralCommandDBServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -116,7 +119,7 @@ func _CentralCommandDBService_CreateShip_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.CentralCommandDBService/CreateShip",
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/CreateShip",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).CreateShip(ctx, req.(*CreateShipRequest))
@@ -134,7 +137,7 @@ func _CentralCommandDBService_CreateStation_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.CentralCommandDBService/CreateStation",
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/CreateStation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).CreateStation(ctx, req.(*CreateStationRequest))
@@ -152,7 +155,7 @@ func _CentralCommandDBService_GetAllShips_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.CentralCommandDBService/GetAllShips",
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/GetAllShips",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).GetAllShips(ctx, req.(*GetAllShipsRequest))
@@ -170,7 +173,7 @@ func _CentralCommandDBService_GetAllStations_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.CentralCommandDBService/GetAllStations",
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/GetAllStations",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CentralCommandDBServiceServer).GetAllStations(ctx, req.(*GetAllStationsRequest))
@@ -182,7 +185,7 @@ func _CentralCommandDBService_GetAllStations_Handler(srv interface{}, ctx contex
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CentralCommandDBService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "deblasis.v1.CentralCommandDBService",
+	ServiceName: "deblasis.state.v1.CentralCommandDBService",
 	HandlerType: (*CentralCommandDBServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

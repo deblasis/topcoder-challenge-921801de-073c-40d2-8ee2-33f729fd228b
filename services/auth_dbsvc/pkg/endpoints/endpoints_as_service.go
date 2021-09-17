@@ -8,12 +8,22 @@ import (
 )
 
 // GetUserByUsername(ctx context.Context, username string) (model.User, error)
-func (s EndpointSet) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (*dtos.GetUserByUsernameResponse, error) {
+func (s EndpointSet) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (*dtos.GetUserResponse, error) {
 	resp, err := s.GetUserByUsernameEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(*dtos.GetUserByUsernameResponse)
+	response := resp.(*dtos.GetUserResponse)
+	return response, nil
+}
+
+// GetUserById(ctx context.Context, id string) (model.User, error)
+func (s EndpointSet) GetUserById(ctx context.Context, request *dtos.GetUserByIdRequest) (*dtos.GetUserResponse, error) {
+	resp, err := s.GetUserByIdEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(*dtos.GetUserResponse)
 	return response, nil
 }
 
@@ -28,6 +38,6 @@ func (s EndpointSet) CreateUser(ctx context.Context, request *dtos.CreateUserReq
 }
 
 var (
-	_ endpoint.Failer = dtos.GetUserByUsernameResponse{}
+	_ endpoint.Failer = dtos.GetUserResponse{}
 	_ endpoint.Failer = dtos.CreateUserResponse{}
 )

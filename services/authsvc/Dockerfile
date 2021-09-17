@@ -24,10 +24,10 @@ COPY ./services/authsvc ./services/authsvc
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe
 
+RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh /
 RUN cp ./scripts/*.sh /   
-
 
 FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash
-COPY --from=server_builder /exe /wait-for-it.sh /
-ENTRYPOINT ["/exe"]
+COPY --from=server_builder /entrypoint.sh /exe /wait-for-it.sh  /
+ENTRYPOINT ["/entrypoint.sh"]

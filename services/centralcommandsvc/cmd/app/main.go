@@ -13,14 +13,17 @@ import (
 	"syscall"
 	"time"
 
+	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/bootstrap"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	dbe "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	dbs "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
 	dbt "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"
+	"deblasis.net/space-traffic-control/services/centralcommandsvc/internal/acl"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/transport"
@@ -32,7 +35,6 @@ import (
 	"github.com/go-kit/kit/sd"
 	consulsd "github.com/go-kit/kit/sd/consul"
 	"github.com/go-kit/kit/sd/lb"
-	grpcgokit "github.com/go-kit/kit/transport/grpc"
 	"github.com/hashicorp/consul/api"
 	"github.com/oklog/oklog/pkg/group"
 	stdopentracing "github.com/opentracing/opentracing-go"
@@ -42,6 +44,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -157,7 +161,13 @@ func main() {
 		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
+			logger.Log("received_err", received)
+			if st, ok := status.FromError(received); !ok && st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
+				return false, nil
+			}
+			return n < retryMax, nil
+		})
 		db_endpoints.CreateShipEndpoint = retry
 	}
 	{
@@ -171,7 +181,15 @@ func main() {
 		factory := centralCommandServiceFactory(dbe.MakeCreateStationEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
+			st, _ := status.FromError(received)
+			logger.Log("received_err", received, "st_code", st.Code(), "st_err", st.Err())
+
+			if st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
+				return false, nil
+			}
+			return n < retryMax, nil
+		})
 		db_endpoints.CreateStationEndpoint = retry
 	}
 	{
@@ -191,11 +209,13 @@ func main() {
 	//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtransport.NewHTTPHandler(db_endpoints, tracer, zipkinTracer, logger)))
 
 	var (
-		g   group.Group
-		svc = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
+		g group.Group
 
-		eps = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		jwtHandler                = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
+		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
 
+		svc         = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
+		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
 	)
@@ -259,11 +279,16 @@ func main() {
 					os.Exit(1)
 				}
 				level.Info(cfg.Logger).Log("serviceName", service.ServiceName, "protocol", "GRPC", "exposed", cfg.GrpcServerPort, "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor), grpc.Creds(creds))
+				baseServer = grpc.NewServer(
+					grpc.UnaryInterceptor(grpcServerAuthInterceptor.Unary()), grpc.Creds(creds),
+				)
 			} else {
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+				baseServer = grpc.NewServer(
+					grpc.UnaryInterceptor(grpcServerAuthInterceptor.Unary()),
+				)
 			}
 			pb.RegisterCentralCommandServiceServer(baseServer, grpcServer)
+			reflection.Register(baseServer)
 
 			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
 
@@ -316,10 +341,11 @@ func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService)
 		// 		return nil, nil, err
 		// 	}
 		// } else {
-		//TODO: #17 localhost instance configurable via switch
-		conn, err = grpc.Dial(instance, grpc.WithInsecure())
-		//conn, err = grpc.Dial("localhost:9382", grpc.WithInsecure())
-
+		if cfg.BindOnLocalhost {
+			conn, err = grpc.Dial("localhost:"+strings.Split(instance, ":")[1], grpc.WithInsecure())
+		} else {
+			conn, err = grpc.Dial(instance, grpc.WithInsecure())
+		}
 		//}
 
 		if err != nil {

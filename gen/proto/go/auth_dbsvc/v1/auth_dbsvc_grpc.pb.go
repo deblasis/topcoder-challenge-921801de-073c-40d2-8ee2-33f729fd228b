@@ -19,7 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthDBServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error)
+	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 }
 
 type authDBServiceClient struct {
@@ -32,16 +33,25 @@ func NewAuthDBServiceClient(cc grpc.ClientConnInterface) AuthDBServiceClient {
 
 func (c *authDBServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error) {
 	out := new(CreateUserResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthDBService/CreateUser", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.AuthDBService/CreateUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error) {
-	out := new(GetUserByUsernameResponse)
-	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthDBService/GetUserByUsername", in, out, opts...)
+func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+	out := new(GetUserResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.AuthDBService/GetUserByUsername", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authDBServiceClient) GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+	out := new(GetUserResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.AuthDBService/GetUserById", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -49,23 +59,29 @@ func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUser
 }
 
 // AuthDBServiceServer is the server API for AuthDBService service.
-// All implementations should embed UnimplementedAuthDBServiceServer
+// All implementations must embed UnimplementedAuthDBServiceServer
 // for forward compatibility
 type AuthDBServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error)
+	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserResponse, error)
+	GetUserById(context.Context, *GetUserByIdRequest) (*GetUserResponse, error)
+	mustEmbedUnimplementedAuthDBServiceServer()
 }
 
-// UnimplementedAuthDBServiceServer should be embedded to have forward compatible implementations.
+// UnimplementedAuthDBServiceServer must be embedded to have forward compatible implementations.
 type UnimplementedAuthDBServiceServer struct {
 }
 
 func (UnimplementedAuthDBServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedAuthDBServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error) {
+func (UnimplementedAuthDBServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
 }
+func (UnimplementedAuthDBServiceServer) GetUserById(context.Context, *GetUserByIdRequest) (*GetUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
+}
+func (UnimplementedAuthDBServiceServer) mustEmbedUnimplementedAuthDBServiceServer() {}
 
 // UnsafeAuthDBServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to AuthDBServiceServer will
@@ -88,7 +104,7 @@ func _AuthDBService_CreateUser_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.AuthDBService/CreateUser",
+		FullMethod: "/deblasis.state.v1.AuthDBService/CreateUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthDBServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
@@ -106,10 +122,28 @@ func _AuthDBService_GetUserByUsername_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/deblasis.v1.AuthDBService/GetUserByUsername",
+		FullMethod: "/deblasis.state.v1.AuthDBService/GetUserByUsername",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthDBServiceServer).GetUserByUsername(ctx, req.(*GetUserByUsernameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthDBService_GetUserById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthDBServiceServer).GetUserById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deblasis.state.v1.AuthDBService/GetUserById",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthDBServiceServer).GetUserById(ctx, req.(*GetUserByIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -118,7 +152,7 @@ func _AuthDBService_GetUserByUsername_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AuthDBService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "deblasis.v1.AuthDBService",
+	ServiceName: "deblasis.state.v1.AuthDBService",
 	HandlerType: (*AuthDBServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -128,6 +162,10 @@ var AuthDBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserByUsername",
 			Handler:    _AuthDBService_GetUserByUsername_Handler,
+		},
+		{
+			MethodName: "GetUserById",
+			Handler:    _AuthDBService_GetUserById_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

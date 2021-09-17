@@ -19,7 +19,7 @@ import (
 func SignupRequestToDBDto(src *pb.SignupRequest) *dtos.CreateUserRequest {
 	ret := &dtos.CreateUserRequest{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
+		//panic(errs[0])
 	}
 	return ret
 }

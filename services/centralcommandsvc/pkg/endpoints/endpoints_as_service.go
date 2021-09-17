@@ -3,7 +3,6 @@ package endpoints
 import (
 	"context"
 
-	"deblasis.net/space-traffic-control/common/errors"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -15,7 +14,7 @@ func (s EndpointSet) RegisterShip(ctx context.Context, request *pb.RegisterShipR
 		return nil, err
 	}
 	response := resp.(*pb.RegisterShipResponse)
-	return response, errors.Str2err(response.Error)
+	return response, nil
 }
 
 // GetAllShips(ctx context.Context, request pb.GetAllShipsRequest) (pb.GetAllShipsResponse, error)
@@ -25,7 +24,7 @@ func (s EndpointSet) GetAllShips(ctx context.Context, request *pb.GetAllShipsReq
 		return nil, err
 	}
 	response := resp.(*pb.GetAllShipsResponse)
-	return response, errors.Str2err(response.Error)
+	return response, nil
 }
 
 // RegisterStation(ctx context.Context, request pb.RegisterStationRequest) (pb.RegisterStationResponse, error)
@@ -35,7 +34,7 @@ func (s EndpointSet) RegisterStation(ctx context.Context, request *pb.RegisterSt
 		return nil, err
 	}
 	response := resp.(*pb.RegisterStationResponse)
-	return response, errors.Str2err(response.Error)
+	return response, nil
 }
 
 // GetAllStations(ctx context.Context, request pb.GetAllStationsRequest) (pb.GetAllStationsResponse, error)
@@ -45,7 +44,7 @@ func (s EndpointSet) GetAllStations(ctx context.Context, request *pb.GetAllStati
 		return nil, err
 	}
 	response := resp.(*pb.GetAllStationsResponse)
-	return response, errors.Str2err(response.Error)
+	return response, nil
 }
 
 var (

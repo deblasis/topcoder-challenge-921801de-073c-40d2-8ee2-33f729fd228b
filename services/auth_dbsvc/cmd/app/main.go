@@ -193,28 +193,3 @@ func main() {
 
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
-
-// func addsvcFactory(makeEndpoint func(addservice.Service) endpoint.Endpoint, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
-// 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-// 		// We could just as easily use the HTTP or Thrift client package to make
-// 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
-// 		// the transport is an implementation detail: it doesn't leak out of
-// 		// this function. Nice!
-
-// 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		service := addtransport.NewGRPCClient(conn, tracer, zipkinTracer, logger)
-// 		endpoint := makeEndpoint(service)
-
-// 		// Notice that the addsvc gRPC client converts the connection to a
-// 		// complete addsvc, and we just throw away everything except the method
-// 		// we're interested in. A smarter factory would mux multiple methods
-// 		// over the same connection. But that would require more work to manage
-// 		// the returned io.Closer, e.g. reference counting. Since this is for
-// 		// the purposes of demonstration, we'll just keep it simple.
-
-// 		return endpoint, conn, nil
-// 	}
-// }

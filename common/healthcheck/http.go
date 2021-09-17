@@ -25,9 +25,9 @@ func makeStatusEndpoint(logger log.Logger) endpoint.Endpoint {
 		_ = request.(ServiceStatusRequest)
 		code, err := serviceStatus(ctx, logger)
 		if err != nil {
-			return ServiceStatusResponse{Code: code, Err: err.Error()}, nil
+			return ServiceStatusResponse{Code: code, Error: err.Error()}, nil
 		}
-		return ServiceStatusResponse{Code: code, Err: ""}, nil
+		return ServiceStatusResponse{Code: code, Error: ""}, nil
 	}
 }
 
@@ -47,8 +47,8 @@ func MakeStatusEndpoint(logger log.Logger, duration metrics.Histogram, otTracer 
 
 type ServiceStatusRequest struct{}
 type ServiceStatusResponse struct {
-	Code int64  `json:"code"`
-	Err  string `json:"err,omitempty"`
+	Code  int64  `json:"code"`
+	Error string `json:"error,omitempty"`
 }
 
 func serviceStatus(ctx context.Context, logger log.Logger) (int64, error) {

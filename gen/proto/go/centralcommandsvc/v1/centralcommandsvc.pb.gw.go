@@ -39,7 +39,7 @@ func request_CentralCommandService_RegisterStation_0(ctx context.Context, marsha
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Station); err != nil && err != io.EOF {
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -56,7 +56,7 @@ func local_request_CentralCommandService_RegisterStation_0(ctx context.Context, 
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Station); err != nil && err != io.EOF {
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -73,7 +73,7 @@ func request_CentralCommandService_RegisterShip_0(ctx context.Context, marshaler
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Ship); err != nil && err != io.EOF {
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -90,7 +90,7 @@ func local_request_CentralCommandService_RegisterShip_0(ctx context.Context, mar
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Ship); err != nil && err != io.EOF {
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -147,7 +147,7 @@ func RegisterCentralCommandServiceHandlerServer(ctx context.Context, mux *runtim
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/RegisterStation", runtime.WithHTTPPathPattern("/centcom/station/register"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/RegisterStation", runtime.WithHTTPPathPattern("/centcom/station/register"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -170,7 +170,7 @@ func RegisterCentralCommandServiceHandlerServer(ctx context.Context, mux *runtim
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/RegisterShip", runtime.WithHTTPPathPattern("/centcom/ship/register"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/RegisterShip", runtime.WithHTTPPathPattern("/centcom/ship/register"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -193,7 +193,7 @@ func RegisterCentralCommandServiceHandlerServer(ctx context.Context, mux *runtim
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/GetAllShips", runtime.WithHTTPPathPattern("/centcom/ship/all"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/GetAllShips", runtime.WithHTTPPathPattern("/centcom/ship/all"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -216,7 +216,7 @@ func RegisterCentralCommandServiceHandlerServer(ctx context.Context, mux *runtim
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/GetAllStations", runtime.WithHTTPPathPattern("/centcom/station/all"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/GetAllStations", runtime.WithHTTPPathPattern("/centcom/station/all"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -278,7 +278,7 @@ func RegisterCentralCommandServiceHandlerClient(ctx context.Context, mux *runtim
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/RegisterStation", runtime.WithHTTPPathPattern("/centcom/station/register"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/RegisterStation", runtime.WithHTTPPathPattern("/centcom/station/register"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -298,7 +298,7 @@ func RegisterCentralCommandServiceHandlerClient(ctx context.Context, mux *runtim
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/RegisterShip", runtime.WithHTTPPathPattern("/centcom/ship/register"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/RegisterShip", runtime.WithHTTPPathPattern("/centcom/ship/register"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -318,7 +318,7 @@ func RegisterCentralCommandServiceHandlerClient(ctx context.Context, mux *runtim
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/GetAllShips", runtime.WithHTTPPathPattern("/centcom/ship/all"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/GetAllShips", runtime.WithHTTPPathPattern("/centcom/ship/all"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -338,7 +338,7 @@ func RegisterCentralCommandServiceHandlerClient(ctx context.Context, mux *runtim
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/centralcommandsvc.v1.CentralCommandService/GetAllStations", runtime.WithHTTPPathPattern("/centcom/station/all"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/deblasis.v1.CentralCommandService/GetAllStations", runtime.WithHTTPPathPattern("/centcom/station/all"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return

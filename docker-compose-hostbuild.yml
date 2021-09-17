@@ -1,0 +1,39 @@
+version: '3.6'
+
+services:
+
+  apigateway:
+    build:
+      dockerfile: ./services/apigateway/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: apigateway
+
+  auth_dbsvc:
+    build:
+      dockerfile: ./services/auth_dbsvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: auth_dbsvc
+   
+  authsvc:
+    build:
+      dockerfile: ./services/authsvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: authsvc
+   
+
+  centralcommand_dbsvc:
+    build:
+      dockerfile: ./services/centralcommand_dbsvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: centralcommand_dbsvc
+  centralcommandsvc:
+    build:
+      dockerfile: ./services/centralcommandsvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: centralcommandsvc
+   

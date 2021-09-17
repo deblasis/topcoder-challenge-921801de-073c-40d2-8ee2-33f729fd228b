@@ -25,15 +25,16 @@ type ConsulRegister struct {
 
 func NewConsulRegister(consulAddress, serviceName string, servicePort, metricsPort int, tags []string, logger log.Logger, forceLocalhost bool) *ConsulRegister {
 	return &ConsulRegister{
-		ConsulAddress:                  consulAddress,
-		ServiceName:                    serviceName,
-		Tags:                           tags,
-		ServicePort:                    servicePort,
-		MetricsPort:                    metricsPort,
-		DeregisterCriticalServiceAfter: time.Duration(1) * time.Minute,
-		Interval:                       time.Duration(20) * time.Second,
-		logger:                         logger,
-		forceLocalhost:                 forceLocalhost,
+		ConsulAddress: consulAddress,
+		ServiceName:   serviceName,
+		Tags:          tags,
+		ServicePort:   servicePort,
+		MetricsPort:   metricsPort,
+		//TODO UNCOMMENT!!!! THIS IS FOR DEBUG
+		//DeregisterCriticalServiceAfter: time.Duration(1) * time.Minute,
+		Interval:       time.Duration(20) * time.Second,
+		logger:         logger,
+		forceLocalhost: forceLocalhost,
 	}
 }
 

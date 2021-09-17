@@ -29,15 +29,5 @@ Content-Type: application/json; charset=utf-8
 ###
 
 
-
-
-
-# grpcurl -import-path ./services/centralcommand_dbsvc/pb/ -proto centralcommand_dbsvc.proto -d @ -plaintext localhost:8082 AuthDBSvc/CreateUser <<EOM                                                                             baremetal-cluster 
-# {
-#   "user": {
-#     "username": "He6a6rl86757r8a4ltto",
-#     "password": "Hello",
-#     "role": "COMMAND"
-#   }
-# }
-# EOM
+#evans example
+#echo '{}' | evans -r  --port 9482 cli call deblasis.v1.CentralCommandService.GetAllShips | jq -r .data  | base64 --decode | jq

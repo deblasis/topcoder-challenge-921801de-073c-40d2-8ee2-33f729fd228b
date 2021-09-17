@@ -2,8 +2,6 @@ package endpoints
 
 import (
 	"context"
-	"reflect"
-	"strings"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -17,10 +15,8 @@ import (
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
-	"github.com/go-playground/validator"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
-	"github.com/pkg/errors"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 )
@@ -86,80 +82,21 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 
 func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.SignupResponse
-			err  error
-		)
-
 		req := request.(*pb.SignupRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.Signup(ctx, req)
-		return resp, err
+		return s.Signup(ctx, req)
 	}
 }
 
 func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.LoginResponse
-			err  error
-		)
-
 		req := request.(*pb.LoginRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.Login(ctx, req)
-		return resp, err
+		return s.Login(ctx, req)
 	}
 }
 
 func MakeCheckTokenEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var (
-			resp *pb.CheckTokenResponse
-			err  error
-		)
-
 		req := request.(*pb.CheckTokenRequest)
-
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return resp, errors.Wrap(validationErrors, "Validation failed")
-		}
-
-		resp, err = s.CheckToken(ctx, req)
-		return resp, err
+		return s.CheckToken(ctx, req)
 	}
-}
-
-//TODO see singleton init
-var validate *validator.Validate
-
-func init() {
-	validate = validator.New()
-	validate.RegisterValidation("notblank", func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		switch field.Kind() {
-		case reflect.String:
-			return len(strings.TrimSpace(field.String())) > 0
-		case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
-			return field.Len() > 0
-		case reflect.Ptr, reflect.Interface, reflect.Func:
-			return !field.IsNil()
-		default:
-			return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
-		}
-	})
 }

@@ -20,8 +20,6 @@ import (
 	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
 
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
-	auth_service "deblasis.net/space-traffic-control/services/authsvc/pkg/service"
-	cc_service "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/golang/glog"
@@ -29,6 +27,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -124,13 +123,19 @@ func main() {
 			defer cancel()
 			//mux := http.NewServeMux()
 
-			authGw, err := newAuthSvcGateway(ctx, []runtime.ServeMuxOption{})
+			authGw, err := newAuthSvcGateway(ctx, cfg,
+				runtime.WithForwardResponseOption(httpHeaderRewriter(logger)),
+				runtime.WithErrorHandler(noContentErrorHandler(logger)),
+			)
 			if err != nil {
 				panic(err)
 			}
 			//mux.Handle("/", authGw)
 
-			ccGw, err := newCentralCommandSvcGateway(ctx, []runtime.ServeMuxOption{})
+			ccGw, err := newCentralCommandSvcGateway(ctx, cfg,
+				runtime.WithForwardResponseOption(httpHeaderRewriter(logger)),
+				runtime.WithErrorHandler(noContentErrorHandler(logger)),
+			)
 			if err != nil {
 				panic(err)
 			}
@@ -175,9 +180,10 @@ func main() {
 }
 
 // newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
-func newAuthSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http.Handler, error) {
+func newAuthSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
 
-	conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", auth_service.ServiceName, auth_service.GrpcServerPort))
+	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", auth_service.ServiceName, auth_service.GrpcServerPort))
+	conn, err := dial(ctx, cfg.APIGateway.AUTHSERVICEGRPCENDPOINT)
 	if err != nil {
 		panic(err)
 	}
@@ -189,6 +195,7 @@ func newAuthSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http
 	}()
 
 	mux := runtime.NewServeMux(opts...)
+	fmt.Printf("mux.GetForwardResponseOptions(): %v\n", mux.GetForwardResponseOptions())
 
 	for _, f := range []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
 		authpb.RegisterAuthServiceHandler,
@@ -201,9 +208,10 @@ func newAuthSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http
 }
 
 // newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
-func newCentralCommandSvcGateway(ctx context.Context, opts []runtime.ServeMuxOption) (http.Handler, error) {
+func newCentralCommandSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
 
-	conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
+	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
+	conn, err := dial(ctx, cfg.APIGateway.CENTRALCOMMANDSERVICEGRPCENDPOINT)
 	if err != nil {
 		panic(err)
 	}
@@ -377,4 +385,96 @@ func NewRouter(authGw http.Handler, ccGw http.Handler) *mux.Router {
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World!")
+}
+
+func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
+	return func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
+		//TODO refactor
+		logger.Log("component", "httpHeaderRewriter",
+			"msg", "checking metadata",
+		)
+		md, ok := runtime.ServerMetadataFromContext(ctx)
+		if !ok {
+			logger.Log("component", "httpHeaderRewriter",
+				"msg", "no md received from context",
+			)
+		}
+		if vals := md.HeaderMD.Get("x-no-content"); len(vals) > 0 {
+			logger.Log("component", "noContentErrorHandler",
+				"msg", "x-no-content exists",
+			)
+			noContent, err := strconv.ParseBool(vals[0])
+			if err != nil {
+				logger.Log("component", "noContentErrorHandler",
+					"err", err,
+				)
+				panic(err)
+			}
+			if noContent {
+				if vals = md.HeaderMD.Get("x-http-code"); len(vals) > 0 {
+					logger.Log("component", "noContentErrorHandler",
+						"msg", "x-http-code exists",
+					)
+					code, err := strconv.Atoi(vals[0])
+					if err != nil {
+						logger.Log("component", "noContentErrorHandler",
+							"err", err,
+						)
+						panic(err)
+					}
+					delete(md.HeaderMD, "x-http-code")
+					delete(rw.Header(), "Grpc-Metadata-X-Http-Code")
+					if vals = md.HeaderMD.Get("x-stc-error"); len(vals) > 0 {
+						rw.Header().Add("x-stc-error", vals[0])
+					}
+					rw.WriteHeader(code)
+				}
+			}
+			return
+		}
+	}
+}
+
+type errorBody struct {
+	Error string `json:"error,omitempty"`
+}
+
+func httpHeaderRewriter(logger log.Logger) func(c context.Context, rw http.ResponseWriter, m proto.Message) error {
+	return func(ctx context.Context, rw http.ResponseWriter, m proto.Message) error {
+		//TODO refactor
+		logger.Log("component", "httpHeaderRewriter",
+			"msg", "checking metadata",
+		)
+		md, ok := runtime.ServerMetadataFromContext(ctx)
+		if !ok {
+			logger.Log("component", "httpHeaderRewriter",
+				"msg", "no md received from context",
+			)
+		}
+
+		// set http status code
+		if vals := md.HeaderMD.Get("x-http-code"); len(vals) > 0 {
+			logger.Log("component", "httpHeaderRewriter",
+				"msg", "x-http-code exists",
+			)
+			code, err := strconv.Atoi(vals[0])
+			if err != nil {
+				logger.Log("component", "httpHeaderRewriter",
+					"err", err,
+				)
+				panic(err)
+			}
+			logger.Log("component", "httpHeaderRewriter",
+				"msg", "fanning out",
+			)
+			// delete the headers to not expose any grpc-metadata in http response
+			delete(md.HeaderMD, "x-http-code")
+			delete(rw.Header(), "Grpc-Metadata-X-Http-Code")
+			delete(rw.Header(), "Grpc-Metadata-Content-Type")
+			delete(rw.Header(), "Grpc-Metadata-X-Stc-Error")
+
+			rw.WriteHeader(code)
+		}
+		return nil
+	}
 }

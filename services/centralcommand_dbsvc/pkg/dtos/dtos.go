@@ -1,7 +1,7 @@
 package dtos
 
 import (
-	"deblasis.net/space-traffic-control/common/errors"
+	"deblasis.net/space-traffic-control/common/errs"
 )
 
 type Ship struct {
@@ -25,7 +25,7 @@ type Station struct {
 	//
 	//COMPUTED on the database, so it should be treated as readonly
 	UsedCapacity float32 `json:"usedCapacity,omitempty"`
-	//Docks availavle at the station
+	//Docks available at the station
 	Docks []*Dock `json:"docks" validate:"required"`
 }
 
@@ -46,26 +46,26 @@ type Dock struct {
 
 type CreateShipRequest Ship
 type CreateShipResponse struct {
-	Ship *Ship  `json:"ship"`
-	Err  string `json:"err,omitempty"`
+	Ship  *Ship  `json:"ship"`
+	Error string `json:"error,omitempty"`
 }
 
 type GetAllShipsRequest struct{}
 type GetAllShipsResponse struct {
 	Ships []Ship `json:"ships"`
-	Err   string `json:"err,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type CreateStationRequest Station
 type CreateStationResponse struct {
 	Station *Station `json:"station"`
-	Err     string   `json:"err,omitempty"`
+	Error   string   `json:"error,omitempty"`
 }
 
 type GetAllStationsRequest struct{}
 type GetAllStationsResponse struct {
 	Stations []Station `json:"stations"`
-	Err      string    `json:"err,omitempty"`
+	Error    string    `json:"error,omitempty"`
 }
 
 // ErrorMessage is for performing the error massage and returning by API
@@ -78,7 +78,7 @@ func NewErrorMessage(err string) ErrorMessage {
 	return ErrorMessage{Error: []string{err}}
 }
 
-func (r CreateShipResponse) Failed() error     { return errors.Str2err(r.Err) }
-func (r GetAllShipsResponse) Failed() error    { return errors.Str2err(r.Err) }
-func (r CreateStationResponse) Failed() error  { return errors.Str2err(r.Err) }
-func (r GetAllStationsResponse) Failed() error { return errors.Str2err(r.Err) }
+func (r CreateShipResponse) Failed() error     { return errs.Str2err(r.Error) }
+func (r GetAllShipsResponse) Failed() error    { return errs.Str2err(r.Error) }
+func (r CreateStationResponse) Failed() error  { return errs.Str2err(r.Error) }
+func (r GetAllStationsResponse) Failed() error { return errs.Str2err(r.Error) }

@@ -27,7 +27,7 @@ func (u dockRepository) GetById(ctx context.Context, id string) (*model.Dock, er
 	//TODO use validate
 	if id == "" {
 		err := errors.New("id is empty")
-		level.Debug(u.logger).Log(err)
+		level.Debug(u.logger).Log("err", err)
 		return nil, err
 	}
 
@@ -47,14 +47,14 @@ func (u dockRepository) Create(ctx context.Context, dock model.Dock) (*model.Doc
 	result, err := u.Db.WithContext(ctx).Model(dock).Returning("id").Insert(&dock.Id)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to insert dock %v", dock)
-		level.Debug(u.logger).Log(err)
+		level.Debug(u.logger).Log("err", err)
 		return nil, err
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
 			err = errors.New("Failed to insert, affected is 0")
-			level.Debug(u.logger).Log(err)
+			level.Debug(u.logger).Log("err", err)
 			return nil, err
 		}
 	}

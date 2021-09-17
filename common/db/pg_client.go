@@ -1,7 +1,9 @@
 package db
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/config"
@@ -61,5 +63,12 @@ func GetPgConnectionOptions(config config.Config) *pg.Options {
 		WriteTimeout:    WriteTimeout,
 		PoolSize:        PoolSize,
 		MinIdleConns:    MinIdleConns,
+		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			conn, err := net.DialTimeout(network, addr, 5*time.Second)
+			if err != nil {
+				return nil, err
+			}
+			return conn, conn.(*net.TCPConn).SetKeepAlive(true)
+		},
 	}
 }

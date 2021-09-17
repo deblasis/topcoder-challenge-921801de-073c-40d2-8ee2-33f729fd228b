@@ -3,6 +3,7 @@ package endpoints
 import (
 	"context"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -31,8 +32,9 @@ func (s EndpointSet) GetAllShips(ctx context.Context, request *dtos.GetAllShipsR
 // CreateStation(ctx context.Context, station *model.Station) (string, error)
 func (s EndpointSet) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error) {
 	resp, err := s.CreateStationEndpoint(ctx, request)
+
 	if err != nil {
-		return nil, err
+		return &dtos.CreateStationResponse{Error: errs.Err2str(err)}, nil
 	}
 	response := resp.(*dtos.CreateStationResponse)
 	return response, nil

@@ -32,22 +32,22 @@
 	"remoteAuthority": "wsl+Ubuntu",
 	"settings": {
 		"workbench.colorCustomizations": {
-			"activityBar.activeBackground": "#71bd62",
-			"activityBar.activeBorder": "#4b5db4",
-			"activityBar.background": "#71bd62",
+			"activityBar.activeBackground": "#6b90b0",
+			"activityBar.activeBorder": "#dec1d0",
+			"activityBar.background": "#6b90b0",
 			"activityBar.foreground": "#15202b",
 			"activityBar.inactiveForeground": "#15202b99",
-			"activityBarBadge.background": "#4b5db4",
-			"activityBarBadge.foreground": "#e7e7e7",
-			"statusBar.background": "#56a646",
-			"statusBar.foreground": "#15202b",
-			"statusBarItem.hoverBackground": "#438237",
-			"titleBar.activeBackground": "#56a646",
-			"titleBar.activeForeground": "#15202b",
-			"titleBar.inactiveBackground": "#56a64699",
-			"titleBar.inactiveForeground": "#15202b99"
+			"activityBarBadge.background": "#dec1d0",
+			"activityBarBadge.foreground": "#15202b",
+			"statusBar.background": "#517797",
+			"statusBar.foreground": "#e7e7e7",
+			"statusBarItem.hoverBackground": "#6b90b0",
+			"titleBar.activeBackground": "#517797",
+			"titleBar.activeForeground": "#e7e7e7",
+			"titleBar.inactiveBackground": "#51779799",
+			"titleBar.inactiveForeground": "#e7e7e799"
 		},
-		"peacock.remoteColor": "#56a646",
+		"peacock.remoteColor": "#517797",
 		"sqltools.connections": [
 			{
 				"previewLimit": 50,
@@ -68,6 +68,17 @@
 				"group": "STC",
 				"name": "auth_db",
 				"database": "auth",
+				"username": "postgres",
+				"password": "secret"
+			},
+			{
+				"previewLimit": 50,
+				"server": "localhost",
+				"port": 5433,
+				"driver": "PostgreSQL",
+				"name": "centralcommand_db",
+				"group": "STC",
+				"database": "centralcommand",
 				"username": "postgres",
 				"password": "secret"
 			}

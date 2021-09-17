@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package deblasis.v1;
+package deblasis.state.v1;
 
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/proto/v1;centralcommand_dbsvc_v1";
 

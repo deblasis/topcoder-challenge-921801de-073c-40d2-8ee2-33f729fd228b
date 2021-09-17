@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 
+	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
@@ -11,21 +12,33 @@ import (
 )
 
 type grpcServer struct {
+	pb.UnimplementedAuthDBServiceServer
 	createUser        grpctransport.Handler
 	getUserByUsername grpctransport.Handler
+	getUserById       grpctransport.Handler
 }
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.AuthDBServiceServer {
+	options := transport_conf.GetCommonGRPCServerOptions(l)
+
 	return &grpcServer{
 		createUser: grpctransport.NewServer(
 			e.CreateUserEndpoint,
 			decodeGRPCCreateUserRequest,
 			encodeGRPCCreateUserResponse,
+			options...,
 		),
 		getUserByUsername: grpctransport.NewServer(
 			e.GetUserByUsernameEndpoint,
 			decodeGRPCGetUserByUsernameRequest,
-			encodeGRPCGetUserByUsernameResponse,
+			encodeGRPCGetUserResponse,
+			options...,
+		),
+		getUserById: grpctransport.NewServer(
+			e.GetUserByIdEndpoint,
+			decodeGRPCGetUserByIdRequest,
+			encodeGRPCGetUserResponse,
+			options...,
 		),
 	}
 
@@ -38,14 +51,21 @@ func (g *grpcServer) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*
 	}
 	return rep.(*pb.CreateUserResponse), nil
 }
-func (g *grpcServer) GetUserByUsername(ctx context.Context, r *pb.GetUserByUsernameRequest) (*pb.GetUserByUsernameResponse, error) {
+func (g *grpcServer) GetUserByUsername(ctx context.Context, r *pb.GetUserByUsernameRequest) (*pb.GetUserResponse, error) {
 	_, rep, err := g.getUserByUsername.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.GetUserByUsernameResponse), nil
+	return rep.(*pb.GetUserResponse), nil
 }
 
+func (g *grpcServer) GetUserById(ctx context.Context, r *pb.GetUserByIdRequest) (*pb.GetUserResponse, error) {
+	_, rep, err := g.getUserById.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetUserResponse), nil
+}
 func decodeGRPCCreateUserRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.CreateUserRequest)
 	return &dtos.CreateUserRequest{
@@ -59,9 +79,15 @@ func decodeGRPCCreateUserRequest(c context.Context, grpcReq interface{}) (interf
 }
 func encodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.CreateUserResponse)
+
+	id := ""
+	if response.Id != nil {
+		id = response.Id.String()
+	}
+
 	return &pb.CreateUserResponse{
-		Id:    response.Id,
-		Error: response.Err,
+		Id:    id,
+		Error: response.Error,
 	}, nil
 }
 
@@ -71,22 +97,29 @@ func decodeGRPCGetUserByUsernameRequest(c context.Context, grpcReq interface{}) 
 		Username: req.Username,
 	}, nil
 }
+func decodeGRPCGetUserByIdRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetUserByIdRequest)
+	return &dtos.GetUserByIdRequest{
+		Id: req.Id,
+	}, nil
+}
 
-func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*dtos.GetUserByUsernameResponse)
+func encodeGRPCGetUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*dtos.GetUserResponse)
 
-	//TODO: centralise
-	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+response.User.Role)]
-	// if roleId <= 0 {
-	// 	return nil, errors.New("cannot unmarshal role")
-	// }
-	return &pb.GetUserByUsernameResponse{
-		User: &pb.User{
+	var user *pb.User
+	if response.User != nil {
+		user = &pb.User{
 			Id:       response.User.Id,
 			Username: response.User.Username,
 			Password: response.User.Password,
 			Role:     response.User.Role,
-		},
-		Error: response.Err,
+		}
+	}
+
+	return &pb.GetUserResponse{
+		User:  user,
+		Error: response.Error,
 	}, nil
+
 }

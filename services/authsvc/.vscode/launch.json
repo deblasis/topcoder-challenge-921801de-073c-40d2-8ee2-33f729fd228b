@@ -14,6 +14,8 @@
                 "DEBLASIS_BINDTOLOCALHOST": "true",
                 "DEBLASIS_HTTPSERVERPORT": "9081",
                 "DEBLASIS_GRPCSERVERPORT": "9082",
+                "DEBLASIS_JWT_PRIVKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.key",
+                "DEBLASIS_JWT_PUBKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.pub",                
             },
             "program": "${workspaceFolder}/cmd/app/main.go"
         }

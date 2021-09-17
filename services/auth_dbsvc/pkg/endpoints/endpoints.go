@@ -2,8 +2,6 @@ package endpoints
 
 import (
 	"context"
-	"reflect"
-	"strings"
 	"time"
 
 	stdopentracing "github.com/opentracing/opentracing-go"
@@ -22,13 +20,12 @@ import (
 	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
-	"github.com/go-playground/validator"
-	"github.com/pkg/errors"
 )
 
 type EndpointSet struct {
 	StatusEndpoint            endpoint.Endpoint
 	GetUserByUsernameEndpoint endpoint.Endpoint
+	GetUserByIdEndpoint       endpoint.Endpoint
 	CreateUserEndpoint        endpoint.Endpoint
 	logger                    log.Logger
 }
@@ -48,6 +45,19 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 		getUserByUsernameEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetUserByUsername"))(getUserByUsernameEndpoint)
 	}
 
+	var getUserByIdEndpoint endpoint.Endpoint
+	{
+		getUserByIdEndpoint = MakeGetUserByIdEndpoint(s)
+		getUserByIdEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(getUserByIdEndpoint)
+		getUserByIdEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByIdEndpoint)
+		getUserByIdEndpoint = opentracing.TraceServer(otTracer, "GetUserById")(getUserByIdEndpoint)
+		if zipkinTracer != nil {
+			getUserByIdEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetUserById")(getUserByIdEndpoint)
+		}
+		getUserByIdEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetUserById"))(getUserByIdEndpoint)
+		getUserByIdEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetUserById"))(getUserByIdEndpoint)
+	}
+
 	var createUserEndpoint endpoint.Endpoint
 	{
 		createUserEndpoint = MakeCreateUserEndpoint(s)
@@ -64,22 +74,22 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 	return EndpointSet{
 		StatusEndpoint:            healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
 		GetUserByUsernameEndpoint: getUserByUsernameEndpoint,
+		GetUserByIdEndpoint:       getUserByIdEndpoint,
 		CreateUserEndpoint:        createUserEndpoint,
 		logger:                    logger,
+	}
+}
+
+func MakeGetUserByIdEndpoint(s service.AuthDBService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(*dtos.GetUserByIdRequest)
+		return s.GetUserById(ctx, req)
 	}
 }
 
 func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetUserByUsernameRequest)
-
-		var err error
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.GetUserByUsername(ctx, req)
 	}
 }
@@ -87,34 +97,6 @@ func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.CreateUserRequest)
-
-		var err error
-		err = validate.Struct(req)
-		if err != nil {
-			validationErrors := err.(validator.ValidationErrors)
-			return -1, errors.Wrap(validationErrors, "Validation failed")
-		}
-
 		return s.CreateUser(ctx, req)
 	}
-}
-
-//TODO see singleton init
-var validate *validator.Validate
-
-func init() {
-	validate = validator.New()
-	validate.RegisterValidation("notblank", func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		switch field.Kind() {
-		case reflect.String:
-			return len(strings.TrimSpace(field.String())) > 0
-		case reflect.Chan, reflect.Map, reflect.Slice, reflect.Array:
-			return field.Len() > 0
-		case reflect.Ptr, reflect.Interface, reflect.Func:
-			return !field.IsNil()
-		default:
-			return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
-		}
-	})
 }

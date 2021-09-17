@@ -81,10 +81,23 @@ gencert:
 .PHONY: build-parallel
 build-parallel: proto
 	docker-compose -f docker-compose.yml -f docker-compose-build.yml build --parallel
-
 .PHONY: run-parallel
 run-parallel: build-parallel
 	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
+
+.PHONY: build-on-host
+build-on-host: proto
+	make services
+	make migrators
+	make seeders
+	docker-compose -f docker-compose.yml -f docker-compose-hostbuild.yml build --parallel
+
+.PHONY: run-fast
+run-fast: build-on-host
+	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
+	
+
+
 # auth_dbsvc:
 # 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-auth_dbsvc services/auth_dbsvc/cmd/app/main.go
 # && cp services/auth_dbsvc/app.yaml build

@@ -3,12 +3,12 @@ package repositories
 import (
 	"context"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 type stationRepository struct {
@@ -26,9 +26,8 @@ func NewStationRepository(db *pg.DB, logger log.Logger) StationRepository {
 func (u stationRepository) GetById(ctx context.Context, id string) (*model.Station, error) {
 	//TODO use validate
 	if id == "" {
-		err := errors.New("id is empty")
-		level.Debug(u.logger).Log(err)
-		return nil, err
+		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
+		return nil, errs.ErrBadRequest
 	}
 
 	var ret model.Station
@@ -37,31 +36,31 @@ func (u stationRepository) GetById(ctx context.Context, id string) (*model.Stati
 		Where("id = ?", id).
 		Select()
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("no rows")
+		level.Debug(u.logger).Log("msg", "no rows")
 		return nil, nil
 	}
 
-	//u.Db.WithContext(ctx).Model(&ret.Docks).Where("station_id = ?", id).Select()
+	if err != nil {
+		return nil, errs.ErrCannotSelectEntity
+	}
 
-	return &ret, err
+	return &ret, nil
 }
 
 func (u stationRepository) Create(ctx context.Context, station model.Station) (*model.Station, error) {
 
 	err := u.Db.RunInTransaction(ctx, func(t *pg.Tx) error {
-		station.Id = uuid.NewString()
+
 		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.Id, station.Capacity)
 		if err != nil {
-			err = errors.Wrapf(err, "Failed to insert station %v", station)
-			level.Debug(u.logger).Log(err)
-			return err
+			level.Debug(u.logger).Log("err", err)
+			return errs.ErrCannotInsertEntity
 		}
 
 		if result != nil {
 			if result.RowsAffected() == 0 {
-				err = errors.New("Failed to insert, affected is 0")
-				level.Debug(u.logger).Log(err)
-				return err
+				level.Debug(u.logger).Log("err", err)
+				return errs.ErrCannotInsertEntity
 			}
 		}
 
@@ -74,9 +73,8 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 				ExcludeColumn("occupied", "weight").
 				Returning("id").Insert(&dock.Id)
 			if err != nil {
-				err = errors.Wrapf(err, "Failed to insert dock %v", station)
-				level.Debug(u.logger).Log(err)
-				return err
+				level.Debug(u.logger).Log("err", err)
+				return errs.ErrCannotInsertEntity
 			}
 		}
 		return nil
@@ -93,9 +91,8 @@ func (u stationRepository) GetAll(ctx context.Context) ([]model.Station, error) 
 		Relation("Docks").
 		Select()
 	if err != nil {
-		err = errors.Wrapf(err, "Failed to select stations")
-		level.Debug(u.logger).Log(err)
-		return nil, err
+		level.Debug(u.logger).Log("err", err)
+		return nil, errs.ErrCannotSelectEntities
 	}
 
 	return stations, nil
