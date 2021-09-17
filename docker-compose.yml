@@ -41,8 +41,8 @@ services:
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
      DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
-     DEBLASIS_APIGATEWAY_AUTHSERVICEGRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
-     DEBLASIS_CENTRALCOMMANSERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
+     DEBLASIS_APIGATEWAY_AUTHSERVICE_GRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
+     DEBLASIS_APIGATEWAY_CENTRALCOMMANDSERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
     networks:
       net:
     dns:
