@@ -3,7 +3,7 @@
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
-SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc
+SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc clessidrasvc
 MIGRATORS = auth_dbsvc_migrator centralcommand_dbsvc_migrator
 SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))

@@ -33,7 +33,7 @@ func (p postgresClient) Close() error {
 }
 
 func NewPostgresClientFromConfig(config config.Config) PostgresClient {
-	return NewPostgresClientFromPgOptions(config.Logger, GetPgConnectionOptions(config))
+	return NewPostgresClientFromPgOptions((config.Logger), GetPgConnectionOptions(config))
 }
 
 func NewPostgresClientFromPgOptions(logger log.Logger, pgOptions *pg.Options) PostgresClient {

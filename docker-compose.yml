@@ -208,7 +208,29 @@ services:
       timeout: 10s
       retries: 3         
 
-  
+  clessidrasvc:
+    image: deblasis/stc_clessidrasvc:latest
+    ports:
+      - 9500:9500
+    depends_on: 
+      - consul
+      - centralcommand_dbsvc
+    volumes:
+      - ./certs:/certs
+      - ./services/clessidrasvc/app.yaml:/app.yaml
+    environment: 
+     DEBLASIS_CENTRALCOMMANDDB: centralcommand_db:5432
+    networks:
+      net:
+    dns:
+      - 127.0.0.1
+      - 8.8.8.8
+      - 8.8.4.4      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3  
       
 # shippingstationsvc:
 #     image: golang:1.17 

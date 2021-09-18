@@ -36,4 +36,11 @@ services:
       context: .
       args: 
         SVC_NAME: centralcommandsvc
+
+  clessidrasvc:
+    build:
+      dockerfile: ./services/clessidrasvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: clessidrasvc        
    

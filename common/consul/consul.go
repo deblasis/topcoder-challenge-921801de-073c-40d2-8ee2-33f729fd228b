@@ -31,10 +31,10 @@ func NewConsulRegister(consulAddress, serviceName string, servicePort, metricsPo
 		ServicePort:   servicePort,
 		MetricsPort:   metricsPort,
 		//TODO UNCOMMENT!!!! THIS IS FOR DEBUG
-		//DeregisterCriticalServiceAfter: time.Duration(1) * time.Minute,
-		Interval:       time.Duration(20) * time.Second,
-		logger:         logger,
-		forceLocalhost: forceLocalhost,
+		DeregisterCriticalServiceAfter: time.Duration(1) * time.Minute,
+		Interval:                       time.Duration(20) * time.Second,
+		logger:                         logger,
+		forceLocalhost:                 forceLocalhost,
 	}
 }
 

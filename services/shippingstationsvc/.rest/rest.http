@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:9081
+
+//HEALTH
+GET {{baseUrl}}/health HTTP/1.1
+
+###
+
+//Request Landing
+POST {{baseUrl}}/request-landing HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{
+    "time": 10
+}
+
+###
+
+//Land
+POST {{baseUrl}}/land HTTP/1.1
+Content-Type: application/json; charset=utf-8
+
+{
+    "time": 7
+}
+
+###
