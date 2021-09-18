@@ -31,6 +31,8 @@ type EndpointSet struct {
 	CreateStationEndpoint  endpoint.Endpoint
 	GetAllStationsEndpoint endpoint.Endpoint
 
+	GetNextAvailableDockingStationEndpoint endpoint.Endpoint
+
 	logger log.Logger
 }
 
@@ -85,14 +87,27 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		getAllStationsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetAllStations"))(getAllStationsEndpoint)
 		getAllStationsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetAllStations"))(getAllStationsEndpoint)
 	}
+	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
+	{
+		getNextAvailableDockingStationEndpoint = MakeGetNextAvailableDockingStationEndpoint(s)
+		getNextAvailableDockingStationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = opentracing.TraceServer(otTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		if zipkinTracer != nil {
+			getNextAvailableDockingStationEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		}
+		getNextAvailableDockingStationEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetNextAvailableDockingStation"))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetNextAvailableDockingStation"))(getNextAvailableDockingStationEndpoint)
+	}
 
 	return EndpointSet{
-		StatusEndpoint:         healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
-		CreateShipEndpoint:     createShipEndpoint,
-		GetAllShipsEndpoint:    getAllShipsEndpoint,
-		CreateStationEndpoint:  createStationEndpoint,
-		GetAllStationsEndpoint: getAllStationsEndpoint,
-		logger:                 logger,
+		StatusEndpoint:                         healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
+		CreateShipEndpoint:                     createShipEndpoint,
+		GetAllShipsEndpoint:                    getAllShipsEndpoint,
+		CreateStationEndpoint:                  createStationEndpoint,
+		GetAllStationsEndpoint:                 getAllStationsEndpoint,
+		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
+		logger:                                 logger,
 	}
 }
 
@@ -144,5 +159,12 @@ func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endp
 		// 	}, nil
 		// }
 
+	}
+}
+
+func MakeGetNextAvailableDockingStationEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(*dtos.GetNextAvailableDockingStationRequest)
+		return s.GetNextAvailableDockingStation(ctx, req)
 	}
 }

@@ -2,7 +2,9 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -59,4 +61,18 @@ func (u dockRepository) Create(ctx context.Context, dock model.Dock) (*model.Doc
 		}
 	}
 	return &dock, nil
+}
+
+func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (*model.NextAvailableDockingStation, error) {
+
+	var nextAvail model.NextAvailableDockingStation
+	_, err := u.Db.WithContext(ctx).Model(&nextAvail).
+		QueryOne(&nextAvail, fmt.Sprintf("select * from %v(?)", model.GetNextAvailableDockingStationForShipFunctionName), shipId)
+
+	if err != nil {
+		level.Debug(u.logger).Log("err", err)
+		return nil, errs.ErrCannotSelectEntities
+	}
+
+	return &nextAvail, nil
 }

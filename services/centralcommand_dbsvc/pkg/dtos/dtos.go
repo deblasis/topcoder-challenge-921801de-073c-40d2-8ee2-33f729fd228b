@@ -44,6 +44,13 @@ type Dock struct {
 	Station *Station `json:"-" model:"-"`
 }
 
+type NextAvailableDockingStation struct {
+	DockId                  string  `json:"dock_id,omitempty"`
+	StationId               string  `json:"station_id,omitempty"`
+	AvailableCapacity       float32 `json:"available_capacity,omitempty"`
+	AvailableDocksAtStation int64   `json:"available_docks_at_station,omitempty"`
+}
+
 type CreateShipRequest Ship
 type CreateShipResponse struct {
 	Ship  *Ship  `json:"ship"`
@@ -68,17 +75,18 @@ type GetAllStationsResponse struct {
 	Error    string    `json:"error,omitempty"`
 }
 
-// ErrorMessage is for performing the error massage and returning by API
-type ErrorMessage struct {
-	Error []string `json:"error"`
+type GetNextAvailableDockingStationRequest struct {
+	//"string - id of the ship"
+	ShipId string `json:"ship_id"`
 }
 
-// NewErrorMessage returns ErrorMessage by error string
-func NewErrorMessage(err string) ErrorMessage {
-	return ErrorMessage{Error: []string{err}}
+type GetNextAvailableDockingStationResponse struct {
+	NextAvailableDockingStation *NextAvailableDockingStation `json:"next_available_docking_station"`
+	Error                       string                       `json:"error,omitempty"`
 }
 
-func (r CreateShipResponse) Failed() error     { return errs.Str2err(r.Error) }
-func (r GetAllShipsResponse) Failed() error    { return errs.Str2err(r.Error) }
-func (r CreateStationResponse) Failed() error  { return errs.Str2err(r.Error) }
-func (r GetAllStationsResponse) Failed() error { return errs.Str2err(r.Error) }
+func (r CreateShipResponse) Failed() error                     { return errs.Str2err(r.Error) }
+func (r GetAllShipsResponse) Failed() error                    { return errs.Str2err(r.Error) }
+func (r CreateStationResponse) Failed() error                  { return errs.Str2err(r.Error) }
+func (r GetAllStationsResponse) Failed() error                 { return errs.Str2err(r.Error) }
+func (r GetNextAvailableDockingStationResponse) Failed() error { return errs.Str2err(r.Error) }

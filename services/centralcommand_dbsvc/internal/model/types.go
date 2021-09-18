@@ -44,7 +44,7 @@ type Dock struct {
 	Station *Station `json:"-" pg:"rel:has-one" model:"-"`
 }
 
-type DockedShips struct {
+type DockedShip struct {
 	tableName struct{} `pg:"docked_ships"`
 
 	DockId string `json:"dock_id,omitempty" db:"dock_id"`
@@ -54,7 +54,15 @@ type DockedShips struct {
 	Ship *Ship `json:"-" pg:"rel:has-one"`
 }
 
+type NextAvailableDockingStation struct {
+	DockId                  string  `json:"dock_id,omitempty" db:"dock_id"`
+	StationId               string  `json:"station_id,omitempty" db:"station_id"`
+	AvailableCapacity       float32 `json:"available_capacity,omitempty" db:"available_capacity"`
+	AvailableDocksAtStation int64   `json:"available_docks_at_station,omitempty" db:"available_docks_at_station"`
+}
+
 //TODO refactor
 const (
-	ShipsHaveLeftFunctionName = "ships_have_left"
+	ShipsHaveLeftFunctionName                         = "ships_have_left"
+	GetNextAvailableDockingStationForShipFunctionName = "get_next_available_docking_station_for_ship"
 )

@@ -77,3 +77,11 @@ func GetAllStationsResponseToProto(src *dtos.GetAllStationsResponse) *pb.GetAllS
 	}
 	return ret
 }
+
+func GetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDockingStationResponse) *pb.GetNextAvailableDockingStationResponse {
+	ret := &pb.GetNextAvailableDockingStationResponse{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}

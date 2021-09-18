@@ -55,6 +55,14 @@ func ShipsToDto(src []model.Ship) []dtos.Ship {
 	return ret
 }
 
+func NextAvailableDockingStationToDto(src *model.NextAvailableDockingStation) *dtos.NextAvailableDockingStation {
+	ret := &dtos.NextAvailableDockingStation{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}
+
 func ProtoCreateStationRequestToDto(src *pb.CreateStationRequest) *dtos.CreateStationRequest {
 	ret := &dtos.CreateStationRequest{}
 	srcStuct := src.Station
@@ -67,6 +75,15 @@ func ProtoCreateStationRequestToDto(src *pb.CreateStationRequest) *dtos.CreateSt
 	}
 	return ret
 }
+
+func ProtoGetNextAvailableDockingStationRequestToDto(src *pb.GetNextAvailableDockingStationRequest) *dtos.GetNextAvailableDockingStationRequest {
+	ret := &dtos.GetNextAvailableDockingStationRequest{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}
+
 func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequest {
 	ret := &dtos.CreateShipRequest{}
 	srcStuct := src.Ship

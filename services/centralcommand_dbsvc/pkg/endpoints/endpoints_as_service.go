@@ -50,9 +50,20 @@ func (s EndpointSet) GetAllStations(ctx context.Context, request *dtos.GetAllSta
 	return response, nil
 }
 
+// GetNextAvailableDockingStation(ctx context.Context, ship *model.Ship) (int64, error)
+func (s EndpointSet) GetNextAvailableDockingStation(ctx context.Context, request *dtos.GetNextAvailableDockingStationRequest) (*dtos.GetNextAvailableDockingStationResponse, error) {
+	resp, err := s.GetNextAvailableDockingStationEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(*dtos.GetNextAvailableDockingStationResponse)
+	return response, nil
+}
+
 var (
 	_ endpoint.Failer = dtos.CreateStationResponse{}
 	_ endpoint.Failer = dtos.CreateShipResponse{}
 	_ endpoint.Failer = dtos.GetAllShipsResponse{}
 	_ endpoint.Failer = dtos.GetAllStationsResponse{}
+	_ endpoint.Failer = dtos.GetNextAvailableDockingStationResponse{}
 )

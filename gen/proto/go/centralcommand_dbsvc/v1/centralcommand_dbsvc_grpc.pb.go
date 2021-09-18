@@ -22,6 +22,7 @@ type CentralCommandDBServiceClient interface {
 	CreateStation(ctx context.Context, in *CreateStationRequest, opts ...grpc.CallOption) (*CreateStationResponse, error)
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
 	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error)
+	GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error)
 }
 
 type centralCommandDBServiceClient struct {
@@ -68,6 +69,15 @@ func (c *centralCommandDBServiceClient) GetAllStations(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *centralCommandDBServiceClient) GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error) {
+	out := new(GetNextAvailableDockingStationResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/GetNextAvailableDockingStation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CentralCommandDBServiceServer is the server API for CentralCommandDBService service.
 // All implementations must embed UnimplementedCentralCommandDBServiceServer
 // for forward compatibility
@@ -76,6 +86,7 @@ type CentralCommandDBServiceServer interface {
 	CreateStation(context.Context, *CreateStationRequest) (*CreateStationResponse, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error)
+	GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error)
 	mustEmbedUnimplementedCentralCommandDBServiceServer()
 }
 
@@ -94,6 +105,9 @@ func (UnimplementedCentralCommandDBServiceServer) GetAllShips(context.Context, *
 }
 func (UnimplementedCentralCommandDBServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllStations not implemented")
+}
+func (UnimplementedCentralCommandDBServiceServer) GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNextAvailableDockingStation not implemented")
 }
 func (UnimplementedCentralCommandDBServiceServer) mustEmbedUnimplementedCentralCommandDBServiceServer() {
 }
@@ -181,6 +195,24 @@ func _CentralCommandDBService_GetAllStations_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CentralCommandDBService_GetNextAvailableDockingStation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNextAvailableDockingStationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CentralCommandDBServiceServer).GetNextAvailableDockingStation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/GetNextAvailableDockingStation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CentralCommandDBServiceServer).GetNextAvailableDockingStation(ctx, req.(*GetNextAvailableDockingStationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CentralCommandDBService_ServiceDesc is the grpc.ServiceDesc for CentralCommandDBService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -203,6 +235,10 @@ var CentralCommandDBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllStations",
 			Handler:    _CentralCommandDBService_GetAllStations_Handler,
+		},
+		{
+			MethodName: "GetNextAvailableDockingStation",
+			Handler:    _CentralCommandDBService_GetNextAvailableDockingStation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

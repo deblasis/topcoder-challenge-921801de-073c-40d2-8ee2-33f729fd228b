@@ -61,6 +61,13 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 		options...,
 	))
 
+	r.Methods("POST").Path("/docks/nextavailable").Handler(httptransport.NewServer(
+		e.GetNextAvailableDockingStationEndpoint,
+		decodeHTTPGetNextAvailableDockingStationRequest,
+		encodeResponse,
+		options...,
+	))
+
 	return r
 }
 
@@ -104,4 +111,17 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		return nil
 	}
 	return json.NewEncoder(w).Encode(response)
+}
+
+func decodeHTTPGetNextAvailableDockingStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req dtos.GetNextAvailableDockingStationRequest
+	if r.ContentLength == 0 {
+		logger.Log("Post request with no body")
+		return req, nil
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
 }

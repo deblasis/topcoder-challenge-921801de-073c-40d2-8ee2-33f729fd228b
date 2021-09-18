@@ -10,6 +10,8 @@ service CentralCommandDBService {
   
   rpc GetAllShips (GetAllShipsRequest) returns (GetAllShipsResponse) {}
   rpc GetAllStations (GetAllStationsRequest) returns (GetAllStationsResponse) {}
+
+  rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
 }
 
 message Dock {
@@ -40,6 +42,12 @@ message Ship {
   float weight = 3;
 }
 
+message NextAvailableDockingStation {
+  string dock_id = 1;
+  string station_id = 2;
+  float available_capacity = 3;
+  int64 available_docks_at_station =4;
+}
 
 message CreateShipRequest {
   Ship ship = 1;
@@ -68,5 +76,14 @@ message GetAllStationsRequest {
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
+  string error = 2;
+}
+
+
+message GetNextAvailableDockingStationRequest {
+  string ship_id = 1;
+}
+message GetNextAvailableDockingStationResponse {
+  NextAvailableDockingStation next_available_docking_station = 1;  
   string error = 2;
 }
