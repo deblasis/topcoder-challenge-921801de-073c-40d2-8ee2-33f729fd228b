@@ -1,0 +1,20 @@
+consul:
+  host: consul
+  port: 8500
+
+
+db:
+  address: centralcommand_db:5432
+  username: postgres
+  password: secret
+  database: centralcommand
+  drivername: postgres
+  sslmode: disable
+
+
+# ssl:
+#   serverCert: ../../../../certs/deblasis-stc.pem
+#   serverKey: ../../../../certs/deblasis-stc-key.pem
+
+
+loglevel: info

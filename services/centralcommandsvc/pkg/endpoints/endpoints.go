@@ -30,6 +30,8 @@ type EndpointSet struct {
 	RegisterStationEndpoint endpoint.Endpoint
 	GetAllStationsEndpoint  endpoint.Endpoint
 
+	GetNextAvailableDockingStationEndpoint endpoint.Endpoint
+
 	logger log.Logger
 }
 
@@ -87,6 +89,19 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		getAllStationsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetAllStations"))(getAllStationsEndpoint)
 	}
 
+	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
+	{
+		getNextAvailableDockingStationEndpoint = MakeGetNextAvailableDockingStationEndpoint(s)
+		getNextAvailableDockingStationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = opentracing.TraceServer(otTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		if zipkinTracer != nil {
+			getNextAvailableDockingStationEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		}
+		getNextAvailableDockingStationEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetNextAvailableDockingStation"))(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetNextAvailableDockingStation"))(getNextAvailableDockingStationEndpoint)
+	}
+
 	return EndpointSet{
 		StatusEndpoint: healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
 
@@ -95,6 +110,8 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 
 		RegisterStationEndpoint: registerStationEndpoint,
 		GetAllStationsEndpoint:  getAllStationsEndpoint,
+
+		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
 
 		logger: logger,
 	}
@@ -125,5 +142,12 @@ func MakeGetAllStationsEndpoint(s service.CentralCommandService) endpoint.Endpoi
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.GetAllStationsRequest)
 		return s.GetAllStations(ctx, req)
+	}
+}
+
+func MakeGetNextAvailableDockingStationEndpoint(s service.CentralCommandService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(*pb.GetNextAvailableDockingStationRequest)
+		return s.GetNextAvailableDockingStation(ctx, req)
 	}
 }

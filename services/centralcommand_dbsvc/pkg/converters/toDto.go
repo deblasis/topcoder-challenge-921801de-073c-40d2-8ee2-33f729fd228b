@@ -138,3 +138,14 @@ func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShip
 	}
 	return ret
 }
+
+func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDockingStationResponse) *dtos.GetNextAvailableDockingStationResponse {
+	if src.Error != "" {
+		return &dtos.GetNextAvailableDockingStationResponse{Error: src.Error}
+	}
+	ret := &dtos.GetNextAvailableDockingStationResponse{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}

@@ -23,8 +23,9 @@ type grpcServer struct {
 	registerShip grpctransport.Handler
 	getAllShips  grpctransport.Handler
 
-	registerStation grpctransport.Handler
-	getAllStations  grpctransport.Handler
+	registerStation                grpctransport.Handler
+	getAllStations                 grpctransport.Handler
+	getNextAvailableDockingStation grpctransport.Handler
 }
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServiceServer {
@@ -117,6 +118,12 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			encodeGRPCGetAllStationsResponse,
 			options...,
 		),
+		getNextAvailableDockingStation: grpctransport.NewServer(
+			e.GetNextAvailableDockingStationEndpoint,
+			decodeGRPCGetNextAvailableDockingStationRequest,
+			encodeGRPCGetNextAvailableDockingStationResponse,
+			options...,
+		),
 	}
 }
 
@@ -177,6 +184,16 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 		Data:        []byte(json),
 	}, nil
 
+}
+
+func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
+	_, rep, err := g.getAllStations.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := rep.(*pb.GetNextAvailableDockingStationResponse)
+	return resp, nil
 }
 
 func decodeGRPCRegisterShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -283,5 +300,30 @@ func encodeGRPCGetAllStationsResponse(ctx context.Context, grpcResponse interfac
 	}
 
 	//return converters.GetAllStationsResponseToProto(*response), nil
+	return response, nil
+}
+
+func decodeGRPCGetNextAvailableDockingStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetNextAvailableDockingStationRequest)
+	// if req != nil {
+	// 	return pb.GetNextAvailableDockingStationRequest{}, nil
+	// }
+	// return nil, errors.Str2err("cannot unmarshal GetNextAvailableDockingStationRequest")
+	return req, nil
+}
+func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
+
+	//TODO: refactor
+	if response.Failed() != nil {
+		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
+		header := metadata.Pairs(
+			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
+			"x-stc-error", response.Failed().Error(),
+		)
+		grpc.SendHeader(ctx, header)
+	}
+
+	//return converters.GetNextAvailableDockingStationResponseToProto(*response), nil
 	return response, nil
 }

@@ -47,9 +47,20 @@ func (s EndpointSet) GetAllStations(ctx context.Context, request *pb.GetAllStati
 	return response, nil
 }
 
+// GetNextAvailableDockingStation(ctx context.Context, request pb.GetNextAvailableDockingStationRequest) (pb.GetNextAvailableDockingStationResponse, error)
+func (s EndpointSet) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
+	resp, err := s.GetNextAvailableDockingStationEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(*pb.GetNextAvailableDockingStationResponse)
+	return response, nil
+}
+
 var (
 	_ endpoint.Failer = pb.RegisterShipResponse{}
 	_ endpoint.Failer = pb.GetAllShipsResponse{}
 	_ endpoint.Failer = pb.RegisterStationResponse{}
 	_ endpoint.Failer = pb.GetAllStationsResponse{}
+	_ endpoint.Failer = pb.GetNextAvailableDockingStationResponse{}
 )

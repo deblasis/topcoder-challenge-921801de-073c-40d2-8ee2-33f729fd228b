@@ -127,12 +127,34 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		}))(getAllStationsEndpoint)
 	}
 
+	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
+	{
+		getNextAvailableDockingStationEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"GetNextAvailableDockingStation",
+			encodeGRPCGetNextAvailableDockingStationRequest,
+			decodeGRPCGetNextAvailableDockingStationResponse,
+			pb.GetNextAvailableDockingStationResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		getNextAvailableDockingStationEndpoint = opentracing.TraceClient(otTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = limiter(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "GetNextAvailableDockingStation",
+			Timeout: 30 * time.Second,
+		}))(getNextAvailableDockingStationEndpoint)
+	}
+
 	return endpoints.EndpointSet{
 		CreateShipEndpoint:  createShipEndpoint,
 		GetAllShipsEndpoint: getAllShipsEndpoint,
 
 		CreateStationEndpoint:  createStationEndpoint,
 		GetAllStationsEndpoint: getAllStationsEndpoint,
+
+		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
 	}
 }
 
@@ -171,4 +193,13 @@ func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (in
 func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllStationsResponse)
 	return converters.ProtoGetAllStationsResponseToDto(response), nil
+}
+
+func encodeGRPCGetNextAvailableDockingStationRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*dtos.GetNextAvailableDockingStationRequest)
+	return converters.GetNextAvailableDockingStationRequestToProto(req), nil
+}
+func decodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
+	return converters.ProtoGetNextAvailableDockingStationResponseToDto(response), nil
 }

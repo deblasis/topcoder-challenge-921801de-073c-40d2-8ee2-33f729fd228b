@@ -85,3 +85,11 @@ func GetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDoc
 	}
 	return ret
 }
+
+func GetNextAvailableDockingStationRequestToProto(src *dtos.GetNextAvailableDockingStationRequest) *pb.GetNextAvailableDockingStationRequest {
+	ret := &pb.GetNextAvailableDockingStationRequest{}
+	if errs := m.Copy(ret, &src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}

@@ -41,6 +41,10 @@ service CentralCommandService {
       //response_body: "stations"
     };    
   }
+
+  rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
+
+
 }
 
 
@@ -67,6 +71,14 @@ message Ship {
   //@gotags: model:"-"
   string status = 2; 
   float weight = 3[(google.api.field_behavior) = REQUIRED];
+}
+
+message NextAvailableDockingStation {
+  string dock_id = 1;
+  string station_id = 2;
+  float available_capacity = 3;
+  int64 available_docks_at_station = 4;
+  int64 seconds_until_available = 5;
 }
 
 message DockSpec {
@@ -100,5 +112,13 @@ message GetAllStationsRequest {
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
+  string error = 2;
+}
+
+message GetNextAvailableDockingStationRequest {
+  string ship_id = 1;
+}
+message GetNextAvailableDockingStationResponse {
+  NextAvailableDockingStation next_available_docking_station = 1;  
   string error = 2;
 }

@@ -59,6 +59,7 @@ type NextAvailableDockingStation struct {
 	StationId               string  `json:"station_id,omitempty" db:"station_id"`
 	AvailableCapacity       float32 `json:"available_capacity,omitempty" db:"available_capacity"`
 	AvailableDocksAtStation int64   `json:"available_docks_at_station,omitempty" db:"available_docks_at_station"`
+	SecondsUntilAvailable   int64   `json:"seconds_until_available" db:"seconds_until_available"`
 }
 
 //TODO refactor

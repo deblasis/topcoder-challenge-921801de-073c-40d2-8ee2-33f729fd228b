@@ -56,6 +56,7 @@ CREATE OR REPLACE VIEW docks_view AS
       d.station_id as station_id,
       d.num_docking_ports as num_docking_ports,
       ds.ship_id as ship_id, 
+      min((ds.docked_since+ INTERVAL '1 second'*ds.dock_duration)-NOW()) as seconds_until_available,
       count(ship_id) as occupied,
       sum(s.weight) as weight
       FROM docks d 
@@ -66,7 +67,8 @@ CREATE OR REPLACE VIEW docks_view AS
 	SELECT d.id as id, d.station_id as station_id, 
    d.num_docking_ports as num_docking_ports,
    d.occupied as occupied,
-   COALESCE(d.weight,0) as weight   
+   COALESCE(d.weight,0) as weight,   
+   d.seconds_until_available as seconds_until_available
 	from docked as d;   
 	
 
@@ -78,7 +80,7 @@ CREATE OR REPLACE VIEW stations_view AS
 
 
 CREATE OR REPLACE FUNCTION get_next_available_docking_station_for_ship(ship_id UUID) RETURNS 
-   TABLE (dock_id UUID, station_id UUID, available_capacity FLOAT, available_docks_at_station BIGINT)
+   TABLE (dock_id UUID, station_id UUID, available_capacity FLOAT, available_docks_at_station BIGINT, seconds_until_available INT)
     AS $$
 BEGIN
   return query
@@ -87,13 +89,22 @@ BEGIN
       ), stations_with_capacity as (
          select st.id, st.capacity-st.used_capacity as available_capacity,
          d.num_docking_ports-d.occupied as available_docks_at_station,
+         d.seconds_until_available as seconds_until_available,
          d.id as dock_id,
          st.id as station_id 
          from stations_view st 
-         inner join docks_view d on (d.station_id = st.id and d.num_docking_ports-d.occupied>0)
-         where capacity-used_capacity>(select weight from ship)
+         --inner join docks_view d on (d.station_id = st.id and d.num_docking_ports-d.occupied>0)
+         inner join docks_view d on (d.station_id = st.id)
+         --where capacity-used_capacity>(select weight from ship)
       ) 
-      select swc.dock_id, swc.station_id, swc.available_capacity, swc.available_docks_at_station from stations_with_capacity swc order by available_capacity desc, available_docks_at_station desc limit 1;
+      select swc.dock_id, swc.station_id, swc.available_capacity, swc.available_docks_at_station, 
+      CASE 
+         when swc.seconds_until_available is null then 0
+         ELSE (select extract(epoch from swc.seconds_until_available))::int
+      END
+      as seconds_until_available
+      from stations_with_capacity swc 
+      order by available_capacity desc, available_docks_at_station desc, seconds_until_available asc limit 1;
 END;
 $$ LANGUAGE plpgsql;
 

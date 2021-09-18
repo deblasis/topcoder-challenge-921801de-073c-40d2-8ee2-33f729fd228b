@@ -47,6 +47,7 @@ message NextAvailableDockingStation {
   string station_id = 2;
   float available_capacity = 3;
   int64 available_docks_at_station =4;
+  int64 seconds_until_available = 5;
 }
 
 message CreateShipRequest {

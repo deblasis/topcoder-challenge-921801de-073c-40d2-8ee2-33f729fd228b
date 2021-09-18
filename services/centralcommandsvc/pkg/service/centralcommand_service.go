@@ -13,6 +13,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -29,6 +30,7 @@ type CentralCommandService interface {
 
 	RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error)
 	GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error)
+	GetNextAvailableDockingStation(context.Context, *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error)
 }
 
 type centralCommandService struct {
@@ -185,4 +187,30 @@ func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.
 	}
 
 	return converters.DBDtoGetAllStationsResponseToProto(*ret), nil
+}
+
+func (u *centralCommandService) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
+	err := u.validate.Struct(request)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return &pb.GetNextAvailableDockingStationResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+
+	ret, err := u.db_svc_endpointset.GetNextAvailableDockingStation(ctx, &dtos.GetNextAvailableDockingStationRequest{ShipId: uuid.MustParse(request.ShipId).String()})
+	if err != nil {
+		return &pb.GetNextAvailableDockingStationResponse{
+			Error: errs.Err2str(err),
+		}, nil
+	}
+	return &pb.GetNextAvailableDockingStationResponse{
+		NextAvailableDockingStation: &pb.NextAvailableDockingStation{
+			DockId:                  ret.NextAvailableDockingStation.DockId,
+			StationId:               ret.NextAvailableDockingStation.StationId,
+			AvailableCapacity:       ret.NextAvailableDockingStation.AvailableCapacity,
+			AvailableDocksAtStation: ret.NextAvailableDockingStation.AvailableDocksAtStation,
+			SecondsUntilAvailable:   ret.NextAvailableDockingStation.SecondsUntilAvailable,
+		},
+	}, nil
 }

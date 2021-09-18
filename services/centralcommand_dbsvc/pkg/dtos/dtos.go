@@ -49,6 +49,7 @@ type NextAvailableDockingStation struct {
 	StationId               string  `json:"station_id,omitempty"`
 	AvailableCapacity       float32 `json:"available_capacity,omitempty"`
 	AvailableDocksAtStation int64   `json:"available_docks_at_station,omitempty"`
+	SecondsUntilAvailable   int64   `json:"seconds_until_available,omitempty"`
 }
 
 type CreateShipRequest Ship
