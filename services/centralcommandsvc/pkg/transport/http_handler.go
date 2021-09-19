@@ -9,6 +9,7 @@ import (
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -67,6 +68,13 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 		options...,
 	))
 
+	r.Methods("POST").Path("/land").Handler(httptransport.NewServer(
+		e.LandShipToDockEndpoint,
+		decodeHTTPLandShipToDockRequest,
+		encodeResponse,
+		options...,
+	))
+
 	return r
 }
 
@@ -114,6 +122,18 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 
 func decodeHTTPGetNextAvailableDockingStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req pb.GetNextAvailableDockingStationRequest
+	if r.ContentLength == 0 {
+		logger.Log("Post request with no body")
+		return req, nil
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+func decodeHTTPLandShipToDockRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req dtos.LandShipToDockRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil

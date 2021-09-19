@@ -28,6 +28,7 @@ type CentralCommandDBService interface {
 	CreateStation(context.Context, *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error)
 	GetAllStations(context.Context, *dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error)
 	GetNextAvailableDockingStation(context.Context, *dtos.GetNextAvailableDockingStationRequest) (*dtos.GetNextAvailableDockingStationResponse, error)
+	LandShipToDock(context.Context, *dtos.LandShipToDockRequest) (*dtos.LandShipToDockResponse, error)
 }
 
 type centralCommandDBService struct {
@@ -171,4 +172,21 @@ func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Con
 	return &dtos.GetNextAvailableDockingStationResponse{
 		NextAvailableDockingStation: converters.NextAvailableDockingStationToDto(ret),
 	}, nil
+}
+
+func (u *centralCommandDBService) LandShipToDock(ctx context.Context, request *dtos.LandShipToDockRequest) (*dtos.LandShipToDockResponse, error) {
+	err := u.validate.Struct(request)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return &dtos.LandShipToDockResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+	_, err = u.dockRepository.LandShipToDock(ctx, uuid.MustParse(request.ShipId), uuid.MustParse(request.DockId), request.Duration)
+	if err != nil {
+		return &dtos.LandShipToDockResponse{
+			Error: errs.Err2str(err),
+		}, nil
+	}
+	return &dtos.LandShipToDockResponse{}, nil
 }

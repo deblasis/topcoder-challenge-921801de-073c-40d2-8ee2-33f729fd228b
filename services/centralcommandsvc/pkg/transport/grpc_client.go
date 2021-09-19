@@ -6,6 +6,7 @@ import (
 	"time"
 
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -122,6 +123,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			Timeout: 30 * time.Second,
 		}))(getAllStationsEndpoint)
 	}
+
 	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
 	{
 		getNextAvailableDockingStationEndpoint = grpctransport.NewClient(
@@ -142,6 +144,26 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		}))(getNextAvailableDockingStationEndpoint)
 	}
 
+	var landShipToDockEndpoint endpoint.Endpoint
+	{
+		landShipToDockEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"LandShipToDock",
+			encodeGRPCLandShipToDockRequest,
+			decodeGRPCLandShipToDockResponse,
+			pb.LandShipToDockResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		landShipToDockEndpoint = opentracing.TraceClient(otTracer, "LandShipToDock")(landShipToDockEndpoint)
+		landShipToDockEndpoint = limiter(landShipToDockEndpoint)
+		landShipToDockEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "LandShipToDock",
+			Timeout: 30 * time.Second,
+		}))(landShipToDockEndpoint)
+	}
+
 	return endpoints.EndpointSet{
 		RegisterShipEndpoint: registerShipEndpoint,
 		GetAllShipsEndpoint:  getAllShipsEndpoint,
@@ -150,6 +172,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		GetAllStationsEndpoint:  getAllStationsEndpoint,
 
 		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
+		LandShipToDockEndpoint:                 landShipToDockEndpoint,
 	}
 
 }
@@ -213,5 +236,13 @@ func encodeGRPCGetNextAvailableDockingStationRequest(_ context.Context, request 
 func decodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
 	//return converters.ProtoGetNextAvailableDockingStationResponseToDto(*response), nil
+	return response, nil
+}
+func encodeGRPCLandShipToDockRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*dtos.LandShipToDockRequest)
+	return req, nil
+}
+func decodeGRPCLandShipToDockResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.LandShipToDockResponse)
 	return response, nil
 }

@@ -23,6 +23,7 @@ type CentralCommandDBServiceClient interface {
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*GetAllShipsResponse, error)
 	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*GetAllStationsResponse, error)
 	GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error)
+	LandShipToDock(ctx context.Context, in *LandShipToDockRequest, opts ...grpc.CallOption) (*LandShipToDockResponse, error)
 }
 
 type centralCommandDBServiceClient struct {
@@ -78,6 +79,15 @@ func (c *centralCommandDBServiceClient) GetNextAvailableDockingStation(ctx conte
 	return out, nil
 }
 
+func (c *centralCommandDBServiceClient) LandShipToDock(ctx context.Context, in *LandShipToDockRequest, opts ...grpc.CallOption) (*LandShipToDockResponse, error) {
+	out := new(LandShipToDockResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.state.v1.CentralCommandDBService/LandShipToDock", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CentralCommandDBServiceServer is the server API for CentralCommandDBService service.
 // All implementations must embed UnimplementedCentralCommandDBServiceServer
 // for forward compatibility
@@ -87,6 +97,7 @@ type CentralCommandDBServiceServer interface {
 	GetAllShips(context.Context, *GetAllShipsRequest) (*GetAllShipsResponse, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*GetAllStationsResponse, error)
 	GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error)
+	LandShipToDock(context.Context, *LandShipToDockRequest) (*LandShipToDockResponse, error)
 	mustEmbedUnimplementedCentralCommandDBServiceServer()
 }
 
@@ -108,6 +119,9 @@ func (UnimplementedCentralCommandDBServiceServer) GetAllStations(context.Context
 }
 func (UnimplementedCentralCommandDBServiceServer) GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNextAvailableDockingStation not implemented")
+}
+func (UnimplementedCentralCommandDBServiceServer) LandShipToDock(context.Context, *LandShipToDockRequest) (*LandShipToDockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LandShipToDock not implemented")
 }
 func (UnimplementedCentralCommandDBServiceServer) mustEmbedUnimplementedCentralCommandDBServiceServer() {
 }
@@ -213,6 +227,24 @@ func _CentralCommandDBService_GetNextAvailableDockingStation_Handler(srv interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CentralCommandDBService_LandShipToDock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LandShipToDockRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CentralCommandDBServiceServer).LandShipToDock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deblasis.state.v1.CentralCommandDBService/LandShipToDock",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CentralCommandDBServiceServer).LandShipToDock(ctx, req.(*LandShipToDockRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CentralCommandDBService_ServiceDesc is the grpc.ServiceDesc for CentralCommandDBService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -239,6 +271,10 @@ var CentralCommandDBService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetNextAvailableDockingStation",
 			Handler:    _CentralCommandDBService_GetNextAvailableDockingStation_Handler,
+		},
+		{
+			MethodName: "LandShipToDock",
+			Handler:    _CentralCommandDBService_LandShipToDock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

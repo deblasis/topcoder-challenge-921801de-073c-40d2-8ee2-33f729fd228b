@@ -147,6 +147,26 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		}))(getNextAvailableDockingStationEndpoint)
 	}
 
+	var landShipToDockEndpoint endpoint.Endpoint
+	{
+		landShipToDockEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"LandShipToDock",
+			encodeGRPCLandShipToDockRequest,
+			decodeGRPCLandShipToDockResponse,
+			pb.LandShipToDockResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		landShipToDockEndpoint = opentracing.TraceClient(otTracer, "LandShipToDock")(landShipToDockEndpoint)
+		landShipToDockEndpoint = limiter(landShipToDockEndpoint)
+		landShipToDockEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "LandShipToDock",
+			Timeout: 30 * time.Second,
+		}))(landShipToDockEndpoint)
+	}
+
 	return endpoints.EndpointSet{
 		CreateShipEndpoint:  createShipEndpoint,
 		GetAllShipsEndpoint: getAllShipsEndpoint,
@@ -155,6 +175,7 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		GetAllStationsEndpoint: getAllStationsEndpoint,
 
 		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
+		LandShipToDockEndpoint:                 landShipToDockEndpoint,
 	}
 }
 
@@ -202,4 +223,13 @@ func encodeGRPCGetNextAvailableDockingStationRequest(_ context.Context, request 
 func decodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
 	return converters.ProtoGetNextAvailableDockingStationResponseToDto(response), nil
+}
+
+func encodeGRPCLandShipToDockRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*dtos.LandShipToDockRequest)
+	return converters.LandShipToDockRequestToProto(req), nil
+}
+func decodeGRPCLandShipToDockResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.LandShipToDockResponse)
+	return converters.ProtoLandShipToDockResponseToDto(response), nil
 }

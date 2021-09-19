@@ -93,3 +93,18 @@ func GetNextAvailableDockingStationRequestToProto(src *dtos.GetNextAvailableDock
 	}
 	return ret
 }
+func LandShipToDockRequestToProto(src *dtos.LandShipToDockRequest) *pb.LandShipToDockRequest {
+	ret := &pb.LandShipToDockRequest{}
+	if errs := m.Copy(ret, &src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}
+
+func LandShipToDockResponseToProto(src *dtos.LandShipToDockResponse) *pb.LandShipToDockResponse {
+	ret := &pb.LandShipToDockResponse{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}

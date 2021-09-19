@@ -32,6 +32,7 @@ type EndpointSet struct {
 	GetAllStationsEndpoint endpoint.Endpoint
 
 	GetNextAvailableDockingStationEndpoint endpoint.Endpoint
+	LandShipToDockEndpoint                 endpoint.Endpoint
 
 	logger log.Logger
 }
@@ -50,6 +51,7 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		createShipEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "CreateShip"))(createShipEndpoint)
 		createShipEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "CreateShip"))(createShipEndpoint)
 	}
+
 	var getAllShipsEndpoint endpoint.Endpoint
 	{
 		getAllShipsEndpoint = MakeGetAllShipsEndpoint(s)
@@ -75,6 +77,7 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		createStationEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "CreateStation"))(createStationEndpoint)
 		createStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "CreateStation"))(createStationEndpoint)
 	}
+
 	var getAllStationsEndpoint endpoint.Endpoint
 	{
 		getAllStationsEndpoint = MakeGetAllStationsEndpoint(s)
@@ -87,6 +90,7 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		getAllStationsEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetAllStations"))(getAllStationsEndpoint)
 		getAllStationsEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetAllStations"))(getAllStationsEndpoint)
 	}
+
 	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
 	{
 		getNextAvailableDockingStationEndpoint = MakeGetNextAvailableDockingStationEndpoint(s)
@@ -100,6 +104,18 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		getNextAvailableDockingStationEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetNextAvailableDockingStation"))(getNextAvailableDockingStationEndpoint)
 	}
 
+	var landShipToDockEndpoint endpoint.Endpoint
+	{
+		landShipToDockEndpoint = MakeLandShipToDockEndpoint(s)
+		landShipToDockEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(landShipToDockEndpoint)
+		landShipToDockEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(landShipToDockEndpoint)
+		landShipToDockEndpoint = opentracing.TraceServer(otTracer, "LandShipToDock")(landShipToDockEndpoint)
+		if zipkinTracer != nil {
+			landShipToDockEndpoint = zipkin.TraceEndpoint(zipkinTracer, "LandShipToDock")(landShipToDockEndpoint)
+		}
+		landShipToDockEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "LandShipToDock"))(landShipToDockEndpoint)
+		landShipToDockEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "LandShipToDock"))(landShipToDockEndpoint)
+	}
 	return EndpointSet{
 		StatusEndpoint:                         healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
 		CreateShipEndpoint:                     createShipEndpoint,
@@ -107,6 +123,7 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger, durati
 		CreateStationEndpoint:                  createStationEndpoint,
 		GetAllStationsEndpoint:                 getAllStationsEndpoint,
 		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
+		LandShipToDockEndpoint:                 landShipToDockEndpoint,
 		logger:                                 logger,
 	}
 }
@@ -136,29 +153,6 @@ func MakeGetAllStationsEndpoint(s service.CentralCommandDBService) endpoint.Endp
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetAllStationsRequest)
 		return s.GetAllStations(ctx, req)
-
-		// 	if err != nil {
-		// 		return dtos.GetAllStationsResponse{
-		// 			Err: err.Error(),
-		// 		}, err
-		// 	}
-
-		// 	stations := make([]dtos.Station, 0)
-		// 	for _, x := range ret.Stations {
-
-		// 		station := &dtos.Station{}
-		// 		errs := m.Copy(station, x)
-		// 		if len(errs) > 0 {
-		// 			return nil, errors.Wrap(errs[0], "Failed to map station")
-		// 		}
-		// 		stations = append(stations, *station)
-		// 	}
-
-		// 	return dtos.GetAllStationsResponse{
-		// 		Stations: stations,
-		// 	}, nil
-		// }
-
 	}
 }
 
@@ -166,5 +160,12 @@ func MakeGetNextAvailableDockingStationEndpoint(s service.CentralCommandDBServic
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetNextAvailableDockingStationRequest)
 		return s.GetNextAvailableDockingStation(ctx, req)
+	}
+}
+
+func MakeLandShipToDockEndpoint(s service.CentralCommandDBService) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req := request.(*dtos.LandShipToDockRequest)
+		return s.LandShipToDock(ctx, req)
 	}
 }

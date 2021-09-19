@@ -60,10 +60,21 @@ func (s EndpointSet) GetNextAvailableDockingStation(ctx context.Context, request
 	return response, nil
 }
 
+// LandShipToDock(ctx context.Context, ship *model.Ship) (int64, error)
+func (s EndpointSet) LandShipToDock(ctx context.Context, request *dtos.LandShipToDockRequest) (*dtos.LandShipToDockResponse, error) {
+	resp, err := s.LandShipToDockEndpoint(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(*dtos.LandShipToDockResponse)
+	return response, nil
+}
+
 var (
 	_ endpoint.Failer = dtos.CreateStationResponse{}
 	_ endpoint.Failer = dtos.CreateShipResponse{}
 	_ endpoint.Failer = dtos.GetAllShipsResponse{}
 	_ endpoint.Failer = dtos.GetAllStationsResponse{}
 	_ endpoint.Failer = dtos.GetNextAvailableDockingStationResponse{}
+	_ endpoint.Failer = dtos.LandShipToDockResponse{}
 )

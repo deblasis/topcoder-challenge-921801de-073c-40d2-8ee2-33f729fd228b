@@ -43,7 +43,7 @@ service CentralCommandService {
   }
 
   rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
-
+  rpc LandShipToDock (LandShipToDockRequest) returns (LandShipToDockResponse) {}
 
 }
 
@@ -76,9 +76,10 @@ message Ship {
 message NextAvailableDockingStation {
   string dock_id = 1;
   string station_id = 2;
-  float available_capacity = 3;
-  int64 available_docks_at_station = 4;
-  int64 seconds_until_available = 5;
+  float ship_weight = 3;
+  float available_capacity = 4;
+  int64 available_docks_at_station =5;
+  int64 seconds_until_next_available = 6;
 }
 
 message DockSpec {
@@ -116,9 +117,21 @@ message GetAllStationsResponse {
 }
 
 message GetNextAvailableDockingStationRequest {
+  //@gotags: validate:"uuid4"
   string ship_id = 1;
 }
 message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
   string error = 2;
+}
+message LandShipToDockRequest {
+  //@gotags: validate:"uuid4"
+  string ship_id = 1;
+  //@gotags: validate:"uuid4"
+  string dock_id = 2;
+  //@gotags: validate:"required,notblank"
+  int64 duration = 3;
+}
+message LandShipToDockResponse {
+  string error = 1;
 }

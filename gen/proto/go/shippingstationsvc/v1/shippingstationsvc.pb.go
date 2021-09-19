@@ -74,6 +74,7 @@ type RequestLandingRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	//@gotags: validate:"uuid4"
 	Id   string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Time int64  `protobuf:"varint,2,opt,name=time,proto3" json:"time,omitempty"`
 }
@@ -218,6 +219,7 @@ type LandingRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	//@gotags: validate:"uuid4"
 	Id   string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Time int64  `protobuf:"varint,2,opt,name=time,proto3" json:"time,omitempty"`
 }

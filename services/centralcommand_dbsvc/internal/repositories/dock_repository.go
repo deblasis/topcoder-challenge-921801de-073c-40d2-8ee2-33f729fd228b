@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
@@ -75,4 +76,31 @@ func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, ship
 	}
 
 	return &nextAvail, nil
+}
+
+func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (*model.DockedShip, error) {
+
+	dockedShip := &model.DockedShip{
+		DockId:       dockId.String(),
+		ShipId:       shipId.String(),
+		DockedSince:  time.Now().UTC(),
+		DockDuration: int64(duration),
+	}
+
+	result, err := u.Db.WithContext(ctx).Model(dockedShip).Insert()
+	if err != nil {
+		err = errors.Wrapf(err, "Failed to insert dockedShip %v", dockedShip)
+		level.Debug(u.logger).Log("err", err)
+		return nil, errs.ErrCannotInsertEntity
+	}
+
+	if result != nil {
+		if result.RowsAffected() == 0 {
+			err = errors.New("Failed to insert, affected is 0")
+			level.Debug(u.logger).Log("err", err)
+			return nil, errs.ErrCannotInsertEntity
+		}
+	}
+
+	return dockedShip, nil
 }

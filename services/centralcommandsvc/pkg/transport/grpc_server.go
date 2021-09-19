@@ -8,6 +8,7 @@ import (
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -26,6 +27,7 @@ type grpcServer struct {
 	registerStation                grpctransport.Handler
 	getAllStations                 grpctransport.Handler
 	getNextAvailableDockingStation grpctransport.Handler
+	landShipToDock                 grpctransport.Handler
 }
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServiceServer {
@@ -122,6 +124,12 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			e.GetNextAvailableDockingStationEndpoint,
 			decodeGRPCGetNextAvailableDockingStationRequest,
 			encodeGRPCGetNextAvailableDockingStationResponse,
+			options...,
+		),
+		landShipToDock: grpctransport.NewServer(
+			e.LandShipToDockEndpoint,
+			decodeGRPCLandShipToDockRequest,
+			encodeGRPCLandShipToDockResponse,
 			options...,
 		),
 	}
@@ -325,5 +333,14 @@ func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcR
 	}
 
 	//return converters.GetNextAvailableDockingStationResponseToProto(*response), nil
+	return response, nil
+}
+
+func decodeGRPCLandShipToDockRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.LandShipToDockRequest)
+	return req, nil
+}
+func encodeGRPCLandShipToDockResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*dtos.LandShipToDockResponse)
 	return response, nil
 }

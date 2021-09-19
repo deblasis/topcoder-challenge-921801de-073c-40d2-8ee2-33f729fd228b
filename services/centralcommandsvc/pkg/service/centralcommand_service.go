@@ -31,6 +31,7 @@ type CentralCommandService interface {
 	RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error)
 	GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error)
 	GetNextAvailableDockingStation(context.Context, *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error)
+	LandShipToDock(context.Context, *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error)
 }
 
 type centralCommandService struct {
@@ -46,11 +47,6 @@ func NewCentralCommandService(logger log.Logger, jwtConfig config.JWTConfig, db_
 		db_svc_endpointset: db_svc_endpointset,
 	}
 }
-
-var (
-	ErrShipAlreadyRegistered    = errors.New("this ship is already registered")
-	ErrStationAlreadyRegistered = errors.New("this station is already registered")
-)
 
 func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {
 	//TODO use middleware
@@ -204,13 +200,37 @@ func (u *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 			Error: errs.Err2str(err),
 		}, nil
 	}
+	//TODO converter
 	return &pb.GetNextAvailableDockingStationResponse{
 		NextAvailableDockingStation: &pb.NextAvailableDockingStation{
-			DockId:                  ret.NextAvailableDockingStation.DockId,
-			StationId:               ret.NextAvailableDockingStation.StationId,
-			AvailableCapacity:       ret.NextAvailableDockingStation.AvailableCapacity,
-			AvailableDocksAtStation: ret.NextAvailableDockingStation.AvailableDocksAtStation,
-			SecondsUntilAvailable:   ret.NextAvailableDockingStation.SecondsUntilAvailable,
+			DockId:                    ret.NextAvailableDockingStation.DockId,
+			StationId:                 ret.NextAvailableDockingStation.StationId,
+			ShipWeight:                ret.NextAvailableDockingStation.ShipWeight,
+			AvailableCapacity:         ret.NextAvailableDockingStation.AvailableCapacity,
+			AvailableDocksAtStation:   ret.NextAvailableDockingStation.AvailableDocksAtStation,
+			SecondsUntilNextAvailable: ret.NextAvailableDockingStation.SecondsUntilNextAvailable,
 		},
 	}, nil
+}
+
+func (u *centralCommandService) LandShipToDock(ctx context.Context, request *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error) {
+	err := u.validate.Struct(request)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		return &pb.LandShipToDockResponse{
+			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+		}, nil
+	}
+
+	_, err = u.db_svc_endpointset.LandShipToDock(ctx, &dtos.LandShipToDockRequest{
+		ShipId:   uuid.MustParse(request.ShipId).String(),
+		DockId:   uuid.MustParse(request.DockId).String(),
+		Duration: request.Duration,
+	})
+	if err != nil {
+		return &pb.LandShipToDockResponse{
+			Error: errs.Err2str(err),
+		}, nil
+	}
+	return &pb.LandShipToDockResponse{}, nil
 }

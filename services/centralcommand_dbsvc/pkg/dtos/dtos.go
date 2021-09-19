@@ -45,11 +45,12 @@ type Dock struct {
 }
 
 type NextAvailableDockingStation struct {
-	DockId                  string  `json:"dock_id,omitempty"`
-	StationId               string  `json:"station_id,omitempty"`
-	AvailableCapacity       float32 `json:"available_capacity,omitempty"`
-	AvailableDocksAtStation int64   `json:"available_docks_at_station,omitempty"`
-	SecondsUntilAvailable   int64   `json:"seconds_until_available,omitempty"`
+	DockId                    string  `json:"dock_id,omitempty"`
+	StationId                 string  `json:"station_id,omitempty"`
+	ShipWeight                float32 `json:"ship_weight,omitempty"`
+	AvailableCapacity         float32 `json:"available_capacity,omitempty"`
+	AvailableDocksAtStation   int64   `json:"available_docks_at_station,omitempty"`
+	SecondsUntilNextAvailable int64   `json:"seconds_until_next_available,omitempty"`
 }
 
 type CreateShipRequest Ship
@@ -86,8 +87,18 @@ type GetNextAvailableDockingStationResponse struct {
 	Error                       string                       `json:"error,omitempty"`
 }
 
+type LandShipToDockRequest struct {
+	ShipId   string `json:"ship_id,omitempty" validate:"uuid4"`
+	DockId   string `json:"dock_id,omitempty" validate:"uuid4"`
+	Duration int64  `json:"duration,omitempty" validate:"required,notblank"`
+}
+type LandShipToDockResponse struct {
+	Error string `json:"error,omitempty"`
+}
+
 func (r CreateShipResponse) Failed() error                     { return errs.Str2err(r.Error) }
 func (r GetAllShipsResponse) Failed() error                    { return errs.Str2err(r.Error) }
 func (r CreateStationResponse) Failed() error                  { return errs.Str2err(r.Error) }
 func (r GetAllStationsResponse) Failed() error                 { return errs.Str2err(r.Error) }
 func (r GetNextAvailableDockingStationResponse) Failed() error { return errs.Str2err(r.Error) }
+func (r LandShipToDockResponse) Failed() error                 { return errs.Str2err(r.Error) }

@@ -21,4 +21,5 @@ type DockRepository interface {
 	GetById(ctx context.Context, id string) (*model.Dock, error)
 	Create(ctx context.Context, dock model.Dock) (*model.Dock, error)
 	GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (*model.NextAvailableDockingStation, error)
+	LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (*model.DockedShip, error)
 }
