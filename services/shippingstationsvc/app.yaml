@@ -1,0 +1,22 @@
+httpserverport: 9281
+grpcserverport: 9282
+
+bindOnLocalhost: true
+
+consul:
+  host: consul
+  port: 8500
+zipkin:
+  v2_url: http://zipkin:9411/api/v2/spans
+
+jwt:
+  privkeypath: /certs/jwt.pem.key
+  pubkeypath: /certs/jwt.pem.pub
+#one day  
+  tokenduration: 86400   
+
+# ssl:
+#   serverCert: ../../../../certs/deblasis-stc.pem
+#   serverKey: ../../../../certs/deblasis-stc-key.pem
+
+loglevel: debug

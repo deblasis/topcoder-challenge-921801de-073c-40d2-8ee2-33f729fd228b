@@ -1,0 +1,5 @@
+# apigateway
+clessidrasvc: /entrypoint.sh
+
+# Consul Agent
+consul: /consul-agent.sh

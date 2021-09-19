@@ -24,6 +24,8 @@ type CentralCommandServiceClient interface {
 	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error)
+	RegisterShipLanding(ctx context.Context, in *RegisterShipLandingRequest, opts ...grpc.CallOption) (*RegisterShipLandingResponse, error)
 }
 
 type centralCommandServiceClient struct {
@@ -70,6 +72,24 @@ func (c *centralCommandServiceClient) GetAllStations(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *centralCommandServiceClient) GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error) {
+	out := new(GetNextAvailableDockingStationResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/GetNextAvailableDockingStation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *centralCommandServiceClient) RegisterShipLanding(ctx context.Context, in *RegisterShipLandingRequest, opts ...grpc.CallOption) (*RegisterShipLandingResponse, error) {
+	out := new(RegisterShipLandingResponse)
+	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/RegisterShipLanding", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CentralCommandServiceServer is the server API for CentralCommandService service.
 // All implementations must embed UnimplementedCentralCommandServiceServer
 // for forward compatibility
@@ -78,6 +98,8 @@ type CentralCommandServiceServer interface {
 	RegisterShip(context.Context, *RegisterShipRequest) (*emptypb.Empty, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*httpbody.HttpBody, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*httpbody.HttpBody, error)
+	GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error)
+	RegisterShipLanding(context.Context, *RegisterShipLandingRequest) (*RegisterShipLandingResponse, error)
 	mustEmbedUnimplementedCentralCommandServiceServer()
 }
 
@@ -96,6 +118,12 @@ func (UnimplementedCentralCommandServiceServer) GetAllShips(context.Context, *Ge
 }
 func (UnimplementedCentralCommandServiceServer) GetAllStations(context.Context, *GetAllStationsRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllStations not implemented")
+}
+func (UnimplementedCentralCommandServiceServer) GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNextAvailableDockingStation not implemented")
+}
+func (UnimplementedCentralCommandServiceServer) RegisterShipLanding(context.Context, *RegisterShipLandingRequest) (*RegisterShipLandingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterShipLanding not implemented")
 }
 func (UnimplementedCentralCommandServiceServer) mustEmbedUnimplementedCentralCommandServiceServer() {}
 
@@ -182,6 +210,42 @@ func _CentralCommandService_GetAllStations_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CentralCommandService_GetNextAvailableDockingStation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNextAvailableDockingStationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CentralCommandServiceServer).GetNextAvailableDockingStation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deblasis.v1.CentralCommandService/GetNextAvailableDockingStation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CentralCommandServiceServer).GetNextAvailableDockingStation(ctx, req.(*GetNextAvailableDockingStationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CentralCommandService_RegisterShipLanding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterShipLandingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CentralCommandServiceServer).RegisterShipLanding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/deblasis.v1.CentralCommandService/RegisterShipLanding",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CentralCommandServiceServer).RegisterShipLanding(ctx, req.(*RegisterShipLandingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CentralCommandService_ServiceDesc is the grpc.ServiceDesc for CentralCommandService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -204,6 +268,14 @@ var CentralCommandService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllStations",
 			Handler:    _CentralCommandService_GetAllStations_Handler,
+		},
+		{
+			MethodName: "GetNextAvailableDockingStation",
+			Handler:    _CentralCommandService_GetNextAvailableDockingStation_Handler,
+		},
+		{
+			MethodName: "RegisterShipLanding",
+			Handler:    _CentralCommandService_RegisterShipLanding_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

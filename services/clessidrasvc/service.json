@@ -1,0 +1,21 @@
+{
+    "service": {
+      "id": "deblasis-job-ClessidraService",
+      "name": "deblasis-job-ClessidraService",
+      "tags": ["scheduledjob","cleanup", "deblasis", "poller"],
+      "meta": {
+        "meta": "this microservice removes the docked ships when they left"
+      },
+      "port": 9500,
+      "checks": [{
+        "id": "health",
+        "name": "Status and Shipping Station stats",
+        "http": "http://localhost:9500/health",
+        "method": "GET",
+        "header": {"Content-Type": ["application/json"]},
+        "interval": "10s",
+        "timeout": "1s"
+      }]
+    }
+  }
+  

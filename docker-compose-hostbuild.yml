@@ -23,17 +23,31 @@ services:
       args: 
         SVC_NAME: authsvc
    
-
   centralcommand_dbsvc:
     build:
       dockerfile: ./services/centralcommand_dbsvc/Dockerfile.hostbuild
       context: .
       args: 
         SVC_NAME: centralcommand_dbsvc
+
   centralcommandsvc:
     build:
       dockerfile: ./services/centralcommandsvc/Dockerfile.hostbuild
       context: .
       args: 
         SVC_NAME: centralcommandsvc
+
+  shippingstationsvc:
+    build:
+      dockerfile: ./services/shippingstationsvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: shippingstationsvc
+
+  clessidrasvc:
+    build:
+      dockerfile: ./services/clessidrasvc/Dockerfile.hostbuild
+      context: .
+      args: 
+        SVC_NAME: clessidrasvc        
    

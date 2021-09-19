@@ -41,6 +41,10 @@ service CentralCommandService {
       //response_body: "stations"
     };    
   }
+
+  rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
+  rpc RegisterShipLanding (RegisterShipLandingRequest) returns (RegisterShipLandingResponse) {}
+
 }
 
 
@@ -67,6 +71,15 @@ message Ship {
   //@gotags: model:"-"
   string status = 2; 
   float weight = 3[(google.api.field_behavior) = REQUIRED];
+}
+
+message NextAvailableDockingStation {
+  string dock_id = 1;
+  string station_id = 2;
+  float ship_weight = 3;
+  float available_capacity = 4;
+  int64 available_docks_at_station =5;
+  int64 seconds_until_next_available = 6;
 }
 
 message DockSpec {
@@ -101,4 +114,26 @@ message GetAllStationsRequest {
 message GetAllStationsResponse {
   repeated Station stations = 1;
   string error = 2;
+}
+
+message GetNextAvailableDockingStationRequest {
+  //@gotags: validate:"uuid4"
+  string ship_id = 1;
+}
+message GetNextAvailableDockingStationResponse {
+  NextAvailableDockingStation next_available_docking_station = 1;  
+  string error = 2;
+}
+
+message RegisterShipLandingRequest {
+  //@gotags: validate:"uuid4,required"
+  string ship_id = 1;    
+  //@gotags: validate:"uuid4,required"
+  string dock_id = 2;
+  //@gotags: validate:"required"
+  int64 duration = 3;
+}
+
+message RegisterShipLandingResponse {
+  string error = 1;
 }

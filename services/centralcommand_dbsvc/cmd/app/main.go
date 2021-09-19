@@ -93,7 +93,8 @@ func main() {
 
 		shipRepo    = repositories.NewShipRepository(connection, log.With(cfg.Logger, "component", "ShipRepository"))
 		stationRepo = repositories.NewStationRepository(connection, log.With(cfg.Logger, "component", "StationRepository"))
-		svc         = service.NewCentralCommandDBService(shipRepo, stationRepo, log.With(cfg.Logger, "component", "CentralCommandDBService"))
+		dockRepo    = repositories.NewDockRepository(connection, log.With(cfg.Logger, "component", "DockRepository"))
+		svc         = service.NewCentralCommandDBService(shipRepo, stationRepo, dockRepo, log.With(cfg.Logger, "component", "CentralCommandDBService"))
 		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))

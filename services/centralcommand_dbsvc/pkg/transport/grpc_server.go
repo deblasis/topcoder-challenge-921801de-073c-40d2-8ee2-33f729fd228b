@@ -22,6 +22,9 @@ type grpcServer struct {
 
 	createStation  grpctransport.Handler
 	getAllStations grpctransport.Handler
+
+	getNextAvailableDockingStation grpctransport.Handler
+	landShipToDock                 grpctransport.Handler
 }
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandDBServiceServer {
@@ -51,6 +54,18 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandDBSer
 			e.GetAllStationsEndpoint,
 			decodeGRPCGetAllStationsRequest,
 			encodeGRPCGetAllStationsResponse,
+			options...,
+		),
+		getNextAvailableDockingStation: grpctransport.NewServer(
+			e.GetNextAvailableDockingStationEndpoint,
+			decodeGRPCGetNextAvailableDockingStationRequest,
+			encodeGRPCGetNextAvailableDockingStationResponse,
+			options...,
+		),
+		landShipToDock: grpctransport.NewServer(
+			e.LandShipToDockEndpoint,
+			decodeGRPCLandShipToDockRequest,
+			encodeGRPCLandShipToDockResponse,
 			options...,
 		),
 	}
@@ -84,6 +99,14 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 		return nil, err
 	}
 	return rep.(*pb.GetAllStationsResponse), nil
+}
+
+func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
+	_, rep, err := g.getNextAvailableDockingStation.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.GetNextAvailableDockingStationResponse), nil
 }
 
 func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -141,4 +164,22 @@ func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (in
 func encodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetAllStationsResponse)
 	return converters.GetAllStationsResponseToProto(response), nil
+}
+
+func decodeGRPCGetNextAvailableDockingStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.GetNextAvailableDockingStationRequest)
+	return converters.ProtoGetNextAvailableDockingStationRequestToDto(req), nil
+}
+func encodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*dtos.GetNextAvailableDockingStationResponse)
+	return converters.GetNextAvailableDockingStationResponseToProto(response), nil
+}
+
+func decodeGRPCLandShipToDockRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.LandShipToDockRequest)
+	return converters.ProtoLandShipToDockRequestToDto(req), nil
+}
+func encodeGRPCLandShipToDockResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*dtos.LandShipToDockResponse)
+	return converters.LandShipToDockResponseToProto(response), nil
 }

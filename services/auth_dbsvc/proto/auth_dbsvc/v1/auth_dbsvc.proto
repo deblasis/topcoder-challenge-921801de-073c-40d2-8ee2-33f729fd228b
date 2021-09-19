@@ -6,8 +6,8 @@ option go_package = "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/
 
 service AuthDBService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
-  rpc GetUserByUsername (GetUserByUsernameRequest) returns (GetUserResponse) {}
-  rpc GetUserById (GetUserByIdRequest) returns (GetUserResponse) {}
+  rpc GetUserByUsername (GetUserByUsernameRequest) returns (GetUserByUsernameResponse) {}
+  rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
 }
 
 
@@ -35,7 +35,11 @@ message GetUserByUsernameRequest {
 message GetUserByIdRequest {
   string id = 1;
 }
-message GetUserResponse {
+message GetUserByUsernameResponse {
+  User user = 1;
+  string error = 2;
+}
+message GetUserByIdResponse {
   User user = 1;
   string error = 2;
 }

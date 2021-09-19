@@ -26,13 +26,6 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 
 	options := transport_conf.GetCommonHTTPServerOptions(l)
 
-	// r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
-	// 	e.StatusEndpoint,
-	// 	healthcheck.DecodeHTTPServiceStatusRequest,
-	// 	encodeResponse,
-	// 	options...,
-	// ))
-
 	r.Methods("POST").Path("/ship").Handler(httptransport.NewServer(
 		e.CreateShipEndpoint,
 		decodeHTTPCreateShipRequest,
@@ -57,6 +50,20 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 	r.Methods("GET").Path("/station/all").Handler(httptransport.NewServer(
 		e.GetAllStationsEndpoint,
 		decodeHTTPGetAllStationsRequest,
+		encodeResponse,
+		options...,
+	))
+
+	r.Methods("POST").Path("/docks/nextavailable").Handler(httptransport.NewServer(
+		e.GetNextAvailableDockingStationEndpoint,
+		decodeHTTPGetNextAvailableDockingStationRequest,
+		encodeResponse,
+		options...,
+	))
+
+	r.Methods("POST").Path("/land").Handler(httptransport.NewServer(
+		e.LandShipToDockEndpoint,
+		decodeHTTPLandShipToDockRequest,
 		encodeResponse,
 		options...,
 	))
@@ -104,4 +111,29 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		return nil
 	}
 	return json.NewEncoder(w).Encode(response)
+}
+
+func decodeHTTPGetNextAvailableDockingStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req dtos.GetNextAvailableDockingStationRequest
+	if r.ContentLength == 0 {
+		logger.Log("Post request with no body")
+		return req, nil
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+func decodeHTTPLandShipToDockRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req dtos.LandShipToDockRequest
+	if r.ContentLength == 0 {
+		logger.Log("Post request with no body")
+		return req, nil
+	}
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
 }

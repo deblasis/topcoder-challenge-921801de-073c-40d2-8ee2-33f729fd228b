@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type Ship struct {
 	tableName struct{} `pg:"ships,select:ships_view"`
 
@@ -44,17 +46,30 @@ type Dock struct {
 	Station *Station `json:"-" pg:"rel:has-one" model:"-"`
 }
 
-type DockedShips struct {
+type DockedShip struct {
 	tableName struct{} `pg:"docked_ships"`
 
 	DockId string `json:"dock_id,omitempty" db:"dock_id"`
 	ShipId string `json:"ship_id,omitempty" db:"ship_id"`
 
+	DockedSince  time.Time `json:"docked_since,omitempty" db:"docked_since"`
+	DockDuration int64     `json:"dock_duration,omitempty" db:"dock_duration"`
+
 	Dock *Dock `json:"-" pg:"rel:has-one"`
 	Ship *Ship `json:"-" pg:"rel:has-one"`
 }
 
+type NextAvailableDockingStation struct {
+	DockId                    string  `json:"dock_id,omitempty" db:"dock_id"`
+	StationId                 string  `json:"station_id,omitempty" db:"station_id"`
+	ShipWeight                float32 `json:"ship_weight,omitempty" db:"ship_weight"`
+	AvailableCapacity         float32 `json:"available_capacity,omitempty" db:"available_capacity"`
+	AvailableDocksAtStation   int64   `json:"available_docks_at_station,omitempty" db:"available_docks_at_station"`
+	SecondsUntilNextAvailable int64   `json:"seconds_until_next_available" db:"seconds_until_next_available"`
+}
+
 //TODO refactor
 const (
-	ShipsHaveLeftFunctionName = "ships_have_left"
+	ShipsHaveLeftFunctionName                         = "ships_have_left"
+	GetNextAvailableDockingStationForShipFunctionName = "get_next_available_docking_station_for_ship"
 )

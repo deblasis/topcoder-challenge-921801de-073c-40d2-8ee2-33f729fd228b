@@ -77,3 +77,34 @@ func GetAllStationsResponseToProto(src *dtos.GetAllStationsResponse) *pb.GetAllS
 	}
 	return ret
 }
+
+func GetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDockingStationResponse) *pb.GetNextAvailableDockingStationResponse {
+	ret := &pb.GetNextAvailableDockingStationResponse{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}
+
+func GetNextAvailableDockingStationRequestToProto(src *dtos.GetNextAvailableDockingStationRequest) *pb.GetNextAvailableDockingStationRequest {
+	ret := &pb.GetNextAvailableDockingStationRequest{}
+	if errs := m.Copy(ret, &src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}
+func LandShipToDockRequestToProto(src *dtos.LandShipToDockRequest) *pb.LandShipToDockRequest {
+	ret := &pb.LandShipToDockRequest{}
+	if errs := m.Copy(ret, &src); len(errs) > 0 {
+		//panic(errs[0])
+	}
+	return ret
+}
+
+func LandShipToDockResponseToProto(src *dtos.LandShipToDockResponse) *pb.LandShipToDockResponse {
+	ret := &pb.LandShipToDockResponse{}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}

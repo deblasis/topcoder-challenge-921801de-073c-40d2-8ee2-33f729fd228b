@@ -267,4 +267,27 @@ func init() {
 		return reflect.ValueOf(ret), nil
 	})
 
+	m.AddConversion((**pb.NextAvailableDockingStation)(nil), (**dtos.NextAvailableDockingStation)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &dtos.NextAvailableDockingStation{}
+		v := in.Interface().(*pb.NextAvailableDockingStation)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+
+	m.AddConversion((**dtos.NextAvailableDockingStation)(nil), (**pb.NextAvailableDockingStation)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.NextAvailableDockingStation{}
+		v := in.Interface().(*dtos.NextAvailableDockingStation)
+		errs := m.Copy(ret, v)
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
 }

@@ -69,6 +69,7 @@ type APIGatewayConfig struct {
 	RetryTimeoutMs                    int
 	AUTHSERVICEGRPCENDPOINT           string
 	CENTRALCOMMANDSERVICEGRPCENDPOINT string
+	SHIPPINGSTATIONENDPOINT           string
 }
 
 // LoadConfig load config from file
@@ -97,9 +98,8 @@ func LoadConfig() (Config, error) {
 	}
 
 	loglevel := v.GetString("loglevel")
-	logger := getLogger(loglevel)
 
-	cfg.Logger = logger
+	cfg.Logger = getLogger(loglevel)
 	return cfg, nil
 }
 
@@ -122,8 +122,5 @@ func getLogger(loglevel string) log.Logger {
 		logFilter = level.AllowAll()
 	}
 
-	logger = level.NewFilter(logger, logFilter)
-	logger = log.With(logger, "caller", log.DefaultCaller)
-
-	return logger
+	return level.NewFilter(logger, logFilter)
 }

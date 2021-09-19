@@ -31,13 +31,13 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.AuthDBServiceServer
 		getUserByUsername: grpctransport.NewServer(
 			e.GetUserByUsernameEndpoint,
 			decodeGRPCGetUserByUsernameRequest,
-			encodeGRPCGetUserResponse,
+			encodeGRPCGetUserByUsernameResponse,
 			options...,
 		),
 		getUserById: grpctransport.NewServer(
 			e.GetUserByIdEndpoint,
 			decodeGRPCGetUserByIdRequest,
-			encodeGRPCGetUserResponse,
+			encodeGRPCGetUserByIdResponse,
 			options...,
 		),
 	}
@@ -51,20 +51,20 @@ func (g *grpcServer) CreateUser(ctx context.Context, r *pb.CreateUserRequest) (*
 	}
 	return rep.(*pb.CreateUserResponse), nil
 }
-func (g *grpcServer) GetUserByUsername(ctx context.Context, r *pb.GetUserByUsernameRequest) (*pb.GetUserResponse, error) {
+func (g *grpcServer) GetUserByUsername(ctx context.Context, r *pb.GetUserByUsernameRequest) (*pb.GetUserByUsernameResponse, error) {
 	_, rep, err := g.getUserByUsername.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.GetUserResponse), nil
+	return rep.(*pb.GetUserByUsernameResponse), nil
 }
 
-func (g *grpcServer) GetUserById(ctx context.Context, r *pb.GetUserByIdRequest) (*pb.GetUserResponse, error) {
+func (g *grpcServer) GetUserById(ctx context.Context, r *pb.GetUserByIdRequest) (*pb.GetUserByIdResponse, error) {
 	_, rep, err := g.getUserById.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*pb.GetUserResponse), nil
+	return rep.(*pb.GetUserByIdResponse), nil
 }
 func decodeGRPCCreateUserRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.CreateUserRequest)
@@ -104,7 +104,7 @@ func decodeGRPCGetUserByIdRequest(c context.Context, grpcReq interface{}) (inter
 	}, nil
 }
 
-func encodeGRPCGetUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+func encodeGRPCGetUserByIdResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetUserResponse)
 
 	var user *pb.User
@@ -117,7 +117,27 @@ func encodeGRPCGetUserResponse(_ context.Context, grpcResponse interface{}) (int
 		}
 	}
 
-	return &pb.GetUserResponse{
+	return &pb.GetUserByIdResponse{
+		User:  user,
+		Error: response.Error,
+	}, nil
+
+}
+
+func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*dtos.GetUserResponse)
+
+	var user *pb.User
+	if response.User != nil {
+		user = &pb.User{
+			Id:       response.User.Id,
+			Username: response.User.Username,
+			Password: response.User.Password,
+			Role:     response.User.Role,
+		}
+	}
+
+	return &pb.GetUserByUsernameResponse{
 		User:  user,
 		Error: response.Error,
 	}, nil

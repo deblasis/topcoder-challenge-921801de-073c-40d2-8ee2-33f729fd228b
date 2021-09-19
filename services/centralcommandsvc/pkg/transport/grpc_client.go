@@ -6,6 +6,7 @@ import (
 	"time"
 
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -123,12 +124,55 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 		}))(getAllStationsEndpoint)
 	}
 
+	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
+	{
+		getNextAvailableDockingStationEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"GetNextAvailableDockingStation",
+			encodeGRPCGetNextAvailableDockingStationRequest,
+			decodeGRPCGetNextAvailableDockingStationResponse,
+			pb.GetNextAvailableDockingStationResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		getNextAvailableDockingStationEndpoint = opentracing.TraceClient(otTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = limiter(getNextAvailableDockingStationEndpoint)
+		getNextAvailableDockingStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "GetNextAvailableDockingStation",
+			Timeout: 30 * time.Second,
+		}))(getNextAvailableDockingStationEndpoint)
+	}
+
+	var registerShipLandingEndpoint endpoint.Endpoint
+	{
+		registerShipLandingEndpoint = grpctransport.NewClient(
+			conn,
+			strings.Replace(service.ServiceName, "-", ".", -1),
+			"RegisterShipLanding",
+			encodeGRPCRegisterShipLandingRequest,
+			decodeGRPCRegisterShipLandingResponse,
+			pb.RegisterShipLandingResponse{},
+			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
+		).Endpoint()
+
+		registerShipLandingEndpoint = opentracing.TraceClient(otTracer, "RegisterShipLanding")(registerShipLandingEndpoint)
+		registerShipLandingEndpoint = limiter(registerShipLandingEndpoint)
+		registerShipLandingEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "RegisterShipLanding",
+			Timeout: 30 * time.Second,
+		}))(registerShipLandingEndpoint)
+	}
+
 	return endpoints.EndpointSet{
 		RegisterShipEndpoint: registerShipEndpoint,
 		GetAllShipsEndpoint:  getAllShipsEndpoint,
 
 		RegisterStationEndpoint: registerStationEndpoint,
 		GetAllStationsEndpoint:  getAllStationsEndpoint,
+
+		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
+		RegisterShipLandingEndpoint:            registerShipLandingEndpoint,
 	}
 
 }
@@ -180,5 +224,25 @@ func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (in
 func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*pb.GetAllStationsResponse)
 	//return converters.ProtoGetAllStationsResponseToDto(*response), nil
+	return response, nil
+}
+
+func encodeGRPCGetNextAvailableDockingStationRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.GetNextAvailableDockingStationRequest)
+	//return converters.GetNextAvailableDockingStationRequestToProto(req), nil
+	return req, nil
+}
+
+func decodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
+	//return converters.ProtoGetNextAvailableDockingStationResponseToDto(*response), nil
+	return response, nil
+}
+func encodeGRPCRegisterShipLandingRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*dtos.LandShipToDockRequest)
+	return req, nil
+}
+func decodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.RegisterShipLandingResponse)
 	return response, nil
 }

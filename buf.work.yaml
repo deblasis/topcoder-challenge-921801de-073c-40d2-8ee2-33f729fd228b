@@ -4,3 +4,4 @@ directories:
   - services/centralcommand_dbsvc/proto
   - services/authsvc/proto
   - services/centralcommandsvc/proto
+  - services/shippingstationsvc/proto
