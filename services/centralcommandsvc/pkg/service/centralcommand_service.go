@@ -31,7 +31,7 @@ type CentralCommandService interface {
 	RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error)
 	GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error)
 	GetNextAvailableDockingStation(context.Context, *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error)
-	LandShipToDock(context.Context, *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error)
+	RegisterShipLanding(context.Context, *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error)
 }
 
 type centralCommandService struct {
@@ -213,11 +213,11 @@ func (u *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 	}, nil
 }
 
-func (u *centralCommandService) LandShipToDock(ctx context.Context, request *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error) {
+func (u *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error) {
 	err := u.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
-		return &pb.LandShipToDockResponse{
+		return &pb.RegisterShipLandingResponse{
 			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
 		}, nil
 	}
@@ -228,9 +228,9 @@ func (u *centralCommandService) LandShipToDock(ctx context.Context, request *pb.
 		Duration: request.Duration,
 	})
 	if err != nil {
-		return &pb.LandShipToDockResponse{
+		return &pb.RegisterShipLandingResponse{
 			Error: errs.Err2str(err),
 		}, nil
 	}
-	return &pb.LandShipToDockResponse{}, nil
+	return &pb.RegisterShipLandingResponse{}, nil
 }

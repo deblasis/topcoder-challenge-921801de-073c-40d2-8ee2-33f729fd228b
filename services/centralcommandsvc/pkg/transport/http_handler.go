@@ -69,7 +69,7 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 	))
 
 	r.Methods("POST").Path("/land").Handler(httptransport.NewServer(
-		e.LandShipToDockEndpoint,
+		e.RegisterShipLandingEndpoint,
 		decodeHTTPLandShipToDockRequest,
 		encodeResponse,
 		options...,

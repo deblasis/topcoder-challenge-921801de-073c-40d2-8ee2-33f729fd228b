@@ -8,8 +8,8 @@ import (
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/common/transport_conf"
-	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
@@ -25,37 +25,16 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 
 	options := transport_conf.GetCommonHTTPServerOptions(l)
 
-	// r.Methods("GET").Path("/health").Handler(httptransport.NewServer(
-	// 	e.StatusEndpoint,
-	// 	healthcheck.DecodeHTTPServiceStatusRequest,
-	// 	encodeResponse,
-	// 	options...,
-	// ))
-
-	r.Methods("POST").Path("/ship").Handler(httptransport.NewServer(
-		e.RegisterShipEndpoint,
-		decodeHTTPRegisterShipRequest,
+	r.Methods("POST").Path("/requestlanding").Handler(httptransport.NewServer(
+		e.RequestLandingEndpoint,
+		decodeHTTPRequestLandingRequest,
 		encodeResponse,
 		options...,
 	))
 
-	r.Methods("GET").Path("/ship/all").Handler(httptransport.NewServer(
-		e.GetAllShipsEndpoint,
-		decodeHTTPGetAllShipsRequest,
-		encodeResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/station").Handler(httptransport.NewServer(
-		e.RegisterStationEndpoint,
-		decodeHTTPRegisterStationRequest,
-		encodeResponse,
-		options...,
-	))
-
-	r.Methods("GET").Path("/station/all").Handler(httptransport.NewServer(
-		e.GetAllStationsEndpoint,
-		decodeHTTPGetAllStationsRequest,
+	r.Methods("POST").Path("/land").Handler(httptransport.NewServer(
+		e.LandingEndpoint,
+		decodeHTTPLandingRequest,
 		encodeResponse,
 		options...,
 	))
@@ -63,8 +42,8 @@ func NewHTTPHandler(e endpoints.EndpointSet, l log.Logger) http.Handler {
 	return r
 }
 
-func decodeHTTPRegisterShipRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.RegisterShipRequest
+func decodeHTTPRequestLandingRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.RequestLandingRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil
@@ -76,12 +55,8 @@ func decodeHTTPRegisterShipRequest(_ context.Context, r *http.Request) (interfac
 	return req, nil
 }
 
-func decodeHTTPGetAllShipsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	return &pb.GetAllShipsRequest{}, nil
-}
-
-func decodeHTTPRegisterStationRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req pb.RegisterStationRequest
+func decodeHTTPLandingRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	var req pb.LandingRequest
 	if r.ContentLength == 0 {
 		logger.Log("Post request with no body")
 		return req, nil
@@ -91,10 +66,6 @@ func decodeHTTPRegisterStationRequest(_ context.Context, r *http.Request) (inter
 		return nil, err
 	}
 	return req, nil
-}
-
-func decodeHTTPGetAllStationsRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	return &pb.GetAllStationsRequest{}, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

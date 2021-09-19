@@ -16,6 +16,7 @@ import (
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	authpb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	sspb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
 
 	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
 
@@ -140,6 +141,13 @@ func main() {
 				panic(err)
 			}
 
+			ssGw, err := newShippingStationSvcGateway(ctx, cfg,
+				runtime.WithForwardResponseOption(httpHeaderRewriter(logger)),
+				runtime.WithErrorHandler(noContentErrorHandler(logger)),
+			)
+			if err != nil {
+				panic(err)
+			}
 			//mux.Handle("/centcom", ccGw)
 
 			// s := &http.Server{
@@ -167,7 +175,7 @@ func main() {
 			go func() {
 				logger.Log("transport", "HTTP", "addr", httpAddr)
 
-				router := LoggerMw(logger, allowCORS(NewRouter(authGw, ccGw)), "grpc-gw")
+				router := LoggerMw(logger, allowCORS(NewRouter(authGw, ccGw, ssGw)), "grpc-gw")
 
 				errc <- http.ListenAndServe(fmt.Sprintf(":%v", cfg.HttpServerPort), router)
 
@@ -226,6 +234,32 @@ func newCentralCommandSvcGateway(ctx context.Context, cfg config.Config, opts ..
 
 	for _, f := range []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
 		ccpb.RegisterCentralCommandServiceHandler,
+	} {
+		if err := f(ctx, mux, conn); err != nil {
+			return nil, err
+		}
+	}
+	return mux, nil
+}
+
+func newShippingStationSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
+
+	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
+	conn, err := dial(ctx, cfg.APIGateway.SHIPPINGSTATIONENDPOINT)
+	if err != nil {
+		panic(err)
+	}
+	go func() {
+		<-ctx.Done()
+		if err := conn.Close(); err != nil {
+			glog.Errorf("Failed to close a client connection to the gRPC server: %v", err)
+		}
+	}()
+
+	mux := runtime.NewServeMux(opts...)
+
+	for _, f := range []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error{
+		sspb.RegisterShippingStationServiceHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err
@@ -300,9 +334,10 @@ type Route struct {
 
 type Routes []Route
 
-func NewRouter(authGw http.Handler, ccGw http.Handler) *mux.Router {
+func NewRouter(authGw http.Handler, ccGw http.Handler, ssGw http.Handler) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
+	//TODO index route, maybe swagger?
 	var routes = Routes{
 		Route{
 			"Index",
@@ -353,19 +388,19 @@ func NewRouter(authGw http.Handler, ccGw http.Handler) *mux.Router {
 			ccGw.ServeHTTP,
 		},
 
-		// Route{
-		// 	"ShipLand",
-		// 	strings.ToUpper("Post"),
-		// 	"/shipping-station/land",
-		// 	ShipLand,
-		// },
+		Route{
+			"ShipLand",
+			strings.ToUpper("Post"),
+			"/shipping-station/land",
+			ssGw.ServeHTTP,
+		},
 
-		// Route{
-		// 	"ShipRequestLanding",
-		// 	strings.ToUpper("Post"),
-		// 	"/shipping-station/request-landing",
-		// 	ShipRequestLanding,
-		// },
+		Route{
+			"ShipRequestLanding",
+			strings.ToUpper("Post"),
+			"/shipping-station/request-landing",
+			ssGw.ServeHTTP,
+		},
 	}
 
 	for _, route := range routes {

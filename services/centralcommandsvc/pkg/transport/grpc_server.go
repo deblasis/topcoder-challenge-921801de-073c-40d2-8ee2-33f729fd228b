@@ -27,7 +27,7 @@ type grpcServer struct {
 	registerStation                grpctransport.Handler
 	getAllStations                 grpctransport.Handler
 	getNextAvailableDockingStation grpctransport.Handler
-	landShipToDock                 grpctransport.Handler
+	registerShipLanding            grpctransport.Handler
 }
 
 func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServiceServer {
@@ -126,10 +126,10 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			encodeGRPCGetNextAvailableDockingStationResponse,
 			options...,
 		),
-		landShipToDock: grpctransport.NewServer(
-			e.LandShipToDockEndpoint,
-			decodeGRPCLandShipToDockRequest,
-			encodeGRPCLandShipToDockResponse,
+		registerShipLanding: grpctransport.NewServer(
+			e.RegisterShipLandingEndpoint,
+			decodeGRPCRegisterShipLandingRequest,
+			encodeGRPCRegisterShipLandingResponse,
 			options...,
 		),
 	}
@@ -201,6 +201,16 @@ func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.G
 	}
 
 	resp := rep.(*pb.GetNextAvailableDockingStationResponse)
+	return resp, nil
+}
+
+func (g *grpcServer) RegisterShipLanding(ctx context.Context, r *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error) {
+	_, rep, err := g.getAllStations.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := rep.(*pb.RegisterShipLandingResponse)
 	return resp, nil
 }
 
@@ -336,11 +346,11 @@ func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcR
 	return response, nil
 }
 
-func decodeGRPCLandShipToDockRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.LandShipToDockRequest)
+func decodeGRPCRegisterShipLandingRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.RegisterShipLandingRequest)
 	return req, nil
 }
-func encodeGRPCLandShipToDockResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+func encodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.LandShipToDockResponse)
 	return response, nil
 }

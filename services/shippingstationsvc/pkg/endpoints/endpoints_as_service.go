@@ -3,53 +3,31 @@ package endpoints
 import (
 	"context"
 
-	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
 	"github.com/go-kit/kit/endpoint"
 )
 
-// RegisterShip(ctx context.Context, request pb.RegisterShipRequest) (pb.RegisterShipResponse, error)
-func (s EndpointSet) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {
-	resp, err := s.RegisterShipEndpoint(ctx, request)
+// RequestLanding(ctx context.Context, request pb.RequestLandingRequest) (pb.RequestLandingResponse, error)
+func (s EndpointSet) RequestLanding(ctx context.Context, request *pb.RequestLandingRequest) (*pb.RequestLandingResponse, error) {
+	resp, err := s.RequestLandingEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(*pb.RegisterShipResponse)
+	response := resp.(*pb.RequestLandingResponse)
 	return response, nil
 }
 
-// GetAllShips(ctx context.Context, request pb.GetAllShipsRequest) (pb.GetAllShipsResponse, error)
-func (s EndpointSet) GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (*pb.GetAllShipsResponse, error) {
-	resp, err := s.GetAllShipsEndpoint(ctx, request)
+// Landing(ctx context.Context, request pb.LandingRequest) (pb.LandingResponse, error)
+func (s EndpointSet) Landing(ctx context.Context, request *pb.LandingRequest) (*pb.LandingResponse, error) {
+	resp, err := s.LandingEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(*pb.GetAllShipsResponse)
-	return response, nil
-}
-
-// RegisterStation(ctx context.Context, request pb.RegisterStationRequest) (pb.RegisterStationResponse, error)
-func (s EndpointSet) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error) {
-	resp, err := s.RegisterStationEndpoint(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	response := resp.(*pb.RegisterStationResponse)
-	return response, nil
-}
-
-// GetAllStations(ctx context.Context, request pb.GetAllStationsRequest) (pb.GetAllStationsResponse, error)
-func (s EndpointSet) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error) {
-	resp, err := s.GetAllStationsEndpoint(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	response := resp.(*pb.GetAllStationsResponse)
+	response := resp.(*pb.LandingResponse)
 	return response, nil
 }
 
 var (
-	_ endpoint.Failer = pb.RegisterShipResponse{}
-	_ endpoint.Failer = pb.GetAllShipsResponse{}
-	_ endpoint.Failer = pb.RegisterStationResponse{}
-	_ endpoint.Failer = pb.GetAllStationsResponse{}
+	_ endpoint.Failer = pb.RequestLandingResponse{}
+	_ endpoint.Failer = pb.LandingResponse{}
 )

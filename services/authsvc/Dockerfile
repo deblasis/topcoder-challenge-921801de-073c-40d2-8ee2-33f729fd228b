@@ -20,12 +20,11 @@ COPY ./gen ./gen
 COPY ./scripts ./scripts
 COPY ./services/auth_dbsvc ./services/auth_dbsvc
 COPY ./services/authsvc ./services/authsvc
+RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh /
+RUN cp ./scripts/*.sh /   
 
 RUN make $SVC_NAME \
     && mv build/deblasis-$SVC_NAME /exe
-
-RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh /
-RUN cp ./scripts/*.sh /   
 
 FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash

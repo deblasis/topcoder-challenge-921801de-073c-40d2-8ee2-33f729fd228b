@@ -2,10 +2,8 @@ syntax = "proto3";
 
 package deblasis.v1;
 
-import "google/protobuf/empty.proto";
-import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
-import "google/api/field_behavior.proto";
+
 
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/proto/v1;shippingstationsvc_v1";
 
@@ -26,7 +24,9 @@ service ShippingStationService {
 
 
 message RequestLandingRequest {
+  //@gotags: validate:"uuid4"
   string id = 1;
+  //@gotags: validate:"required"
   int64 time =2;
 }
 
@@ -40,13 +40,19 @@ message RequestLandingResponse {
     string docking_station_id = 2;
     int64 duration = 3;
   }
+  string error = 4;
 }
 
+
 message LandingRequest {
-  string id = 1;
-  int64 time = 2;
+  //@gotags: validate:"uuid4,required"
+  string ship_id = 1;    
+  //@gotags: validate:"uuid4,required"
+  string dock_id = 2;
+  //@gotags: validate:"required"
+  int64 duration = 3;
 }
 
 message LandingResponse {
-  bool ok = 1;
+  string error = 1;
 }

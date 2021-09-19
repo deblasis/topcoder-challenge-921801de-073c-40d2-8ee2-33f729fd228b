@@ -29,12 +29,20 @@ services:
       context: .
       args: 
         SVC_NAME: centralcommand_dbsvc
+
   centralcommandsvc:
     build:
       dockerfile: ./services/centralcommandsvc/Dockerfile
       context: .
       args: 
         SVC_NAME: centralcommandsvc
+
+  shippingstationsvc:
+    build:
+      dockerfile: ./services/shippingstationsvc/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: shippingstationsvc        
 
   clessidrasvc:
     build:

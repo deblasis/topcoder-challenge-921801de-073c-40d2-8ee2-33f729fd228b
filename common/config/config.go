@@ -69,6 +69,7 @@ type APIGatewayConfig struct {
 	RetryTimeoutMs                    int
 	AUTHSERVICEGRPCENDPOINT           string
 	CENTRALCOMMANDSERVICEGRPCENDPOINT string
+	SHIPPINGSTATIONENDPOINT           string
 }
 
 // LoadConfig load config from file

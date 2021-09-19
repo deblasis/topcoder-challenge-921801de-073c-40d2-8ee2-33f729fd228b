@@ -4,7 +4,6 @@ import (
 	"context"
 
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/endpoint"
 )
 
@@ -59,12 +58,12 @@ func (s EndpointSet) GetNextAvailableDockingStation(ctx context.Context, request
 }
 
 // LandShipToDock(ctx context.Context, ship *model.Ship) (int64, error)
-func (s EndpointSet) LandShipToDock(ctx context.Context, request *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error) {
-	resp, err := s.LandShipToDockEndpoint(ctx, request)
+func (s EndpointSet) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error) {
+	resp, err := s.RegisterShipLandingEndpoint(ctx, request)
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(*pb.LandShipToDockResponse)
+	response := resp.(*pb.RegisterShipLandingResponse)
 	return response, nil
 }
 
@@ -74,5 +73,5 @@ var (
 	_ endpoint.Failer = pb.RegisterStationResponse{}
 	_ endpoint.Failer = pb.GetAllStationsResponse{}
 	_ endpoint.Failer = pb.GetNextAvailableDockingStationResponse{}
-	_ endpoint.Failer = dtos.LandShipToDockResponse{}
+	_ endpoint.Failer = pb.RegisterShipLandingResponse{}
 )

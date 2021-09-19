@@ -31,7 +31,7 @@ type EndpointSet struct {
 	GetAllStationsEndpoint  endpoint.Endpoint
 
 	GetNextAvailableDockingStationEndpoint endpoint.Endpoint
-	LandShipToDockEndpoint                 endpoint.Endpoint
+	RegisterShipLandingEndpoint            endpoint.Endpoint
 
 	logger log.Logger
 }
@@ -105,15 +105,15 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 
 	var landShipToDockEndpoint endpoint.Endpoint
 	{
-		landShipToDockEndpoint = MakeLandShipToDockEndpoint(s)
+		landShipToDockEndpoint = MakeRegisterShipLandingEndpoint(s)
 		landShipToDockEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(landShipToDockEndpoint)
 		landShipToDockEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(landShipToDockEndpoint)
-		landShipToDockEndpoint = opentracing.TraceServer(otTracer, "LandShipToDock")(landShipToDockEndpoint)
+		landShipToDockEndpoint = opentracing.TraceServer(otTracer, "RegisterShipLanding")(landShipToDockEndpoint)
 		if zipkinTracer != nil {
-			landShipToDockEndpoint = zipkin.TraceEndpoint(zipkinTracer, "LandShipToDock")(landShipToDockEndpoint)
+			landShipToDockEndpoint = zipkin.TraceEndpoint(zipkinTracer, "RegisterShipLanding")(landShipToDockEndpoint)
 		}
-		landShipToDockEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "LandShipToDock"))(landShipToDockEndpoint)
-		landShipToDockEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "LandShipToDock"))(landShipToDockEndpoint)
+		landShipToDockEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "RegisterShipLanding"))(landShipToDockEndpoint)
+		landShipToDockEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "RegisterShipLanding"))(landShipToDockEndpoint)
 	}
 
 	return EndpointSet{
@@ -126,7 +126,7 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 		GetAllStationsEndpoint:  getAllStationsEndpoint,
 
 		GetNextAvailableDockingStationEndpoint: getNextAvailableDockingStationEndpoint,
-		LandShipToDockEndpoint:                 landShipToDockEndpoint,
+		RegisterShipLandingEndpoint:            landShipToDockEndpoint,
 
 		logger: logger,
 	}
@@ -166,9 +166,9 @@ func MakeGetNextAvailableDockingStationEndpoint(s service.CentralCommandService)
 		return s.GetNextAvailableDockingStation(ctx, req)
 	}
 }
-func MakeLandShipToDockEndpoint(s service.CentralCommandService) endpoint.Endpoint {
+func MakeRegisterShipLandingEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(*pb.LandShipToDockRequest)
-		return s.LandShipToDock(ctx, req)
+		req := request.(*pb.RegisterShipLandingRequest)
+		return s.RegisterShipLanding(ctx, req)
 	}
 }

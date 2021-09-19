@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/endpoints"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) service.CentralCommandService {
+func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) service.ShippingStationService {
 	// We construct a single ratelimiter middleware, to limit the total outgoing
 	// QPS from this client to all methods on the remote instance. We also
 	// construct per-endpoint circuitbreaker middlewares to demonstrate how
@@ -45,140 +45,72 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 
 	}
 
-	var registerShipEndpoint endpoint.Endpoint
+	var requestLandingEndpoint endpoint.Endpoint
 	{
-		registerShipEndpoint = grpctransport.NewClient(
+		requestLandingEndpoint = grpctransport.NewClient(
 			conn,
 			strings.Replace(service.ServiceName, "-", ".", -1),
-			"RegisterShip",
-			encodeGRPCRegisterShipRequest,
-			decodeGRPCRegisterShipResponse,
-			pb.RegisterShipResponse{},
+			"RequestLanding",
+			encodeGRPCRequestLandingRequest,
+			decodeGRPCRequestLandingResponse,
+			pb.RequestLandingResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
-		registerShipEndpoint = opentracing.TraceClient(otTracer, "RegisterShip")(registerShipEndpoint)
-		registerShipEndpoint = limiter(registerShipEndpoint)
-		registerShipEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "RegisterShip",
+		requestLandingEndpoint = opentracing.TraceClient(otTracer, "RequestLanding")(requestLandingEndpoint)
+		requestLandingEndpoint = limiter(requestLandingEndpoint)
+		requestLandingEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "RequestLanding",
 			Timeout: 30 * time.Second,
-		}))(registerShipEndpoint)
+		}))(requestLandingEndpoint)
 	}
-	var getAllShipsEndpoint endpoint.Endpoint
+	var landingEndpoint endpoint.Endpoint
 	{
-		getAllShipsEndpoint = grpctransport.NewClient(
+		landingEndpoint = grpctransport.NewClient(
 			conn,
 			strings.Replace(service.ServiceName, "-", ".", -1),
-			"GetAllShips",
-			encodeGRPCGetAllShipsRequest,
-			decodeGRPCGetAllShipsResponse,
-			pb.GetAllShipsResponse{},
+			"Landing",
+			encodeGRPCLandingRequest,
+			decodeGRPCLandingResponse,
+			pb.LandingResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
-		getAllShipsEndpoint = opentracing.TraceClient(otTracer, "GetAllShips")(getAllShipsEndpoint)
-		getAllShipsEndpoint = limiter(getAllShipsEndpoint)
-		getAllShipsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "GetAllShips",
+		landingEndpoint = opentracing.TraceClient(otTracer, "Landing")(landingEndpoint)
+		landingEndpoint = limiter(landingEndpoint)
+		landingEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "Landing",
 			Timeout: 30 * time.Second,
-		}))(getAllShipsEndpoint)
-	}
-
-	var registerStationEndpoint endpoint.Endpoint
-	{
-		registerStationEndpoint = grpctransport.NewClient(
-			conn,
-			strings.Replace(service.ServiceName, "-", ".", -1),
-			"RegisterStation",
-			encodeGRPCRegisterStationRequest,
-			decodeGRPCRegisterStationResponse,
-			pb.RegisterStationResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
-		).Endpoint()
-
-		registerStationEndpoint = opentracing.TraceClient(otTracer, "RegisterStation")(registerStationEndpoint)
-		registerStationEndpoint = limiter(registerStationEndpoint)
-		registerStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "RegisterStation",
-			Timeout: 30 * time.Second,
-		}))(registerStationEndpoint)
-	}
-	var getAllStationsEndpoint endpoint.Endpoint
-	{
-		getAllStationsEndpoint = grpctransport.NewClient(
-			conn,
-			strings.Replace(service.ServiceName, "-", ".", -1),
-			"GetAllStations",
-			encodeGRPCGetAllStationsRequest,
-			decodeGRPCGetAllStationsResponse,
-			pb.GetAllStationsResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
-		).Endpoint()
-
-		getAllStationsEndpoint = opentracing.TraceClient(otTracer, "GetAllStations")(getAllStationsEndpoint)
-		getAllStationsEndpoint = limiter(getAllStationsEndpoint)
-		getAllStationsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "GetAllStations",
-			Timeout: 30 * time.Second,
-		}))(getAllStationsEndpoint)
+		}))(landingEndpoint)
 	}
 
 	return endpoints.EndpointSet{
-		RegisterShipEndpoint: registerShipEndpoint,
-		GetAllShipsEndpoint:  getAllShipsEndpoint,
-
-		RegisterStationEndpoint: registerStationEndpoint,
-		GetAllStationsEndpoint:  getAllStationsEndpoint,
+		RequestLandingEndpoint: requestLandingEndpoint,
+		LandingEndpoint:        landingEndpoint,
 	}
 
 }
 
-func encodeGRPCRegisterShipRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.RegisterShipRequest)
-	//return converters.RegisterShipRequestToProto(req), nil
+func encodeGRPCRequestLandingRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.RequestLandingRequest)
+	//return converters.RequestLandingRequestToProto(req), nil
 	return req, nil
 }
 
-func decodeGRPCRegisterShipResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.RegisterShipResponse)
-	//return converters.ProtoRegisterShipResponseToDto(*response), nil
+func decodeGRPCRequestLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.RequestLandingResponse)
+	//return converters.ProtoRequestLandingResponseToDto(*response), nil
 	return response, nil
 }
 
-func encodeGRPCGetAllShipsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.GetAllShipsRequest)
-	//return converters.GetAllShipsRequestToProto(req), nil
+func encodeGRPCLandingRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(*pb.LandingRequest)
+	//return converters.LandingRequestToProto(req), nil
 	return req, nil
 }
 
-func decodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetAllShipsResponse)
-	//return converters.ProtoGetAllShipsResponseToDto(*response), nil
-	return response, nil
-}
-
-//
-
-func encodeGRPCRegisterStationRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.RegisterStationRequest)
-	//return converters.RegisterStationRequestToProto(req), nil
-	return req, nil
-}
-
-func decodeGRPCRegisterStationResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.RegisterStationResponse)
-	//return converters.ProtoRegisterStationResponseToDto(*response), nil
-	return response, nil
-}
-
-func encodeGRPCGetAllStationsRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*pb.GetAllStationsRequest)
-	//return converters.GetAllStationsRequestToProto(req), nil
-	return req, nil
-}
-
-func decodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetAllStationsResponse)
-	//return converters.ProtoGetAllStationsResponseToDto(*response), nil
+func decodeGRPCLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.LandingResponse)
+	//return converters.ProtoLandingResponseToDto(*response), nil
 	return response, nil
 }

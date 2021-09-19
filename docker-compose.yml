@@ -206,7 +206,31 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
       interval: 30s
       timeout: 10s
-      retries: 3         
+      retries: 3        
+
+
+  shippingstationsvc:
+    image: deblasis/stc_shippingstationsvc:latest
+    ports:
+      - 9281:9281
+      - 9282:9282
+    depends_on: 
+      - consul
+      - centralcommandsvc
+    volumes:
+      - ./certs:/certs
+      - ./services/shippingstationsvc/app.yaml:/app.yaml
+    environment: 
+     DEBLASIS_BINDONLOCALHOST: "false"
+     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    networks:
+      - net      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3             
 
   clessidrasvc:
     image: deblasis/stc_clessidrasvc:latest
@@ -232,31 +256,6 @@ services:
       timeout: 10s
       retries: 3  
       
-# shippingstationsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     depends_on:
-#       - shippingstation_db
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - frontend
-#       - shippingstation_backend            
-#   shippingstation_dbsvc:
-#     image: golang:1.17 
-#     environment: 
-#       - F3_API_ENDPOINT=http://accountapi:8080
-#     working_dir: /go/src/deblasis.net/space-traffic-control
-#     volumes: 
-#       - .:/go/src/deblasis.net/space-traffic-control
-#     #command: "./scripts/wait-for-it.sh accountapi:8080 --timeout=20 --strict -- go test -tags integration -count=1 -v -cover -race ./..."
-#     command: "make run"
-#     networks: 
-#       - shippingstation_backend         
       
       
 volumes:

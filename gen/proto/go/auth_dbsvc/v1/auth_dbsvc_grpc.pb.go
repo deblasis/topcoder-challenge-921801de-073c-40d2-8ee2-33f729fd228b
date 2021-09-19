@@ -19,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthDBServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
-	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
+	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error)
+	GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserByIdResponse, error)
 }
 
 type authDBServiceClient struct {
@@ -40,8 +40,8 @@ func (c *authDBServiceClient) CreateUser(ctx context.Context, in *CreateUserRequ
 	return out, nil
 }
 
-func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
-	out := new(GetUserResponse)
+func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error) {
+	out := new(GetUserByUsernameResponse)
 	err := c.cc.Invoke(ctx, "/deblasis.state.v1.AuthDBService/GetUserByUsername", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -49,8 +49,8 @@ func (c *authDBServiceClient) GetUserByUsername(ctx context.Context, in *GetUser
 	return out, nil
 }
 
-func (c *authDBServiceClient) GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
-	out := new(GetUserResponse)
+func (c *authDBServiceClient) GetUserById(ctx context.Context, in *GetUserByIdRequest, opts ...grpc.CallOption) (*GetUserByIdResponse, error) {
+	out := new(GetUserByIdResponse)
 	err := c.cc.Invoke(ctx, "/deblasis.state.v1.AuthDBService/GetUserById", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *authDBServiceClient) GetUserById(ctx context.Context, in *GetUserByIdRe
 // for forward compatibility
 type AuthDBServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
-	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserResponse, error)
-	GetUserById(context.Context, *GetUserByIdRequest) (*GetUserResponse, error)
+	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error)
+	GetUserById(context.Context, *GetUserByIdRequest) (*GetUserByIdResponse, error)
 	mustEmbedUnimplementedAuthDBServiceServer()
 }
 
@@ -75,10 +75,10 @@ type UnimplementedAuthDBServiceServer struct {
 func (UnimplementedAuthDBServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedAuthDBServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserResponse, error) {
+func (UnimplementedAuthDBServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
 }
-func (UnimplementedAuthDBServiceServer) GetUserById(context.Context, *GetUserByIdRequest) (*GetUserResponse, error) {
+func (UnimplementedAuthDBServiceServer) GetUserById(context.Context, *GetUserByIdRequest) (*GetUserByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
 }
 func (UnimplementedAuthDBServiceServer) mustEmbedUnimplementedAuthDBServiceServer() {}

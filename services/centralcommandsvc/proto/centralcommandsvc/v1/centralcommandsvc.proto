@@ -43,7 +43,7 @@ service CentralCommandService {
   }
 
   rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
-  rpc LandShipToDock (LandShipToDockRequest) returns (LandShipToDockResponse) {}
+  rpc RegisterShipLanding (RegisterShipLandingRequest) returns (RegisterShipLandingResponse) {}
 
 }
 
@@ -124,14 +124,16 @@ message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
   string error = 2;
 }
-message LandShipToDockRequest {
-  //@gotags: validate:"uuid4"
-  string ship_id = 1;
-  //@gotags: validate:"uuid4"
+
+message RegisterShipLandingRequest {
+  //@gotags: validate:"uuid4,required"
+  string ship_id = 1;    
+  //@gotags: validate:"uuid4,required"
   string dock_id = 2;
-  //@gotags: validate:"required,notblank"
+  //@gotags: validate:"required"
   int64 duration = 3;
 }
-message LandShipToDockResponse {
+
+message RegisterShipLandingResponse {
   string error = 1;
 }

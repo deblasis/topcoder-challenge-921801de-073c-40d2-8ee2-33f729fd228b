@@ -19,14 +19,14 @@ import (
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
-	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	dbe "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
-	dbs "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
-	dbt "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/internal/acl"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
-	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/transport"
+	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
+	cce "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
+	ccs "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
+	cct "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/transport"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/internal/acl"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/endpoints"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/service"
+	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/transport"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -124,10 +124,10 @@ func main() {
 		logger       = cfg.Logger
 		retryMax     = cfg.APIGateway.RetryMax
 		retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond) * 10 //TODO remove
-		tags         = []string{"centralCommandDBService"}
+		tags         = []string{"centralCommandService"}
 		passingOnly  = true
-		db_endpoints = dbe.EndpointSet{}
-		instancer    = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+		cc_endpoints = cce.EndpointSet{}
+		instancer    = consulsd.NewInstancer(client, logger, ccs.ServiceName, tags, passingOnly)
 	)
 	instancesChannel := make(chan sd.Event)
 	go func() {
@@ -138,27 +138,16 @@ func main() {
 			}
 		}
 	}()
-	// done := make(chan bool, 1)
-	// go func(ok chan bool) {
-	// 	for evt := range instancesChannel {
-	// 		for _, i := range evt.Instances {
-	// 			logger.Log("received_instance", i)
-	// 		}
-	// 		if len(evt.Instances) > 0 {
-	// 			instancer.Stop()
-	// 			instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-	// 			ok <- true
-	// 			return
-	// 		}
-	// 		logger.Log("msg", fmt.Sprintf("waiting for instances of the service [%v] with tags[%v] from consul", dbs.ServiceName, tags))
-	// 		time.Sleep(time.Second * 1)
-	// 	}
-	// }(done)
-	// instancer.Register(instancesChannel)
-	// <-done
 
 	{
-		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(cce.MakeGetNextAvailableDockingStationEndpoint, cfg, tracer, zipkinTracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		cc_endpoints.GetNextAvailableDockingStationEndpoint = retry
+	}
+	{
+		factory := centralCommandServiceFactory(cce.MakeRegisterShipLandingEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
@@ -168,36 +157,7 @@ func main() {
 			}
 			return n < retryMax, nil
 		})
-		db_endpoints.CreateShipEndpoint = retry
-	}
-	{
-		factory := centralCommandServiceFactory(dbe.MakeGetAllShipsEndpoint, cfg, tracer, zipkinTracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
-		db_endpoints.GetAllShipsEndpoint = retry
-	}
-	{
-		factory := centralCommandServiceFactory(dbe.MakeCreateStationEndpoint, cfg, tracer, zipkinTracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
-			st, _ := status.FromError(received)
-			logger.Log("received_err", received, "st_code", st.Code(), "st_err", st.Err())
-
-			if st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
-				return false, nil
-			}
-			return n < retryMax, nil
-		})
-		db_endpoints.CreateStationEndpoint = retry
-	}
-	{
-		factory := centralCommandServiceFactory(dbe.MakeGetAllStationsEndpoint, cfg, tracer, zipkinTracer, logger)
-		endpointer := sd.NewEndpointer(instancer, factory, logger)
-		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
-		db_endpoints.GetAllStationsEndpoint = retry
+		cc_endpoints.RegisterShipLandingEndpoint = retry
 	}
 
 	// Here we leverage the fact that addsvc comes with a constructor for an
@@ -214,7 +174,7 @@ func main() {
 		jwtHandler                = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
 		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
 
-		svc         = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
+		svc         = service.NewShippingStationService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, cc_endpoints)
 		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
@@ -287,7 +247,7 @@ func main() {
 					grpc.UnaryInterceptor(grpcServerAuthInterceptor.Unary()),
 				)
 			}
-			pb.RegisterCentralCommandServiceServer(baseServer, grpcServer)
+			pb.RegisterShippingStationServiceServer(baseServer, grpcServer)
 			reflection.Register(baseServer)
 
 			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
@@ -316,13 +276,8 @@ func main() {
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
 
-func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
+func centralCommandServiceFactory(makeEndpoint func(ccs.CentralCommandService) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-		// We could just as easily use the HTTP or Thrift client package to make
-		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
-		// the transport is an implementation detail: it doesn't leak out of
-		// this function. Nice!
-
 		var (
 			conn *grpc.ClientConn
 			err  error
@@ -351,7 +306,7 @@ func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService)
 		if err != nil {
 			return nil, nil, err
 		}
-		service := dbt.NewGRPCClient(conn, tracer, zipkinTracer, logger)
+		service := cct.NewGRPCClient(conn, tracer, zipkinTracer, logger)
 		endpoint := makeEndpoint(service)
 		//TODO improve
 		level.Debug(logger).Log(
@@ -359,14 +314,6 @@ func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService)
 			"instance", instance,
 			"conn", conn,
 		)
-
-		// Notice that the addsvc gRPC client converts the connection to a
-		// complete addsvc, and we just throw away everything except the method
-		// we're interested in. A smarter factory would mux multiple methods
-		// over the same connection. But that would require more work to manage
-		// the returned io.Closer, e.g. reference counting. Since this is for
-		// the purposes of demonstration, we'll just keep it simple.
-
 		return endpoint, conn, nil
 	}
 }

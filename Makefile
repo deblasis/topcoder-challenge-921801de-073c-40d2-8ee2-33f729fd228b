@@ -3,7 +3,7 @@
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
-SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc clessidrasvc
+SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc shippingstationsvc clessidrasvc
 MIGRATORS = auth_dbsvc_migrator centralcommand_dbsvc_migrator
 SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
@@ -95,15 +95,6 @@ build-on-host: proto
 .PHONY: run-fast
 run-fast: build-on-host
 	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
-	
-
-
-# auth_dbsvc:
-# 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-auth_dbsvc services/auth_dbsvc/cmd/app/main.go
-# && cp services/auth_dbsvc/app.yaml build
-
-
-
 
 services: $(SERVICES)
 migrators: $(MIGRATORS)

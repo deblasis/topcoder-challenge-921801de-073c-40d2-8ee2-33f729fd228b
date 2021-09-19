@@ -19,9 +19,7 @@ COPY ./common ./common
 COPY ./gen ./gen
 COPY ./scripts ./scripts
 COPY ./services/${SVC_NAME} ./services/${SVC_NAME}
-
-RUN make $SVC_NAME \
-    && mv build/deblasis-$SVC_NAME /exe
+RUN cp ./scripts/*.sh /
 
 RUN make ${SVC_NAME}_migrator \
     && mv build/deblasis-${SVC_NAME}_migrator /migrator    
@@ -30,8 +28,8 @@ RUN cp ./services/${SVC_NAME}/scripts/entrypoint.sh / \
     && mkdir -p /scripts/migrations \
     && cp ./services/${SVC_NAME}/scripts/migrations/* /scripts/migrations    
 
-RUN cp ./scripts/*.sh /
-
+RUN make $SVC_NAME \
+    && mv build/deblasis-$SVC_NAME /exe
 
 FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash

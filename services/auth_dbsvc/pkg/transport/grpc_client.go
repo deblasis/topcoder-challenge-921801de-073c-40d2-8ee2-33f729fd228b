@@ -55,8 +55,8 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			strings.Replace(service.ServiceName, "-", ".", -1),
 			"GetUserByUsername",
 			encodeGRPCGetUserByUsernameRequest,
-			decodeGRPCGetUserResponse,
-			pb.GetUserResponse{},
+			decodeGRPCGetUserByUsernameResponse,
+			pb.GetUserByUsernameResponse{},
 			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
@@ -102,8 +102,8 @@ func encodeGRPCGetUserByUsernameRequest(_ context.Context, request interface{}) 
 	}, nil
 }
 
-func decodeGRPCGetUserResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetUserResponse)
+func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
+	response := grpcResponse.(*pb.GetUserByUsernameResponse)
 
 	var user *model.User
 	if response.User != nil {
