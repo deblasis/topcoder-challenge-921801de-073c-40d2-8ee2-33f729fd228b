@@ -10,6 +10,7 @@ import (
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 
@@ -85,5 +86,10 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		errs.EncodeErrorHTTP(ctx, e, w)
 		return nil
 	}
+	if e, ok := response.(endpoint.Failer); ok && e != nil && e.Failed() != nil {
+		errs.EncodeErrorHTTP(ctx, e.Failed(), w)
+		return nil
+	}
+
 	return json.NewEncoder(w).Encode(response)
 }

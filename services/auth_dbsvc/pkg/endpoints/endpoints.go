@@ -2,13 +2,12 @@ package endpoints
 
 import (
 	"context"
-	"time"
 
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"golang.org/x/time/rate"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
@@ -17,7 +16,6 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 )
@@ -35,7 +33,6 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 	var getUserByUsernameEndpoint endpoint.Endpoint
 	{
 		getUserByUsernameEndpoint = MakeGetUserByUsernameEndpoint(s)
-		getUserByUsernameEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(getUserByUsernameEndpoint)
 		getUserByUsernameEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByUsernameEndpoint)
 		getUserByUsernameEndpoint = opentracing.TraceServer(otTracer, "GetUserByUsername")(getUserByUsernameEndpoint)
 		if zipkinTracer != nil {
@@ -48,7 +45,6 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 	var getUserByIdEndpoint endpoint.Endpoint
 	{
 		getUserByIdEndpoint = MakeGetUserByIdEndpoint(s)
-		getUserByIdEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(getUserByIdEndpoint)
 		getUserByIdEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByIdEndpoint)
 		getUserByIdEndpoint = opentracing.TraceServer(otTracer, "GetUserById")(getUserByIdEndpoint)
 		if zipkinTracer != nil {
@@ -61,7 +57,6 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 	var createUserEndpoint endpoint.Endpoint
 	{
 		createUserEndpoint = MakeCreateUserEndpoint(s)
-		createUserEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(createUserEndpoint)
 		createUserEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(createUserEndpoint)
 		createUserEndpoint = opentracing.TraceServer(otTracer, "CreateUser")(createUserEndpoint)
 		if zipkinTracer != nil {
@@ -83,20 +78,32 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics
 func MakeGetUserByIdEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetUserByIdRequest)
-		return s.GetUserById(ctx, req)
+		resp, err := s.GetUserById(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeGetUserByUsernameEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.GetUserByUsernameRequest)
-		return s.GetUserByUsername(ctx, req)
+		resp, err := s.GetUserByUsername(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeCreateUserEndpoint(s service.AuthDBService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*dtos.CreateUserRequest)
-		return s.CreateUser(ctx, req)
+		resp, err := s.CreateUser(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }

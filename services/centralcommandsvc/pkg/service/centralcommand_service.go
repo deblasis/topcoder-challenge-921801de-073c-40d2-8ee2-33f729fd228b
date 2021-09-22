@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common"
 	"deblasis.net/space-traffic-control/common/config"
@@ -14,7 +15,6 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -48,7 +48,12 @@ func NewCentralCommandService(logger log.Logger, jwtConfig config.JWTConfig, db_
 	}
 }
 
-func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (*pb.RegisterShipResponse, error) {
+func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (resp *pb.RegisterShipResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "RegisterShip", "err", err)
+		}
+	}()
 	//TODO use middleware
 	level.Info(s.logger).Log("handling request", "RegisterShip",
 		"userId", ctx.Value(common.ContextKeyUserId),
@@ -56,17 +61,19 @@ func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.Re
 	)
 	defer level.Info(s.logger).Log("handled request", "RegisterShip")
 
-	err := s.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+	verr := s.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.RegisterShipResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
 	userId := common.ExtractUserIdFromCtx(ctx)
 	if userId == "" {
-		return &pb.RegisterShipResponse{Error: errs.ErrBadRequest.Error()}, nil
+		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
+		return &pb.RegisterShipResponse{Error: errs.ToProtoV1(err)}, nil
 	}
 
 	req := &dtos.CreateShipRequest{
@@ -78,15 +85,20 @@ func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.Re
 		level.Debug(s.logger).Log("err", err)
 		return nil, err
 	}
-	if ret.Failed() != nil {
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.RegisterShipResponse{
-			Error: ret.Failed().Error(),
+			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
 	return converters.DBDtoCreateShipResponseToProto(*ret), nil
 }
 
-func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (*pb.RegisterStationResponse, error) {
+func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (resp *pb.RegisterStationResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "RegisterStation", "err", err)
+		}
+	}()
 	//TODO use middleware
 	level.Info(s.logger).Log("handling request", "RegisterStation",
 		"userId", ctx.Value(common.ContextKeyUserId),
@@ -95,17 +107,19 @@ func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb
 	defer level.Info(s.logger).Log("handled request", "RegisterStation")
 
 	//TODO refactor
-	err := s.validate.Struct(request)
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.RegisterStationResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
 	userId := common.ExtractUserIdFromCtx(ctx)
 	if userId == "" {
-		return &pb.RegisterStationResponse{Error: errs.ErrBadRequest.Error()}, nil
+		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
+		return &pb.RegisterStationResponse{Error: errs.ToProtoV1(err)}, nil
 	}
 
 	req := &dtos.CreateStationRequest{
@@ -124,19 +138,28 @@ func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb
 		level.Debug(s.logger).Log("err", err)
 		return nil, err
 	}
-	if ret.Failed() != nil {
-		return &pb.RegisterStationResponse{Error: ret.Failed().Error()}, nil
+	if !errs.IsNil(ret.Failed()) {
+		return &pb.RegisterStationResponse{
+			Error: errs.ToProtoV1(ret.Error),
+		}, nil
 	}
 
 	return converters.DBDtoCreateStationResponseToProto(*ret), nil
 }
 
-func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (*pb.GetAllShipsResponse, error) {
-	err := s.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (resp *pb.GetAllShipsResponse, err error) {
+
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "GetAllShips", "err", err)
+		}
+	}()
+	verr := s.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.GetAllShipsResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
@@ -147,57 +170,73 @@ func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.Get
 		level.Debug(s.logger).Log("err", err)
 		return nil, err
 	}
-	if ret.Failed() != nil {
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.GetAllShipsResponse{
-			Error: ret.Failed().Error(),
+			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
 
 	return converters.DBDtoGetAllShipsResponseToProto(*ret), nil
 }
 
-func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (*pb.GetAllStationsResponse, error) {
+func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (resp *pb.GetAllStationsResponse, err error) {
+
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
 	//TODO use middleware
 	level.Info(s.logger).Log("handling request", "GetAllStations")
 	defer level.Info(s.logger).Log("handled request", "GetAllStations")
 
-	err := s.validate.Struct(request)
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.GetAllStationsResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
-	ret, err := s.db_svc_endpointset.GetAllStations(ctx,
+	ret, e := s.db_svc_endpointset.GetAllStations(ctx,
 		&dtos.GetAllStationsRequest{},
 	)
 	if err != nil {
-		level.Debug(s.logger).Log("err", err)
-		return nil, err
+		return nil, e
 	}
-	if ret.Failed() != nil {
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.GetAllStationsResponse{
-			Error: ret.Failed().Error(),
+			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
 
 	return converters.DBDtoGetAllStationsResponseToProto(*ret), nil
 }
 
-func (u *centralCommandService) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
-	err := u.validate.Struct(request)
+func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (resp *pb.GetNextAvailableDockingStationResponse, err error) {
+
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.GetNextAvailableDockingStationResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
-	ret, err := u.db_svc_endpointset.GetNextAvailableDockingStation(ctx, &dtos.GetNextAvailableDockingStationRequest{ShipId: uuid.MustParse(request.ShipId).String()})
+	ret, err := s.db_svc_endpointset.GetNextAvailableDockingStation(ctx, &dtos.GetNextAvailableDockingStationRequest{ShipId: uuid.MustParse(request.ShipId).String()})
 	if err != nil {
+		return nil, err
+	}
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.GetNextAvailableDockingStationResponse{
-			Error: errs.Err2str(err),
+			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
 	//TODO converter
@@ -213,24 +252,35 @@ func (u *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 	}, nil
 }
 
-func (u *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (s *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (resp *pb.RegisterShipLandingResponse, err error) {
+
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
+	verr := s.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.RegisterShipLandingResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
-	_, err = u.db_svc_endpointset.LandShipToDock(ctx, &dtos.LandShipToDockRequest{
+	ret, err := s.db_svc_endpointset.LandShipToDock(ctx, &dtos.LandShipToDockRequest{
 		ShipId:   uuid.MustParse(request.ShipId).String(),
 		DockId:   uuid.MustParse(request.DockId).String(),
 		Duration: request.Duration,
 	})
 	if err != nil {
+		return nil, err
+	}
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.RegisterShipLandingResponse{
-			Error: errs.Err2str(err),
+			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
+
 	return &pb.RegisterShipLandingResponse{}, nil
 }

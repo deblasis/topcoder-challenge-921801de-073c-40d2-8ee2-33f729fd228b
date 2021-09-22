@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common"
 	ca "deblasis.net/space-traffic-control/common/auth"
@@ -10,8 +11,8 @@ import (
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/repositories"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -40,65 +41,100 @@ func NewAuthDBService(repository repositories.UserRepository, logger log.Logger)
 	}
 }
 
-func (u *authDbService) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (*dtos.GetUserResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *authDbService) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (resp *dtos.GetUserResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "GetUserByUsername", "err", err)
+		}
+	}()
+
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.GetUserResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
 	user, err := u.repository.GetUserByUsername(ctx, request.Username)
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot get user", err)
+	}
 	return &dtos.GetUserResponse{
 		User:  user,
-		Error: errs.Err2str(err),
+		Error: err,
 	}, nil
 }
 
-func (u *authDbService) GetUserById(ctx context.Context, request *dtos.GetUserByIdRequest) (*dtos.GetUserResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *authDbService) GetUserById(ctx context.Context, request *dtos.GetUserByIdRequest) (resp *dtos.GetUserResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "GetUserById", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.GetUserResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
 	user, err := u.repository.GetUserById(ctx, request.Id)
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot get user", err)
+	}
 	return &dtos.GetUserResponse{
 		User:  user,
-		Error: errs.Err2str(err),
+		Error: err,
 	}, nil
 }
 
-func (u *authDbService) CreateUser(ctx context.Context, request *dtos.CreateUserRequest) (*dtos.CreateUserResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *authDbService) CreateUser(ctx context.Context, request *dtos.CreateUserRequest) (resp *dtos.CreateUserResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.CreateUserResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
 	existing, err := u.repository.GetUserByUsername(ctx, request.Username)
-	if existing != nil {
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot check user existence", err)
 		return &dtos.CreateUserResponse{
-			Error: errs.ErrCannotInsertAlreadyExistingEntity.Error(),
+			Error: err,
+		}, nil
+	}
+	if existing != nil {
+		err = errs.NewError(http.StatusBadRequest, "username already taken", errs.ErrCannotInsertAlreadyExistingEntity)
+		return &dtos.CreateUserResponse{
+			Error: err,
 		}, nil
 	}
 
-	hashedPassword, err := ca.HashPwd(request.Password)
-	if err != nil {
+	hashedPassword, herr := ca.HashPwd(request.Password)
+	if herr != nil {
+		err = errs.NewError(http.StatusInternalServerError, "unable to hash password", herr)
 		return nil, err
 	}
 	request.Password = hashedPassword
 	user := model.User(*request)
 
 	id, err := u.repository.CreateUser(ctx, &user)
-
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot create user", err)
+	}
 	return &dtos.CreateUserResponse{
 		Id:    id,
-		Error: errs.Err2str(err),
+		Error: err,
 	}, nil
 }

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"time"
 
 	"deblasis.net/space-traffic-control/common"
@@ -10,16 +12,14 @@ import (
 	"deblasis.net/space-traffic-control/common/config"
 	"deblasis.net/space-traffic-control/common/errs"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
+	common_v1 "deblasis.net/space-traffic-control/gen/proto/go/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/converters"
-
-	//"deblasis.net/space-traffic-control/services/authsvc/pkg/converters"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,92 +58,112 @@ func NewAuthService(logger log.Logger, jwtConfig config.JWTConfig, db_svc_endpoi
 	}
 }
 
-func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (*pb.SignupResponse, error) {
-	err := s.validate.Struct(request)
+func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (resp *pb.SignupResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "Signup", "err", err)
+		}
+	}()
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.SignupResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
+	level.Debug(s.logger).Log("signup_attempt", request.Username)
+
 	ret, err := s.db_svc_endpointset.CreateUser(ctx, converters.SignupRequestToDBDto(request))
 	if err != nil {
-		level.Debug(s.logger).Log("err", err)
 		return nil, err
 	}
-	if ret.Failed() != nil {
+
+	if !errs.IsNil(ret.Failed()) {
 		return &pb.SignupResponse{
-			Error: ret.Failed().Error(),
+			Error: errs.ToProtoV1(ret.Failed()),
 		}, nil
 	}
 
 	jwtTokenClaims, expiresAt, err := s.jwtHandler.NewJWTToken(*ret.Id, request.Username, request.Role, "http://"+ServiceName) //TODO cfg
 
-	resp := &pb.SignupResponse{
+	resp = &pb.SignupResponse{
 		Token: &pb.Token{
 			Token:     jwtTokenClaims.Token,
 			ExpiresAt: expiresAt,
 		},
-		Error: errs.Err2str(err),
+		Error: errs.ToProtoV1(err),
 	}
 
 	err = s.authUserSession(ctx, jwtTokenClaims.Claims)
 	if err != nil {
-		resp.Error = err.Error()
+		resp.Error = errs.ToProtoV1(err)
 	}
 
 	return resp, nil
 }
 
-func (s *authService) Login(ctx context.Context, request *pb.LoginRequest) (*pb.LoginResponse, error) {
-	err := s.validate.Struct(request)
+func (s *authService) Login(ctx context.Context, request *pb.LoginRequest) (resp *pb.LoginResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "Login", "err", err)
+		}
+	}()
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.LoginResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
+
+	level.Debug(s.logger).Log("login_attempt", request.Username)
 
 	getUserResponse, err := s.db_svc_endpointset.GetUserByUsername(ctx, &dtos.GetUserByUsernameRequest{
 		Username: request.Username,
 	})
 	if err != nil {
-		level.Debug(s.logger).Log("err", err)
-		return unauthorized()
+		return unauthorized("unknown username")
 	}
 	user := getUserResponse.User
 
 	bytesHashed := []byte(user.Password)
 	err = bcrypt.CompareHashAndPassword(bytesHashed, []byte(request.Password+auth.PWDSALT))
 	if err != nil {
-		level.Debug(s.logger).Log("err", err)
-		return unauthorized()
+		return unauthorized("wrong password")
 	}
 
 	jwtTokenClaims, expiresAt, err := s.jwtHandler.NewJWTToken(uuid.MustParse(user.Id), user.Username, user.Role, "http://"+ServiceName) //TODO cfg
 
-	resp := &pb.LoginResponse{
+	resp = &pb.LoginResponse{
 		Token: &pb.Token{
 			Token:     jwtTokenClaims.Token,
 			ExpiresAt: expiresAt,
-		}, Error: errs.Err2str(err),
+		}, Error: errs.ToProtoV1(err),
 	}
 
 	err = s.authUserSession(ctx, jwtTokenClaims.Claims)
 	if err != nil {
-		resp.Error = err.Error()
+		resp.Error = errs.ToProtoV1(err)
 	}
 
-	return resp, err
+	return resp, nil
 }
 
-func (s *authService) CheckToken(ctx context.Context, request *pb.CheckTokenRequest) (*pb.CheckTokenResponse, error) {
-	err := s.validate.Struct(request)
+func (s *authService) CheckToken(ctx context.Context, request *pb.CheckTokenRequest) (resp *pb.CheckTokenResponse, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(s.logger).Log("method", "CheckToken", "err", err)
+		}
+	}()
+	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &pb.CheckTokenResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: errs.ToProtoV1(err),
 		}, nil
 	}
 
@@ -151,15 +171,15 @@ func (s *authService) CheckToken(ctx context.Context, request *pb.CheckTokenRequ
 	if err != nil {
 		return &pb.CheckTokenResponse{
 			TokenPayload: nil,
-			Error:        errs.Err2str(err),
+			Error:        errs.ToProtoV1(err),
 		}, nil
 	}
 	authorizedUser, err := s.tokensCache.Get(ctx, claims.Id)
 	if err != nil {
-		level.Debug(s.logger).Log("err", err)
+		err = errs.NewError(http.StatusUnauthorized, "token not authorized", err)
 		return &pb.CheckTokenResponse{
 			TokenPayload: nil,
-			Error:        errs.ErrUnauthorized.Error(),
+			Error:        errs.ToProtoV1(err),
 		}, nil
 	}
 	user := authorizedUser.(dtos.User)
@@ -173,8 +193,13 @@ func (s *authService) CheckToken(ctx context.Context, request *pb.CheckTokenRequ
 	}, nil
 }
 
-func unauthorized() (*pb.LoginResponse, error) {
-	return &pb.LoginResponse{Error: errs.ErrUnauthorized.Error()}, nil
+func unauthorized(reason string) (*pb.LoginResponse, error) {
+	return &pb.LoginResponse{
+		Error: &common_v1.Error{
+			Code:    http.StatusUnauthorized,
+			Message: fmt.Sprintf("unauthorized: %v", reason),
+		},
+	}, nil
 }
 
 func (s *authService) authUserSession(ctx context.Context, claims auth.STCClaims) error {

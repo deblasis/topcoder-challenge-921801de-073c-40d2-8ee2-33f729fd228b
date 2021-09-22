@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
@@ -87,7 +88,7 @@ func encodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (
 
 	return &pb.CreateUserResponse{
 		Id:    id,
-		Error: response.Error,
+		Error: errs.ToProtoV1(response.Error),
 	}, nil
 }
 
@@ -119,7 +120,7 @@ func encodeGRPCGetUserByIdResponse(_ context.Context, grpcResponse interface{}) 
 
 	return &pb.GetUserByIdResponse{
 		User:  user,
-		Error: response.Error,
+		Error: errs.ToProtoV1(response.Error),
 	}, nil
 
 }
@@ -139,7 +140,7 @@ func encodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 
 	return &pb.GetUserByUsernameResponse{
 		User:  user,
-		Error: response.Error,
+		Error: errs.ToProtoV1(response.Error),
 	}, nil
 
 }

@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"deblasis.net/space-traffic-control/common/errs"
@@ -141,9 +142,9 @@ func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest
 		return nil, err
 	}
 	resp := rep.(*pb.RegisterShipResponse)
-	if resp.Error == errs.ErrCannotInsertAlreadyExistingEntity.Error() {
+	if errors.Is(resp.Error, errs.ErrCannotInsertAlreadyExistingEntity) {
 		//this will trigger the error handlers so we can alter body and header
-		return nil, errs.ErrCannotInsertAlreadyExistingEntity
+		return nil, resp.Error
 	}
 
 	return &emptypb.Empty{}, nil
@@ -232,8 +233,7 @@ func encodeGRPCRegisterShipResponse(ctx context.Context, grpcResponse interface{
 	if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
 
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(f.Failed())),
-			"x-stc-error", f.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 			"x-no-content", "true",
 		)
 		grpc.SendHeader(ctx, header)
@@ -252,10 +252,8 @@ func encodeGRPCGetAllShipsResponse(ctx context.Context, grpcResponse interface{}
 	response := grpcResponse.(*pb.GetAllShipsResponse)
 	//TODO: refactor
 	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
@@ -286,8 +284,7 @@ func encodeGRPCRegisterStationResponse(ctx context.Context, grpcResponse interfa
 	if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
 
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(f.Failed())),
-			"x-stc-error", f.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
@@ -309,10 +306,8 @@ func encodeGRPCGetAllStationsResponse(ctx context.Context, grpcResponse interfac
 
 	//TODO: refactor
 	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
@@ -334,10 +329,8 @@ func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcR
 
 	//TODO: refactor
 	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}

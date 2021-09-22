@@ -3,12 +3,16 @@
 CGO_ENABLED ?= 0
 GOOS ?= linux
 
+#built using Docker version 20.10.2, build 2291f61 on Windows with WSL2
+#depending on your setup, you might have to change the below line to DOCKERCOMPOSE = docker-compose 
+DOCKERCOMPOSE = docker compose
+
 SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc shippingstationsvc clessidrasvc
 MIGRATORS = auth_dbsvc_migrator centralcommand_dbsvc_migrator
 SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
-INJECTPROTOTAGS = $(addprefix inject_prototags_,$(SERVICES))
+INJECTPROTOTAGS = inject_prototags_ $(addprefix inject_prototags_,$(SERVICES))
 
 
 define compile_service
@@ -80,21 +84,21 @@ gencert:
 
 .PHONY: build-parallel
 build-parallel: proto
-	docker-compose -f docker-compose.yml -f docker-compose-build.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-build.yml build --parallel
 .PHONY: run-parallel
 run-parallel: build-parallel
-	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml up --force-recreate --remove-orphans
 
 .PHONY: build-on-host
 build-on-host: proto
 	make services
 	make migrators
 	make seeders
-	docker-compose -f docker-compose.yml -f docker-compose-hostbuild.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-hostbuild.yml build --parallel
 
 .PHONY: run-fast
 run-fast: build-on-host
-	docker-compose -f docker-compose.yml up --force-recreate --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml up --remove-orphans
 
 services: $(SERVICES)
 migrators: $(MIGRATORS)

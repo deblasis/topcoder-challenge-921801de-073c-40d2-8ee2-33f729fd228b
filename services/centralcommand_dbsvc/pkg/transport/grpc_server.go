@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
@@ -131,7 +132,7 @@ func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (inter
 	if req != nil {
 		return &dtos.GetAllShipsRequest{}, nil
 	}
-	return nil, errs.ErrBadRequest
+	return nil, errs.NewError(http.StatusInternalServerError, "cannot decode request", errs.ErrException)
 }
 func encodeGRPCGetAllShipsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetAllShipsResponse)
@@ -159,7 +160,7 @@ func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (in
 	if req != nil {
 		return &dtos.GetAllStationsRequest{}, nil
 	}
-	return nil, errs.ErrBadRequest
+	return nil, errs.NewError(http.StatusInternalServerError, "cannot decode request", errs.ErrException)
 }
 func encodeGRPCGetAllStationsResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.GetAllStationsResponse)

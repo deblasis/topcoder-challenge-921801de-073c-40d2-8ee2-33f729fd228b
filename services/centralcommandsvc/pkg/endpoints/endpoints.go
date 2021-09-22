@@ -2,8 +2,8 @@ package endpoints
 
 import (
 	"context"
-	"time"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
@@ -12,13 +12,11 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"golang.org/x/time/rate"
 )
 
 type EndpointSet struct {
@@ -41,7 +39,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var registerShipEndpoint endpoint.Endpoint
 	{
 		registerShipEndpoint = MakeRegisterShipEndpoint(s)
-		registerShipEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerShipEndpoint)
 		registerShipEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerShipEndpoint)
 		registerShipEndpoint = opentracing.TraceServer(otTracer, "RegisterShip")(registerShipEndpoint)
 		if zipkinTracer != nil {
@@ -54,7 +51,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var getAllShipsEndpoint endpoint.Endpoint
 	{
 		getAllShipsEndpoint = MakeGetAllShipsEndpoint(s)
-		getAllShipsEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getAllShipsEndpoint)
 		getAllShipsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getAllShipsEndpoint)
 		getAllShipsEndpoint = opentracing.TraceServer(otTracer, "GetAllShips")(getAllShipsEndpoint)
 		if zipkinTracer != nil {
@@ -67,7 +63,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var registerStationEndpoint endpoint.Endpoint
 	{
 		registerStationEndpoint = MakeRegisterStationEndpoint(s)
-		registerStationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(registerStationEndpoint)
 		registerStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(registerStationEndpoint)
 		registerStationEndpoint = opentracing.TraceServer(otTracer, "RegisterStation")(registerStationEndpoint)
 		if zipkinTracer != nil {
@@ -80,7 +75,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var getAllStationsEndpoint endpoint.Endpoint
 	{
 		getAllStationsEndpoint = MakeGetAllStationsEndpoint(s)
-		getAllStationsEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getAllStationsEndpoint)
 		getAllStationsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getAllStationsEndpoint)
 		getAllStationsEndpoint = opentracing.TraceServer(otTracer, "GetAllStations")(getAllStationsEndpoint)
 		if zipkinTracer != nil {
@@ -93,7 +87,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var getNextAvailableDockingStationEndpoint endpoint.Endpoint
 	{
 		getNextAvailableDockingStationEndpoint = MakeGetNextAvailableDockingStationEndpoint(s)
-		getNextAvailableDockingStationEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(getNextAvailableDockingStationEndpoint)
 		getNextAvailableDockingStationEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getNextAvailableDockingStationEndpoint)
 		getNextAvailableDockingStationEndpoint = opentracing.TraceServer(otTracer, "GetNextAvailableDockingStation")(getNextAvailableDockingStationEndpoint)
 		if zipkinTracer != nil {
@@ -106,7 +99,6 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 	var landShipToDockEndpoint endpoint.Endpoint
 	{
 		landShipToDockEndpoint = MakeRegisterShipLandingEndpoint(s)
-		landShipToDockEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 30))(landShipToDockEndpoint)
 		landShipToDockEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(landShipToDockEndpoint)
 		landShipToDockEndpoint = opentracing.TraceServer(otTracer, "RegisterShipLanding")(landShipToDockEndpoint)
 		if zipkinTracer != nil {
@@ -135,40 +127,64 @@ func NewEndpointSet(s service.CentralCommandService, logger log.Logger, duration
 func MakeRegisterShipEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.RegisterShipRequest)
-		return s.RegisterShip(ctx, req)
+		resp, err := s.RegisterShip(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeGetAllShipsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.GetAllShipsRequest)
-		return s.GetAllShips(ctx, req)
+		resp, err := s.GetAllShips(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeRegisterStationEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.RegisterStationRequest)
-		return s.RegisterStation(ctx, req)
+		resp, err := s.RegisterStation(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeGetAllStationsEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.GetAllStationsRequest)
-		return s.GetAllStations(ctx, req)
+		resp, err := s.GetAllStations(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeGetNextAvailableDockingStationEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.GetNextAvailableDockingStationRequest)
-		return s.GetNextAvailableDockingStation(ctx, req)
+		resp, err := s.GetNextAvailableDockingStation(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 func MakeRegisterShipLandingEndpoint(s service.CentralCommandService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.RegisterShipLandingRequest)
-		return s.RegisterShipLanding(ctx, req)
+		resp, err := s.RegisterShipLanding(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }

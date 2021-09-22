@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"deblasis.net/space-traffic-control/common/errs"
@@ -11,7 +12,6 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/go-pg/pg/v10"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 type dockRepository struct {
@@ -26,60 +26,73 @@ func NewDockRepository(db *pg.DB, logger log.Logger) DockRepository {
 	}
 }
 
-func (u dockRepository) GetById(ctx context.Context, id string) (*model.Dock, error) {
-	//TODO use validate
+func (u dockRepository) GetById(ctx context.Context, id string) (resp *model.Dock, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
 	if id == "" {
-		err := errors.New("id is empty")
-		level.Debug(u.logger).Log("err", err)
+		err := errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
 		return nil, err
 	}
-
 	var ret model.Dock
-	err := u.Db.WithContext(ctx).Model(&ret).
+	err = u.Db.WithContext(ctx).Model(&ret).
 		Where("id = ?", id).Select()
 
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("no rows")
+		level.Debug(u.logger).Log("method", "GetById", "msg", "no rows")
 		return nil, nil
 	}
-	return &ret, err
+	return &ret, nil
 }
 
-func (u dockRepository) Create(ctx context.Context, dock model.Dock) (*model.Dock, error) {
+func (u dockRepository) Create(ctx context.Context, dock model.Dock) (resp *model.Dock, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
 	dock.Id = uuid.New().String()
 	result, err := u.Db.WithContext(ctx).Model(dock).Returning("id").Insert(&dock.Id)
 	if err != nil {
-		err = errors.Wrapf(err, "Failed to insert dock %v", dock)
-		level.Debug(u.logger).Log("err", err)
+		err = errs.NewError(http.StatusInternalServerError, "failed to insert dock", err)
 		return nil, err
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
-			err = errors.New("Failed to insert, affected is 0")
-			level.Debug(u.logger).Log("err", err)
+			err = errs.NewError(http.StatusInternalServerError, "failed to insert dock", errs.ErrCannotInsertEntity)
 			return nil, err
 		}
 	}
 	return &dock, nil
 }
 
-func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (*model.NextAvailableDockingStation, error) {
-
+func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (resp *model.NextAvailableDockingStation, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
 	var nextAvail model.NextAvailableDockingStation
-	_, err := u.Db.WithContext(ctx).Model(&nextAvail).
+	_, err = u.Db.WithContext(ctx).Model(&nextAvail).
 		QueryOne(&nextAvail, fmt.Sprintf("select * from %v(?)", model.GetNextAvailableDockingStationForShipFunctionName), shipId)
 
 	if err != nil {
-		level.Debug(u.logger).Log("err", err)
-		return nil, errs.ErrCannotSelectEntities
+		err = errs.NewError(http.StatusInternalServerError, "cannot determine next available docking station", err)
+		return nil, err
 	}
 
 	return &nextAvail, nil
 }
 
-func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (*model.DockedShip, error) {
-
+func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (resp *model.DockedShip, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
 	dockedShip := &model.DockedShip{
 		DockId:       dockId.String(),
 		ShipId:       shipId.String(),
@@ -89,16 +102,14 @@ func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, do
 
 	result, err := u.Db.WithContext(ctx).Model(dockedShip).Insert()
 	if err != nil {
-		err = errors.Wrapf(err, "Failed to insert dockedShip %v", dockedShip)
-		level.Debug(u.logger).Log("err", err)
-		return nil, errs.ErrCannotInsertEntity
+		err = errs.NewError(http.StatusInternalServerError, "failed to insert docked ship", err)
+		return nil, err
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
-			err = errors.New("Failed to insert, affected is 0")
-			level.Debug(u.logger).Log("err", err)
-			return nil, errs.ErrCannotInsertEntity
+			err = errs.NewError(http.StatusInternalServerError, "failed to insert docked ship", errs.ErrCannotInsertEntity)
+			return nil, err
 		}
 	}
 

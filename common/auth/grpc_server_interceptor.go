@@ -38,19 +38,18 @@ func (interceptor *AuthServerInterceptor) Unary() grpc.UnaryServerInterceptor {
 		info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler,
 	) (interface{}, error) {
-		interceptor.logger.Log("server_unaryinterceptor", info.FullMethod)
-
 		//heathcheck, it's ok anyway, let's not flood logs and stuff
 		if info.FullMethod == "/grpc.health.v1.Health/Check" {
 			return handler(ctx, req)
 		}
+		interceptor.logger.Log("server_unaryinterceptor", info.FullMethod)
 
 		ctx, err := interceptor.checkAuth(ctx, info.FullMethod, req, log.With(interceptor.logger, "component", "checkAuth"))
 		if err != nil {
 			return nil, err
 		}
 
-		//replicationg Go-Kit unary interceptor functionality
+		//this is necessary for Go-Kit go work, it provides execution metadata to the framework
 		ctx = context.WithValue(ctx, gk.ContextKeyRequestMethod, info.FullMethod)
 
 		return handler(ctx, req)

@@ -13,8 +13,8 @@ zipkin:
 apigateway:
   retrymax: 10
   retrytimeoutms: 5000
-  authservicegrpcendpoint: deblasis-v1-AuthService.service.consul:9082
-  centralcommandservicegrpcendpoint: deblasis-v1-CentralCommandService.service.consul:9482
+  authservice_grpcendpoint: deblasis-v1-AuthService.service.consul:9082
+  centralcommandservice_grpcendpoint: deblasis-v1-CentralCommandService.service.consul:9482
   shippingstationendpoint: deblasis-v1-ShippingStationService.service.consul:9282
 
 

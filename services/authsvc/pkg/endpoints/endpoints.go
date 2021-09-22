@@ -2,8 +2,8 @@ package endpoints
 
 import (
 	"context"
-	"time"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
@@ -12,13 +12,11 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/ratelimit"
 	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/go-kit/kit/tracing/zipkin"
 	stdopentracing "github.com/opentracing/opentracing-go"
 	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
-	"golang.org/x/time/rate"
 )
 
 type EndpointSet struct {
@@ -35,7 +33,6 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 	var signupEndpoint endpoint.Endpoint
 	{
 		signupEndpoint = MakeSignupEndpoint(s)
-		signupEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(signupEndpoint)
 		signupEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(signupEndpoint)
 		signupEndpoint = opentracing.TraceServer(otTracer, "Signup")(signupEndpoint)
 		if zipkinTracer != nil {
@@ -48,7 +45,6 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 	var loginEndpoint endpoint.Endpoint
 	{
 		loginEndpoint = MakeLoginEndpoint(s)
-		loginEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(loginEndpoint)
 		loginEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(loginEndpoint)
 		loginEndpoint = opentracing.TraceServer(otTracer, "Login")(loginEndpoint)
 		if zipkinTracer != nil {
@@ -61,7 +57,6 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 	var checkTokenEndpoint endpoint.Endpoint
 	{
 		checkTokenEndpoint = MakeCheckTokenEndpoint(s)
-		checkTokenEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(checkTokenEndpoint)
 		checkTokenEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(checkTokenEndpoint)
 		checkTokenEndpoint = opentracing.TraceServer(otTracer, "CheckToken")(checkTokenEndpoint)
 		if zipkinTracer != nil {
@@ -83,20 +78,32 @@ func NewEndpointSet(s service.AuthService, logger log.Logger, duration metrics.H
 func MakeSignupEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.SignupRequest)
-		return s.Signup(ctx, req)
+		resp, err := s.Signup(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeLoginEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.LoginRequest)
-		return s.Login(ctx, req)
+		resp, err := s.Login(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }
 
 func MakeCheckTokenEndpoint(s service.AuthService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(*pb.CheckTokenRequest)
-		return s.CheckToken(ctx, req)
+		resp, err := s.CheckToken(ctx, req)
+		if resp != nil && !errs.IsNil(resp.Failed()) {
+			errs.GetErrorContainer(ctx).Domain = resp.Error
+		}
+		return resp, err
 	}
 }

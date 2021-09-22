@@ -1,9 +1,5 @@
 package dtos
 
-import (
-	"deblasis.net/space-traffic-control/common/errs"
-)
-
 type Ship struct {
 	//"string - id of the ship"
 	Id string `json:"id"`
@@ -55,26 +51,26 @@ type NextAvailableDockingStation struct {
 
 type CreateShipRequest Ship
 type CreateShipResponse struct {
-	Ship  *Ship  `json:"ship"`
-	Error string `json:"error,omitempty"`
+	Ship  *Ship `json:"ship"`
+	Error error `json:"error,omitempty"`
 }
 
 type GetAllShipsRequest struct{}
 type GetAllShipsResponse struct {
 	Ships []Ship `json:"ships"`
-	Error string `json:"error,omitempty"`
+	Error error  `json:"error,omitempty"`
 }
 
 type CreateStationRequest Station
 type CreateStationResponse struct {
 	Station *Station `json:"station"`
-	Error   string   `json:"error,omitempty"`
+	Error   error    `json:"error,omitempty"`
 }
 
 type GetAllStationsRequest struct{}
 type GetAllStationsResponse struct {
 	Stations []Station `json:"stations"`
-	Error    string    `json:"error,omitempty"`
+	Error    error     `json:"error,omitempty"`
 }
 
 type GetNextAvailableDockingStationRequest struct {
@@ -84,7 +80,7 @@ type GetNextAvailableDockingStationRequest struct {
 
 type GetNextAvailableDockingStationResponse struct {
 	NextAvailableDockingStation *NextAvailableDockingStation `json:"next_available_docking_station"`
-	Error                       string                       `json:"error,omitempty"`
+	Error                       error                        `json:"error,omitempty"`
 }
 
 type LandShipToDockRequest struct {
@@ -93,12 +89,12 @@ type LandShipToDockRequest struct {
 	Duration int64  `json:"duration,omitempty" validate:"required,notblank"`
 }
 type LandShipToDockResponse struct {
-	Error string `json:"error,omitempty"`
+	Error error `json:"error,omitempty"`
 }
 
-func (r CreateShipResponse) Failed() error                     { return errs.Str2err(r.Error) }
-func (r GetAllShipsResponse) Failed() error                    { return errs.Str2err(r.Error) }
-func (r CreateStationResponse) Failed() error                  { return errs.Str2err(r.Error) }
-func (r GetAllStationsResponse) Failed() error                 { return errs.Str2err(r.Error) }
-func (r GetNextAvailableDockingStationResponse) Failed() error { return errs.Str2err(r.Error) }
-func (r LandShipToDockResponse) Failed() error                 { return errs.Str2err(r.Error) }
+func (r CreateShipResponse) Failed() error                     { return r.Error }
+func (r GetAllShipsResponse) Failed() error                    { return r.Error }
+func (r CreateStationResponse) Failed() error                  { return r.Error }
+func (r GetAllStationsResponse) Failed() error                 { return r.Error }
+func (r GetNextAvailableDockingStationResponse) Failed() error { return r.Error }
+func (r LandShipToDockResponse) Failed() error                 { return r.Error }

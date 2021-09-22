@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package deblasis.state.v1;
 
+import "v1/error.proto";
+
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/proto/v1;auth_dbsvc_v1";
 
 service AuthDBService {
@@ -25,7 +27,7 @@ message CreateUserRequest {
 
 message CreateUserResponse {
   string id = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 
 message GetUserByUsernameRequest {
@@ -37,9 +39,9 @@ message GetUserByIdRequest {
 }
 message GetUserByUsernameResponse {
   User user = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 message GetUserByIdResponse {
   User user = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }

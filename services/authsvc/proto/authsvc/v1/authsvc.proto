@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package deblasis.v1;
 
+import "v1/error.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 
@@ -36,7 +37,8 @@ message LoginRequest {
 message LoginResponse {
   //@gotags: json:"token,omitempty"
   Token token = 1;
-  string error = 2;
+  //@gotags: json:"error,omitempty"
+  deblasis.common.v1.Error error = 2;
 }
 
 message SignupRequest {
@@ -51,7 +53,8 @@ message SignupRequest {
 message SignupResponse {
   //@gotags: json:"token,omitempty"
   Token token = 1;
-  string error = 2;
+  //@gotags: json:"error,omitempty"
+  deblasis.common.v1.Error error = 2;
 }
 
 message CheckTokenRequest {
@@ -60,11 +63,14 @@ message CheckTokenRequest {
 
 message CheckTokenResponse {
   TokenPayload token_payload = 1;
-  string error = 2;
+  //@gotags: json:"error,omitempty"
+  deblasis.common.v1.Error error = 2;
 }
 
 message Token {
+  //@gotags: json:"token,omitempty"
   string token = 1;
+  //@gotags: json:"expires_at,omitempty"
   int64 expires_at = 2;
 }
 

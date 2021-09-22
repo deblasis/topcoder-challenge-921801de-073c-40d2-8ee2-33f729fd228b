@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package deblasis.v1;
 
+import "v1/error.proto";
 import "google/protobuf/empty.proto";
 import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
@@ -91,7 +92,7 @@ message RegisterStationRequest {
 }
 message RegisterStationResponse {
   Station station = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 
 message RegisterShipRequest {
@@ -99,7 +100,7 @@ message RegisterShipRequest {
 }
 message RegisterShipResponse {
   Ship ship = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 
 
@@ -107,13 +108,13 @@ message GetAllShipsRequest {
 }
 message GetAllShipsResponse {
   repeated Ship ships = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 message GetAllStationsRequest {
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 
 message GetNextAvailableDockingStationRequest {
@@ -122,7 +123,7 @@ message GetNextAvailableDockingStationRequest {
 }
 message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
-  string error = 2;
+  deblasis.common.v1.Error error = 2;
 }
 
 message RegisterShipLandingRequest {
@@ -135,5 +136,5 @@ message RegisterShipLandingRequest {
 }
 
 message RegisterShipLandingResponse {
-  string error = 1;
+  deblasis.common.v1.Error error = 1;
 }

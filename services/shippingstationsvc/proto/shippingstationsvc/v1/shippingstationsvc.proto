@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package deblasis.v1;
 
+import "v1/error.proto";
 import "google/api/annotations.proto";
 
 
@@ -40,7 +41,7 @@ message RequestLandingResponse {
     string docking_station_id = 2;
     int64 duration = 3;
   }
-  string error = 4;
+  deblasis.common.v1.Error error = 4;
 }
 
 
@@ -54,5 +55,5 @@ message LandingRequest {
 }
 
 message LandingResponse {
-  string error = 1;
+  deblasis.common.v1.Error error = 1;
 }

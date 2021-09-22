@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
@@ -23,49 +24,66 @@ func NewShipRepository(db *pg.DB, logger log.Logger) ShipRepository {
 	}
 }
 
-func (u shipRepository) GetById(ctx context.Context, id string) (*model.Ship, error) {
-	//TODO use validate
+func (u shipRepository) GetById(ctx context.Context, id string) (resp *model.Ship, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "GetById", "err", err)
+		}
+	}()
 	if id == "" {
-		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
-		return nil, errs.ErrBadRequest
+		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
+		return nil, err
 	}
 
 	var ret model.Ship
-	err := u.Db.WithContext(ctx).Model(&ret).
+	err = u.Db.WithContext(ctx).Model(&ret).
 		Where("id = ?", id).Select()
-
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("msg", "no rows")
+		level.Debug(u.logger).Log("method", "GetById", "msg", "no rows")
 		return nil, nil
 	}
-	return &ret, errs.ErrCannotSelectEntity
+	if err != nil {
+		return nil, err
+	}
+
+	return &ret, err
 }
 
-func (u shipRepository) Create(ctx context.Context, ship model.Ship) (*model.Ship, error) {
+func (u shipRepository) Create(ctx context.Context, ship model.Ship) (resp *model.Ship, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "Create", "err", err)
+		}
+	}()
 	result, err := u.Db.WithContext(ctx).Model(&ship).
 		ExcludeColumn("status").
 		Returning("id").Insert(&ship.Id)
 	if err != nil {
-		level.Debug(u.logger).Log("err", err)
-		return nil, errs.ErrCannotInsertEntity
+		err = errs.NewError(http.StatusInternalServerError, "cannot insert ship", err)
+		return nil, err
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
-			level.Debug(u.logger).Log("err", err)
-			return nil, errs.ErrCannotInsertEntity
+			err = errs.NewError(http.StatusInternalServerError, "cannot insert ship", errs.ErrCannotInsertEntity)
+			return nil, err
 		}
 	}
 	return &ship, nil
 }
 
-func (u shipRepository) GetAll(ctx context.Context) ([]model.Ship, error) {
+func (u shipRepository) GetAll(ctx context.Context) (resp []model.Ship, err error) {
+	defer func() {
+		if err != nil {
+			level.Debug(u.logger).Log("method", "GetAll", "err", err)
+		}
+	}()
 	var ret []model.Ship
 
-	err := u.Db.WithContext(ctx).Model(&ret).Select()
+	err = u.Db.WithContext(ctx).Model(&ret).Select()
 	if err != nil {
-		level.Debug(u.logger).Log("err", err)
-		return nil, errs.ErrCannotSelectEntities
+		err = errs.NewError(http.StatusInternalServerError, "cannot select ships", err)
+		return nil, err
 	}
 
 	return ret, nil

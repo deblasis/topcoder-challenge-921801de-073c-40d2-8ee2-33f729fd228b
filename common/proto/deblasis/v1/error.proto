@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package deblasis.common.v1;
+
+option go_package = "deblasis.net/space-traffic-control/gen/proto/go/v1;common_v1";
+
+message Error {
+  //@gotags: json:"-"
+  int32 code = 1;
+  //@gotags: json:"message,omitempty"
+  string message = 2;
+}

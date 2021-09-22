@@ -1,6 +1,7 @@
 package converters
 
 import (
+	"deblasis.net/space-traffic-control/common/errs"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
@@ -96,8 +97,8 @@ func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequ
 	return ret
 }
 func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipResponse {
-	if src.Error != "" {
-		return &dtos.CreateShipResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.CreateShipResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.CreateShipResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
@@ -107,8 +108,8 @@ func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipRe
 }
 
 func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.CreateStationResponse {
-	if src.Error != "" {
-		return &dtos.CreateStationResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.CreateStationResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.CreateStationResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
@@ -118,8 +119,8 @@ func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.Create
 }
 
 func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetAllStationsResponse {
-	if src.Error != "" {
-		return &dtos.GetAllStationsResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.GetAllStationsResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
@@ -129,8 +130,8 @@ func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetA
 }
 
 func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShipsResponse {
-	if src.Error != "" {
-		return &dtos.GetAllShipsResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.GetAllShipsResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.GetAllShipsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
@@ -140,8 +141,8 @@ func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShip
 }
 
 func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDockingStationResponse) *dtos.GetNextAvailableDockingStationResponse {
-	if src.Error != "" {
-		return &dtos.GetNextAvailableDockingStationResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.GetNextAvailableDockingStationResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.GetNextAvailableDockingStationResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
@@ -151,8 +152,8 @@ func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDo
 }
 
 func ProtoLandShipToDockResponseToDto(src *pb.LandShipToDockResponse) *dtos.LandShipToDockResponse {
-	if src.Error != "" {
-		return &dtos.LandShipToDockResponse{Error: src.Error}
+	if src.Error != nil {
+		return &dtos.LandShipToDockResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.LandShipToDockResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {

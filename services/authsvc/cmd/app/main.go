@@ -18,7 +18,6 @@ import (
 	"deblasis.net/space-traffic-control/common/cache"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
-	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	dbe "deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/endpoints"
@@ -45,7 +44,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
-	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -146,13 +144,7 @@ func main() {
 		factory := authDBServiceFactory(dbe.MakeCreateUserEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
-			logger.Log("received_err", received)
-			if st, ok := status.FromError(received); !ok && st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
-				return false, nil
-			}
-			return n < retryMax, nil
-		})
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateUserEndpoint = retry
 	}
 	{

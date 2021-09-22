@@ -67,9 +67,9 @@ type JWTConfig struct {
 type APIGatewayConfig struct {
 	RetryMax                          int
 	RetryTimeoutMs                    int
-	AUTHSERVICEGRPCENDPOINT           string
-	CENTRALCOMMANDSERVICEGRPCENDPOINT string
-	SHIPPINGSTATIONENDPOINT           string
+	AuthServiceGRPCEndpoint           string `mapstructure:"authservice_grpcendpoint"`
+	CentralCommandServiceGRPCEndpoint string `mapstructure:"centralcommandservice_grpcendpoint"`
+	ShippingStationGRPCEndpoint       string `mapstructure:"shippingstationservice_grpcendpoint"`
 }
 
 // LoadConfig load config from file
@@ -107,6 +107,7 @@ func getLogger(loglevel string) log.Logger {
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+	logger = log.With(logger, "caller", log.DefaultCaller)
 
 	var logFilter level.Option
 	switch loglevel {

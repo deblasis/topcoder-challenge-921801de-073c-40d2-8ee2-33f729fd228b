@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"deblasis.net/space-traffic-control/common/errs"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/auth_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
@@ -118,7 +119,7 @@ func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 
 	return &dtos.GetUserResponse{
 		User:  user,
-		Error: response.Error,
+		Error: errs.FromProtoV1(response.Error),
 	}, nil
 }
 
@@ -146,6 +147,6 @@ func decodeGRPCCreateUserResponse(_ context.Context, grpcResponse interface{}) (
 
 	return &dtos.CreateUserResponse{
 		Id:    &id,
-		Error: response.Error,
+		Error: errs.FromProtoV1(response.Error),
 	}, nil
 }
