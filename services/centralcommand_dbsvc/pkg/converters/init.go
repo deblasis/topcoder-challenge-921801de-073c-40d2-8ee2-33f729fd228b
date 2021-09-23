@@ -12,6 +12,31 @@ import (
 
 //TODO DRY
 func init() {
+
+	m.AddConversion((*float32)(nil), (**float32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(in.Float()), nil
+	})
+
+	m.AddConversion((*int64)(nil), (**int64)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(in.Int()), nil
+	})
+
+	m.AddConversion((*int32)(nil), (**int32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(in.Int()), nil
+	})
+
+	m.AddConversion((**float32)(nil), (*float32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(float32(in.Elem().Float())), nil
+	})
+
+	m.AddConversion((**int64)(nil), (*int64)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(in.Elem().Int()), nil
+	})
+
+	m.AddConversion((**int32)(nil), (*int32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(int32(in.Elem().Int())), nil
+	})
+
 	m.AddConversion((*model.Dock)(nil), (*dtos.Dock)(nil), func(in reflect.Value) (reflect.Value, error) {
 
 		ret := &dtos.Dock{}

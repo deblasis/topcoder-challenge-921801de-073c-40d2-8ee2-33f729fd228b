@@ -43,16 +43,16 @@ func NewShippingStationService(logger log.Logger, jwtConfig config.JWTConfig, ce
 
 func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb.RequestLandingRequest) (resp *pb.RequestLandingResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "RequestLanding", "err", err)
 		}
 	}()
 	//TODO use middleware
-	level.Info(s.logger).Log("handling request", "RequestLanding",
+	level.Info(s.logger).Log("handlingrequest", "RequestLanding",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
 	)
-	defer level.Info(s.logger).Log("handled request", "RequestLanding")
+	defer level.Info(s.logger).Log("handledrequest", "RequestLanding")
 
 	role := common.ExtractUserRoleFromCtx(ctx)
 	if role != consts.ROLE_SHIP {
@@ -104,16 +104,16 @@ func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb
 
 func (s *shippingStationService) Landing(ctx context.Context, request *pb.LandingRequest) (resp *pb.LandingResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "CreateShip", "err", err)
 		}
 	}()
 	//TODO use middleware
-	level.Info(s.logger).Log("handling request", "Landing",
+	level.Info(s.logger).Log("handlingrequest", "Landing",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
 	)
-	defer level.Info(s.logger).Log("handled request", "Landing")
+	defer level.Info(s.logger).Log("handledrequest", "Landing")
 
 	//TODO refactor
 	err = s.validate.Struct(request)

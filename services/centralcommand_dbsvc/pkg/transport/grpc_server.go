@@ -158,7 +158,7 @@ func encodeGRPCCreateStationResponse(_ context.Context, grpcResponse interface{}
 func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*pb.GetAllStationsRequest)
 	if req != nil {
-		return &dtos.GetAllStationsRequest{}, nil
+		return &dtos.GetAllStationsRequest{ShipId: req.ShipId}, nil
 	}
 	return nil, errs.NewError(http.StatusInternalServerError, "cannot decode request", errs.ErrException)
 }

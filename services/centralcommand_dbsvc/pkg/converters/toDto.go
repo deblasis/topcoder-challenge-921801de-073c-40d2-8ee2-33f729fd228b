@@ -97,51 +97,60 @@ func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequ
 	return ret
 }
 func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.CreateShipResponse{Error: errs.FromProtoV1(src.Error)}
 	}
-	ret := &dtos.CreateShipResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
+	ret := &dtos.CreateShipResponse{
+		Ship: &dtos.Ship{},
+	}
+	if errs := m.Copy(ret.Ship, src.Ship); len(errs) > 0 {
 		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.CreateStationResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.CreateStationResponse{Error: errs.FromProtoV1(src.Error)}
 	}
-	ret := &dtos.CreateStationResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
+	ret := &dtos.CreateStationResponse{
+		Station: &dtos.Station{},
+	}
+	if errs := m.Copy(ret.Station, src.Station); len(errs) > 0 {
 		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetAllStationsResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.GetAllStationsResponse{Error: errs.FromProtoV1(src.Error)}
+	}
+	if src.Stations == nil {
+		return &dtos.GetAllStationsResponse{Stations: []dtos.Station{}}
 	}
 	ret := &dtos.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
+		panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShipsResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.GetAllShipsResponse{Error: errs.FromProtoV1(src.Error)}
 	}
-	ret := &dtos.GetAllShipsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
+	ret := &dtos.GetAllShipsResponse{
+		Ships: []dtos.Ship{},
+	}
+	if errs := m.Copy(ret.Ships, src.Ships); len(errs) > 0 {
 		//panic(errs[0])
 	}
 	return ret
 }
 
 func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDockingStationResponse) *dtos.GetNextAvailableDockingStationResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.GetNextAvailableDockingStationResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.GetNextAvailableDockingStationResponse{}
@@ -152,7 +161,7 @@ func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDo
 }
 
 func ProtoLandShipToDockResponseToDto(src *pb.LandShipToDockResponse) *dtos.LandShipToDockResponse {
-	if src.Error != nil {
+	if !errs.IsNil(src.Error) {
 		return &dtos.LandShipToDockResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.LandShipToDockResponse{}

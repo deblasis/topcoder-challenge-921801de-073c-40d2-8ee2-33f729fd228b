@@ -144,8 +144,9 @@ type CreateUserResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id    string    `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	//@gotags: model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *CreateUserResponse) Reset() {
@@ -293,8 +294,9 @@ type GetUserByUsernameResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User  *User     `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	User *User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	//@gotags: model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *GetUserByUsernameResponse) Reset() {
@@ -348,8 +350,9 @@ type GetUserByIdResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	User  *User     `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	User *User `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	//@gotags: model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *GetUserByIdResponse) Reset() {

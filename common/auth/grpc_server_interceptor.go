@@ -93,7 +93,7 @@ func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method 
 
 	token, err := interceptor.jwtHandler.VerifyToken(accessToken)
 	if err != nil {
-		return ctx, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
+		return ctx, status.Errorf(acl.statusCodeOnFailure, "access token is invalid: %v", err)
 	}
 
 	aclRuleErr := acl.tokenValidator(token)
@@ -107,20 +107,24 @@ func (interceptor *AuthServerInterceptor) checkAuth(ctx context.Context, method 
 		}
 		return ctx, nil
 	}
-
-	return ctx, status.Error(codes.PermissionDenied, "you are not allowed to do that")
+	return ctx, status.Error(acl.statusCodeOnFailure, "you are not allowed to do that")
 }
 
 type ACLRule func(req interface{}, logger log.Logger) ACLDescriptor
 
 type ACLDescriptor struct {
-	allGood        bool
-	tokenValidator TokenValidator
+	allGood             bool
+	tokenValidator      TokenValidator
+	statusCodeOnFailure codes.Code
 }
 
 func NewAllGoodAclDescriptor() ACLDescriptor {
 	return ACLDescriptor{allGood: true}
 }
 func NewMustCheckTokenDescriptor(tokenValidator TokenValidator) ACLDescriptor {
-	return ACLDescriptor{allGood: false, tokenValidator: tokenValidator}
+	return ACLDescriptor{allGood: false, tokenValidator: tokenValidator, statusCodeOnFailure: codes.Unauthenticated}
+}
+
+func NewMustCheckTokenDescriptorWithCustomStatusCode(tokenValidator TokenValidator, statusCodeOnFailure codes.Code) ACLDescriptor {
+	return ACLDescriptor{allGood: false, tokenValidator: tokenValidator, statusCodeOnFailure: statusCodeOnFailure}
 }

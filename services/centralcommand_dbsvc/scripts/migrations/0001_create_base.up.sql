@@ -79,6 +79,37 @@ CREATE OR REPLACE VIEW stations_view AS
 	from stations as s;
 
 
+--select * from stations_available_for_ship('632afa4d-6c76-4d56-967f-e61b4659d638');
+
+CREATE OR REPLACE FUNCTION stations_available_for_ship(ship_id UUID) RETURNS 
+   TABLE (station_id UUID, capacity FLOAT, used_capacity FLOAT, dock_id UUID, num_docking_ports INTEGER, occupied BIGINT, weight FLOAT)
+    AS $$
+BEGIN
+  return query
+      with ship as (
+         select s.id, s.weight from ships s where id = ship_id
+      ), stations_with_capacity as (
+         select st.id as station_id, 
+         st.capacity as capacity,
+         st.used_capacity as used_capacity,
+         d.id as dock_id,
+         d.num_docking_ports as num_docking_ports,
+         d.occupied as occupied,
+         d.weight as weight
+         from stations_view st 
+         inner join docks_view d on (d.station_id = st.id and d.num_docking_ports-d.occupied>0)
+         --inner join docks_view d on (d.station_id = st.id)
+         where st.capacity-st.used_capacity>=(select s.weight from ship s)
+         -- group by (st.id, st.capacity, st.used_capacity)
+      ) 
+      select swc.station_id, swc.capacity, swc.used_capacity, swc.dock_id, swc.num_docking_ports, swc.occupied, swc.weight
+      from stations_with_capacity swc;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- select * from get_next_available_docking_station_for_ship('632afa4d-6c76-4d56-967f-e61b4659d638');
 CREATE OR REPLACE FUNCTION get_next_available_docking_station_for_ship(ship_id UUID) RETURNS 
    TABLE (dock_id UUID, station_id UUID, ship_weight FLOAT, available_capacity FLOAT, available_docks_at_station BIGINT, seconds_until_next_available INT)
     AS $$

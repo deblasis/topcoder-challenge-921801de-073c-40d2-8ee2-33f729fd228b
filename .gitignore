@@ -18,3 +18,4 @@ certs/*
 build/*
 extra/*
 esdata/*
+**/__debug_bin

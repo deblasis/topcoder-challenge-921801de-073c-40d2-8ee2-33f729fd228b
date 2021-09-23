@@ -32,7 +32,7 @@ var (
 )
 
 func EncodeErrorHTTP(ctx context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/vnd.deblasis.spacetrafficcontrol-v1+/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if e, ok := err.(*Err); ok {
 		w.WriteHeader(int(e.Code))
 		json.NewEncoder(w).Encode(map[string]interface{}{

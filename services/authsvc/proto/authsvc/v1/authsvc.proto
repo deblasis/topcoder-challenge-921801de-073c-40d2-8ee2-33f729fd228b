@@ -37,7 +37,7 @@ message LoginRequest {
 message LoginResponse {
   //@gotags: json:"token,omitempty"
   Token token = 1;
-  //@gotags: json:"error,omitempty"
+  //@gotags: json:"error,omitempty" model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
@@ -53,7 +53,7 @@ message SignupRequest {
 message SignupResponse {
   //@gotags: json:"token,omitempty"
   Token token = 1;
-  //@gotags: json:"error,omitempty"
+  //@gotags: json:"error,omitempty" model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
@@ -63,7 +63,7 @@ message CheckTokenRequest {
 
 message CheckTokenResponse {
   TokenPayload token_payload = 1;
-  //@gotags: json:"error,omitempty"
+  //@gotags: json:"error,omitempty" model:"-"
   deblasis.common.v1.Error error = 2;
 }
 

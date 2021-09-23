@@ -59,14 +59,15 @@ message CreateShipRequest {
 }
 message CreateShipResponse {
   Ship ship = 1;
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
 
-message GetAllShipsRequest {
-}
+message GetAllShipsRequest {}
 message GetAllShipsResponse {
   repeated Ship ships = 1;
+  //@gotags: model:"-"  
   deblasis.common.v1.Error error = 2;
 }
 
@@ -75,12 +76,15 @@ message CreateStationRequest {
 }
 message CreateStationResponse {
   Station station = 1;
+  //@gotags: model:"-"  
   deblasis.common.v1.Error error = 2;
 }
 message GetAllStationsRequest {
+  optional string ship_id = 1;
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
@@ -91,6 +95,7 @@ message GetNextAvailableDockingStationRequest {
 }
 message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
@@ -104,5 +109,6 @@ message LandShipToDockRequest {
   int64 duration = 3;
 }
 message LandShipToDockResponse {
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 1;
 }

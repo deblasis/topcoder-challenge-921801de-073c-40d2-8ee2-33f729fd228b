@@ -59,11 +59,13 @@ func NewAuthService(logger log.Logger, jwtConfig config.JWTConfig, db_svc_endpoi
 }
 
 func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (resp *pb.SignupResponse, err error) {
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "Signup", "err", err)
-		}
-	}()
+	//TODO use middleware
+	level.Info(s.logger).Log("handlingrequest", "Signup",
+		"userId", ctx.Value(common.ContextKeyUserId),
+		"role", ctx.Value(common.ContextKeyUserRole),
+	)
+	defer level.Info(s.logger).Log("handledrequest", "Signup", "err", err)
+
 	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
@@ -106,7 +108,7 @@ func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (re
 
 func (s *authService) Login(ctx context.Context, request *pb.LoginRequest) (resp *pb.LoginResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "Login", "err", err)
 		}
 	}()
@@ -121,13 +123,19 @@ func (s *authService) Login(ctx context.Context, request *pb.LoginRequest) (resp
 
 	level.Debug(s.logger).Log("login_attempt", request.Username)
 
-	getUserResponse, err := s.db_svc_endpointset.GetUserByUsername(ctx, &dtos.GetUserByUsernameRequest{
+	ret, err := s.db_svc_endpointset.GetUserByUsername(ctx, &dtos.GetUserByUsernameRequest{
 		Username: request.Username,
 	})
-	if err != nil {
+	if err != nil || ret.User == nil {
 		return unauthorized("unknown username")
 	}
-	user := getUserResponse.User
+
+	if !errs.IsNil(ret.Failed()) {
+		return &pb.LoginResponse{
+			Error: errs.ToProtoV1(ret.Failed()),
+		}, nil
+	}
+	user := ret.User
 
 	bytesHashed := []byte(user.Password)
 	err = bcrypt.CompareHashAndPassword(bytesHashed, []byte(request.Password+auth.PWDSALT))
@@ -154,7 +162,7 @@ func (s *authService) Login(ctx context.Context, request *pb.LoginRequest) (resp
 
 func (s *authService) CheckToken(ctx context.Context, request *pb.CheckTokenRequest) (resp *pb.CheckTokenResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "CheckToken", "err", err)
 		}
 	}()

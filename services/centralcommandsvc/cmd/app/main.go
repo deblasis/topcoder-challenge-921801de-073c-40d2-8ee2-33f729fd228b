@@ -125,8 +125,16 @@ func main() {
 		tags         = []string{"centralCommandDBService"}
 		passingOnly  = true
 		db_endpoints = dbe.EndpointSet{}
-		instancer    = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+		instancer    sd.Instancer
 	)
+
+	if cfg.BindOnLocalhost {
+		instancer = sd.FixedInstancer{"localhost:9382"} //TODO from config
+	} else {
+		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+
+	}
+
 	instancesChannel := make(chan sd.Event)
 	go func() {
 		for event := range instancesChannel {
@@ -197,13 +205,12 @@ func main() {
 
 		jwtHandler                = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
 		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
-
-		svc         = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
-		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
-		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
-		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
+		httpAuthProvider          = auth.NewHttpAuthProvider(log.With(cfg.Logger, "component", "HttpAuthProvider"), jwtHandler)
+		svc                       = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
+		eps                       = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		httpHandler               = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
+		grpcServer                = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
 	)
-	fmt.Printf("svc %v", svc)
 
 	// consul
 	{
@@ -237,10 +244,10 @@ func main() {
 		g.Add(func() error {
 			if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
 				level.Debug(cfg.Logger).Log("transport", "HTTP", "addr", httpAddr, "TLS", "enabled")
-				return http.ServeTLS(httpListener, httpHandler, cfg.SSL.ServerCert, cfg.SSL.ServerKey)
+				return http.ServeTLS(httpListener, httpAuthProvider.Handler(httpHandler), cfg.SSL.ServerCert, cfg.SSL.ServerKey)
 			} else {
 				level.Debug(cfg.Logger).Log("transport", "HTTP", "addr", httpAddr, "TLS", "disabled")
-				return http.Serve(httpListener, httpHandler)
+				return http.Serve(httpListener, httpAuthProvider.Handler(httpHandler))
 			}
 		}, func(error) {
 			httpListener.Close()

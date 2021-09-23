@@ -6,6 +6,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common"
 	"deblasis.net/space-traffic-control/common/config"
+	"deblasis.net/space-traffic-control/common/consts"
 	"deblasis.net/space-traffic-control/common/errs"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
@@ -49,17 +50,12 @@ func NewCentralCommandService(logger log.Logger, jwtConfig config.JWTConfig, db_
 }
 
 func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (resp *pb.RegisterShipResponse, err error) {
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "RegisterShip", "err", err)
-		}
-	}()
 	//TODO use middleware
-	level.Info(s.logger).Log("handling request", "RegisterShip",
+	level.Info(s.logger).Log("handlingrequest", "RegisterShip",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
 	)
-	defer level.Info(s.logger).Log("handled request", "RegisterShip")
+	defer level.Info(s.logger).Log("handledrequest", "RegisterShip", "err", err)
 
 	verr := s.validate.Struct(request)
 	if verr != nil {
@@ -86,6 +82,7 @@ func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.Re
 		return nil, err
 	}
 	if !errs.IsNil(ret.Failed()) {
+		level.Debug(s.logger).Log("failed", ret.Failed())
 		return &pb.RegisterShipResponse{
 			Error: errs.ToProtoV1(ret.Error),
 		}, nil
@@ -94,17 +91,12 @@ func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.Re
 }
 
 func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (resp *pb.RegisterStationResponse, err error) {
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "RegisterStation", "err", err)
-		}
-	}()
 	//TODO use middleware
-	level.Info(s.logger).Log("handling request", "RegisterStation",
+	level.Info(s.logger).Log("handlingrequest", "RegisterStation",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
 	)
-	defer level.Info(s.logger).Log("handled request", "RegisterStation")
+	defer level.Info(s.logger).Log("handledrequest", "RegisterStation", "err", err)
 
 	//TODO refactor
 	err = s.validate.Struct(request)
@@ -138,7 +130,10 @@ func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb
 		level.Debug(s.logger).Log("err", err)
 		return nil, err
 	}
+	level.Error(s.logger).Log("ret", ret.Error)
+
 	if !errs.IsNil(ret.Failed()) {
+		level.Debug(s.logger).Log("failed", ret.Failed())
 		return &pb.RegisterStationResponse{
 			Error: errs.ToProtoV1(ret.Error),
 		}, nil
@@ -148,12 +143,12 @@ func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb
 }
 
 func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.GetAllShipsRequest) (resp *pb.GetAllShipsResponse, err error) {
+	level.Info(s.logger).Log("handlingrequest", "GetAllShips",
+		"userId", ctx.Value(common.ContextKeyUserId),
+		"role", ctx.Value(common.ContextKeyUserRole),
+	)
+	defer level.Info(s.logger).Log("handledrequest", "GetAllShips", "err", err)
 
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "GetAllShips", "err", err)
-		}
-	}()
 	verr := s.validate.Struct(request)
 	if verr != nil {
 		validationErrors := verr.(validator.ValidationErrors)
@@ -180,15 +175,12 @@ func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.Get
 }
 
 func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (resp *pb.GetAllStationsResponse, err error) {
-
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
-		}
-	}()
 	//TODO use middleware
-	level.Info(s.logger).Log("handling request", "GetAllStations")
-	defer level.Info(s.logger).Log("handled request", "GetAllStations")
+	level.Info(s.logger).Log("handlingrequest", "GetAllStations",
+		"userId", ctx.Value(common.ContextKeyUserId),
+		"role", ctx.Value(common.ContextKeyUserRole),
+	)
+	defer level.Info(s.logger).Log("handledrequest", "GetAllStations", "err", err)
 
 	err = s.validate.Struct(request)
 	if err != nil {
@@ -199,11 +191,17 @@ func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.
 		}, nil
 	}
 
-	ret, e := s.db_svc_endpointset.GetAllStations(ctx,
-		&dtos.GetAllStationsRequest{},
-	)
+	req := &dtos.GetAllStationsRequest{}
+	userId := common.ExtractUserIdFromCtx(ctx)
+	role := common.ExtractUserRoleFromCtx(ctx)
+
+	if role == consts.ROLE_SHIP {
+		req.ShipId = &userId
+	}
+
+	ret, err := s.db_svc_endpointset.GetAllStations(ctx, req)
 	if err != nil {
-		return nil, e
+		return nil, err
 	}
 	if !errs.IsNil(ret.Failed()) {
 		return &pb.GetAllStationsResponse{
@@ -215,12 +213,13 @@ func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.
 }
 
 func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (resp *pb.GetNextAvailableDockingStationResponse, err error) {
+	//TODO use middleware
+	level.Info(s.logger).Log("handlingrequest", "GetNextAvailableDockingStation",
+		"userId", ctx.Value(common.ContextKeyUserId),
+		"role", ctx.Value(common.ContextKeyUserRole),
+	)
+	defer level.Info(s.logger).Log("handledrequest", "GetNextAvailableDockingStation", "err", err)
 
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
-		}
-	}()
 	err = s.validate.Struct(request)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
@@ -245,20 +244,21 @@ func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 			DockId:                    ret.NextAvailableDockingStation.DockId,
 			StationId:                 ret.NextAvailableDockingStation.StationId,
 			ShipWeight:                ret.NextAvailableDockingStation.ShipWeight,
-			AvailableCapacity:         ret.NextAvailableDockingStation.AvailableCapacity,
-			AvailableDocksAtStation:   ret.NextAvailableDockingStation.AvailableDocksAtStation,
-			SecondsUntilNextAvailable: ret.NextAvailableDockingStation.SecondsUntilNextAvailable,
+			AvailableCapacity:         *ret.NextAvailableDockingStation.AvailableCapacity,
+			AvailableDocksAtStation:   *ret.NextAvailableDockingStation.AvailableDocksAtStation,
+			SecondsUntilNextAvailable: *ret.NextAvailableDockingStation.SecondsUntilNextAvailable,
 		},
 	}, nil
 }
 
 func (s *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (resp *pb.RegisterShipLandingResponse, err error) {
+	//TODO use middleware
+	level.Info(s.logger).Log("handlingrequest", "RegisterShipLanding",
+		"userId", ctx.Value(common.ContextKeyUserId),
+		"role", ctx.Value(common.ContextKeyUserRole),
+	)
+	defer level.Info(s.logger).Log("handledrequest", "RegisterShipLanding", "err", err)
 
-	defer func() {
-		if err != nil {
-			level.Debug(s.logger).Log("method", "GetAllStations", "err", err)
-		}
-	}()
 	verr := s.validate.Struct(request)
 	if verr != nil {
 		validationErrors := verr.(validator.ValidationErrors)

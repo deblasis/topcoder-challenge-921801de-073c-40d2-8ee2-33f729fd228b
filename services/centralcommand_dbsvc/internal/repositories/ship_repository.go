@@ -26,7 +26,7 @@ func NewShipRepository(db *pg.DB, logger log.Logger) ShipRepository {
 
 func (u shipRepository) GetById(ctx context.Context, id string) (resp *model.Ship, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetById", "err", err)
 		}
 	}()
@@ -51,7 +51,7 @@ func (u shipRepository) GetById(ctx context.Context, id string) (resp *model.Shi
 
 func (u shipRepository) Create(ctx context.Context, ship model.Ship) (resp *model.Ship, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "Create", "err", err)
 		}
 	}()
@@ -74,7 +74,7 @@ func (u shipRepository) Create(ctx context.Context, ship model.Ship) (resp *mode
 
 func (u shipRepository) GetAll(ctx context.Context) (resp []model.Ship, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetAll", "err", err)
 		}
 	}()

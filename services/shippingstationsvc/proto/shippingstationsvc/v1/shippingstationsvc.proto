@@ -41,6 +41,7 @@ message RequestLandingResponse {
     string docking_station_id = 2;
     int64 duration = 3;
   }
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 4;
 }
 
@@ -55,5 +56,6 @@ message LandingRequest {
 }
 
 message LandingResponse {
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 1;
 }

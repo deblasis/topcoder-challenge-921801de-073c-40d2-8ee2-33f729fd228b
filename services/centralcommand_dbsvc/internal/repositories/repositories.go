@@ -16,6 +16,7 @@ type StationRepository interface {
 	GetById(ctx context.Context, id string) (*model.Station, error)
 	Create(ctx context.Context, station model.Station) (*model.Station, error)
 	GetAll(ctx context.Context) ([]model.Station, error)
+	GetAvailableForShip(ctx context.Context, shipId uuid.UUID) ([]model.Station, error)
 }
 type DockRepository interface {
 	GetById(ctx context.Context, id string) (*model.Dock, error)

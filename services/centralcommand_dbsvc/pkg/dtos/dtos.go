@@ -20,7 +20,7 @@ type Station struct {
 	//“float - total combined weight of all docked spaceships”
 	//
 	//COMPUTED on the database, so it should be treated as readonly
-	UsedCapacity float32 `json:"usedCapacity,omitempty"`
+	UsedCapacity *float32 `json:"usedCapacity,omitempty"`
 	//Docks available at the station
 	Docks []*Dock `json:"docks" validate:"required"`
 }
@@ -33,7 +33,7 @@ type Dock struct {
 	//"Integer - total number of available ports"
 	NumDockingPorts int64 `json:"numDockingPorts,omitempty" validate:"required"`
 	//“Integer - number of docked spaceships on this docking station”
-	Occupied int64 `json:"occupied,omitempty"`
+	Occupied *int64 `json:"occupied,omitempty"`
 	//“float - combined weight of all docked spaceships on this docking station”
 	Weight float32 `json:"weight,omitempty"`
 	//Reference to the Station entity
@@ -41,36 +41,38 @@ type Dock struct {
 }
 
 type NextAvailableDockingStation struct {
-	DockId                    string  `json:"dock_id,omitempty"`
-	StationId                 string  `json:"station_id,omitempty"`
-	ShipWeight                float32 `json:"ship_weight,omitempty"`
-	AvailableCapacity         float32 `json:"available_capacity,omitempty"`
-	AvailableDocksAtStation   int64   `json:"available_docks_at_station,omitempty"`
-	SecondsUntilNextAvailable int64   `json:"seconds_until_next_available,omitempty"`
+	DockId                    string   `json:"dock_id,omitempty"`
+	StationId                 string   `json:"station_id,omitempty"`
+	ShipWeight                float32  `json:"ship_weight,omitempty"`
+	AvailableCapacity         *float32 `json:"available_capacity,omitempty"`
+	AvailableDocksAtStation   *int64   `json:"available_docks_at_station,omitempty"`
+	SecondsUntilNextAvailable *int64   `json:"seconds_until_next_available,omitempty"`
 }
 
 type CreateShipRequest Ship
 type CreateShipResponse struct {
 	Ship  *Ship `json:"ship"`
-	Error error `json:"error,omitempty"`
+	Error error `json:"error,omitempty" model:"-"`
 }
 
 type GetAllShipsRequest struct{}
 type GetAllShipsResponse struct {
 	Ships []Ship `json:"ships"`
-	Error error  `json:"error,omitempty"`
+	Error error  `json:"error,omitempty" model:"-"`
 }
 
 type CreateStationRequest Station
 type CreateStationResponse struct {
 	Station *Station `json:"station"`
-	Error   error    `json:"error,omitempty"`
+	Error   error    `json:"error,omitempty" model:"-"`
 }
 
-type GetAllStationsRequest struct{}
+type GetAllStationsRequest struct {
+	ShipId *string `json:"ship_id"`
+}
 type GetAllStationsResponse struct {
 	Stations []Station `json:"stations"`
-	Error    error     `json:"error,omitempty"`
+	Error    error     `json:"error,omitempty" model:"-"`
 }
 
 type GetNextAvailableDockingStationRequest struct {
@@ -80,7 +82,7 @@ type GetNextAvailableDockingStationRequest struct {
 
 type GetNextAvailableDockingStationResponse struct {
 	NextAvailableDockingStation *NextAvailableDockingStation `json:"next_available_docking_station"`
-	Error                       error                        `json:"error,omitempty"`
+	Error                       error                        `json:"error,omitempty" model:"-"`
 }
 
 type LandShipToDockRequest struct {
@@ -89,7 +91,7 @@ type LandShipToDockRequest struct {
 	Duration int64  `json:"duration,omitempty" validate:"required,notblank"`
 }
 type LandShipToDockResponse struct {
-	Error error `json:"error,omitempty"`
+	Error error `json:"error,omitempty" model:"-"`
 }
 
 func (r CreateShipResponse) Failed() error                     { return r.Error }

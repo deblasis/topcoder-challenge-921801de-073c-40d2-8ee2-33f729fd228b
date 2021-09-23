@@ -43,7 +43,7 @@ func NewAuthDBService(repository repositories.UserRepository, logger log.Logger)
 
 func (u *authDbService) GetUserByUsername(ctx context.Context, request *dtos.GetUserByUsernameRequest) (resp *dtos.GetUserResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetUserByUsername", "err", err)
 		}
 	}()
@@ -69,7 +69,7 @@ func (u *authDbService) GetUserByUsername(ctx context.Context, request *dtos.Get
 
 func (u *authDbService) GetUserById(ctx context.Context, request *dtos.GetUserByIdRequest) (resp *dtos.GetUserResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetUserById", "err", err)
 		}
 	}()
@@ -94,7 +94,7 @@ func (u *authDbService) GetUserById(ctx context.Context, request *dtos.GetUserBy
 
 func (u *authDbService) CreateUser(ctx context.Context, request *dtos.CreateUserRequest) (resp *dtos.CreateUserResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()

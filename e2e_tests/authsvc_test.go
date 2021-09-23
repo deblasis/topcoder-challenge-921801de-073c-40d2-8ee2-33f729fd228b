@@ -1,4 +1,4 @@
-package e2e_tests_test
+package e2e_tests
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = consts.ROLE_STATION
 				})
 				It("should be unauthorized", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
 				})
 			})
 			When("trying to sign up a Command user", func() {
@@ -46,7 +46,7 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = consts.ROLE_COMMAND
 				})
 				It("should be unauthorized", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
 				})
 			})
 			When("trying to signing up with malformed role", func() {
@@ -57,7 +57,7 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = "Pirate"
 				})
 				It("should fail", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusUnauthorized)
 				})
 			})
 
@@ -69,7 +69,7 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = consts.ROLE_SHIP
 				})
 				It("should succeed", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusOK)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusOK)
 				})
 			})
 
@@ -78,7 +78,7 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = consts.ROLE_SHIP
 				})
 				It("should fail with validation error", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
 				})
 			})
 
@@ -90,12 +90,102 @@ var _ = Describe("AuthSvc", func() {
 					signupReq.Role = consts.ROLE_SHIP
 				})
 				It("should succeed at first and fail on subsequent requests", func() {
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusOK)
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
-					client.POST("/user/signup").WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusOK)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
+					client.POST(AuthService_Signup).WithJSON(signupReq).Expect().Status(http.StatusBadRequest)
 				})
 			})
+
+		})
+
+		Context("logged in as Ship user", func() {
+
+			var shipClient *httpexpect.Expect
+
+			BeforeEach(func() {
+				shipClient = client.Builder(func(r *httpexpect.Request) {
+					r.WithHeader("Authorization", "Bearer "+personas[Persona_Ship_USSEnterprise])
+				})
+			})
+
+			testCases := []struct {
+				role           string
+				expectedstatus int
+			}{
+				{
+					role:           consts.ROLE_SHIP,
+					expectedstatus: http.StatusOK,
+				},
+				{
+					role:           consts.ROLE_STATION,
+					expectedstatus: http.StatusUnauthorized,
+				},
+				{
+					role:           consts.ROLE_COMMAND,
+					expectedstatus: http.StatusUnauthorized,
+				},
+			}
+			for _, tC := range testCases {
+				tC := tC
+				When(fmt.Sprintf("trying to sign up a %v user", tC.role), func() {
+					BeforeEach(func() {
+						if err := faker.FakeData(&signupReq); err != nil {
+							panic(err)
+						}
+						signupReq.Role = tC.role
+					})
+					It(fmt.Sprintf("should return status %v", tC.expectedstatus), func() {
+						shipClient.POST(AuthService_Signup).
+							WithJSON(signupReq).Expect().Status(tC.expectedstatus)
+					})
+				})
+			}
+
+		})
+
+		Context("logged in as Station user", func() {
+
+			var stationClient *httpexpect.Expect
+
+			BeforeEach(func() {
+				stationClient = client.Builder(func(r *httpexpect.Request) {
+					r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_ISS])
+				})
+			})
+
+			testCases := []struct {
+				role           string
+				expectedstatus int
+			}{
+				{
+					role:           consts.ROLE_SHIP,
+					expectedstatus: http.StatusOK,
+				},
+				{
+					role:           consts.ROLE_STATION,
+					expectedstatus: http.StatusUnauthorized,
+				},
+				{
+					role:           consts.ROLE_COMMAND,
+					expectedstatus: http.StatusUnauthorized,
+				},
+			}
+			for _, tC := range testCases {
+				tC := tC
+				When(fmt.Sprintf("trying to sign up a %v user", tC.role), func() {
+					BeforeEach(func() {
+						if err := faker.FakeData(&signupReq); err != nil {
+							panic(err)
+						}
+						signupReq.Role = tC.role
+					})
+					It(fmt.Sprintf("should return status %v", tC.expectedstatus), func() {
+						stationClient.POST(AuthService_Signup).
+							WithJSON(signupReq).Expect().Status(tC.expectedstatus)
+					})
+				})
+			}
 
 		})
 
@@ -127,15 +217,16 @@ var _ = Describe("AuthSvc", func() {
 				},
 			}
 			for _, tC := range testCases {
+				tC := tC
 				When(fmt.Sprintf("trying to sign up a %v user", tC.role), func() {
 					BeforeEach(func() {
 						if err := faker.FakeData(&signupReq); err != nil {
 							panic(err)
 						}
-						signupReq.Role = consts.ROLE_SHIP
+						signupReq.Role = tC.role
 					})
-					It("should succeed", func() {
-						commandClient.POST("/user/signup").
+					It(fmt.Sprintf("should return status %v", tC.expectedstatus), func() {
+						commandClient.POST(AuthService_Signup).
 							WithJSON(signupReq).Expect().Status(tC.expectedstatus)
 					})
 				})
@@ -143,6 +234,46 @@ var _ = Describe("AuthSvc", func() {
 
 		})
 
+	})
+
+	Describe("Login", func() {
+		var (
+			loginReq loginRequest
+		)
+
+		BeforeEach(func() {
+			loginReq = loginRequest{}
+		})
+		When("providing empty credentials", func() {
+			It("should fail with 400", func() {
+				client.POST(AuthService_Login).WithJSON(loginReq).Expect().Status(http.StatusBadRequest)
+			})
+		})
+		When("providing wrong credentials", func() {
+			BeforeEach(func() {
+				if err := faker.FakeData(&loginReq); err != nil {
+					panic(err)
+				}
+			})
+			It("should fail with 401", func() {
+				client.POST(AuthService_Login).WithJSON(loginReq).Expect().Status(http.StatusUnauthorized)
+			})
+		})
+
+		When("providing correct credentials", func() {
+			BeforeEach(func() {
+				loginReq = loginRequest{
+					Username: Persona_Ship_MilleniumFalcon,
+					Password: Persona_Ship_MilleniumFalcon,
+				}
+			})
+			It("should succeed with 200", func() {
+				client.POST(AuthService_Login).WithJSON(loginReq).Expect().Status(http.StatusOK)
+			})
+			It("should return token", func() {
+				client.POST(AuthService_Login).WithJSON(loginReq).Expect().JSON().Path("$.token.token").NotNull()
+			})
+		})
 	})
 
 	// Context("logged in as Station user", func() {
@@ -181,7 +312,7 @@ var _ = Describe("AuthSvc", func() {
 	// 				signupReq.Role = consts.ROLE_SHIP
 	// 			})
 	// 			It("should succeed", func() {
-	// 				stationClient.POST("/user/signup").
+	// 				stationClient.POST(AuthService_Signup).
 	// 					WithJSON(signupReq).Expect().Status(tC.expectedstatus)
 	// 			})
 	// 		})

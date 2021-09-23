@@ -36,7 +36,7 @@ paths:
       requestBody:
         description: '`SignupRequest` object that is used to identify a user'
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/SignupRequest'
         required: true
@@ -58,7 +58,7 @@ paths:
       requestBody:
         description: '`LoginRequest` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
         required: true
@@ -66,7 +66,7 @@ paths:
         "200":
           description: Successfull login
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         "401":
@@ -83,7 +83,7 @@ paths:
       requestBody:
         description: '`Station` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RegisterStationRequest'
         required: true
@@ -91,7 +91,7 @@ paths:
         "200":
           description: Successfully registered
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/RegisterStationResponse'
         "400":
@@ -111,7 +111,7 @@ paths:
         "200":
           description: Stations list
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/StationsListResponse'
         "400":
@@ -129,7 +129,7 @@ paths:
       requestBody:
         description: '`RegisterShipRequest` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RegisterShipRequest'
         required: true
@@ -152,12 +152,12 @@ paths:
         "200":
           description: Ships list
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ShipWithStats'
-                x-content-type: application/vnd.deblasis.spacetrafficcontrol-v1+/json
+                x-content-type: application/json
         "400":
           description: Bad Request
       security:
@@ -173,7 +173,7 @@ paths:
       requestBody:
         description: Landing request
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RequestLandingRequest'
         required: true
@@ -181,7 +181,7 @@ paths:
         "200":
           description: Landing request instructions
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/inline_response_200'
         "400":
@@ -200,7 +200,7 @@ paths:
       requestBody:
         description: 'Land request '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/LandRequest'
         required: true

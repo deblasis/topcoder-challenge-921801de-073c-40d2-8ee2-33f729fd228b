@@ -27,6 +27,7 @@ message CreateUserRequest {
 
 message CreateUserResponse {
   string id = 1;
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }
 
@@ -39,9 +40,11 @@ message GetUserByIdRequest {
 }
 message GetUserByUsernameResponse {
   User user = 1;
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }
 message GetUserByIdResponse {
   User user = 1;
+  //@gotags: model:"-"
   deblasis.common.v1.Error error = 2;
 }

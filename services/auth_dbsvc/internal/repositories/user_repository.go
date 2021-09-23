@@ -26,7 +26,7 @@ func NewUserRepository(db *pg.DB, logger log.Logger) UserRepository {
 
 func (u userRepository) GetUserByUsername(ctx context.Context, username string) (resp *model.User, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetUserByUsername", "err", err)
 		}
 	}()
@@ -46,7 +46,7 @@ func (u userRepository) GetUserByUsername(ctx context.Context, username string) 
 
 func (u userRepository) GetUserById(ctx context.Context, id string) (resp *model.User, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetUserById", "err", err)
 		}
 	}()
@@ -66,7 +66,7 @@ func (u userRepository) GetUserById(ctx context.Context, id string) (resp *model
 
 func (u userRepository) CreateUser(ctx context.Context, user *model.User) (resp *uuid.UUID, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()

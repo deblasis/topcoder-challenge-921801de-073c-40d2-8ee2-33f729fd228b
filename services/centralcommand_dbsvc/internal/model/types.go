@@ -24,7 +24,7 @@ type Station struct {
 	//“float - total combined weight of all docked spaceships”
 	//
 	//COMPUTED on the database, so it should be treated as readonly
-	UsedCapacity float32 `json:"usedCapacity,omitempty" db:"used_capacity"`
+	UsedCapacity *float32 `json:"usedCapacity,omitempty" db:"used_capacity"`
 	//Docks availavle at the station
 	Docks []*Dock `json:"docks" pg:"rel:has-many"`
 }
@@ -39,7 +39,7 @@ type Dock struct {
 	//"Integer - total number of available ports"
 	NumDockingPorts int64 `json:"numDockingPorts,omitempty" db:"num_docking_ports"`
 	//“Integer - number of docked spaceships on this docking station”
-	Occupied int64 `json:"occupied,omitempty" db:"occupied"`
+	Occupied *int64 `json:"occupied,omitempty" db:"occupied"`
 	//“float - combined weight of all docked spaceships on this docking station”
 	Weight float32 `json:"weight,omitempty" db:"weight"`
 	//Reference to the Station entity
@@ -60,16 +60,26 @@ type DockedShip struct {
 }
 
 type NextAvailableDockingStation struct {
-	DockId                    string  `json:"dock_id,omitempty" db:"dock_id"`
-	StationId                 string  `json:"station_id,omitempty" db:"station_id"`
-	ShipWeight                float32 `json:"ship_weight,omitempty" db:"ship_weight"`
-	AvailableCapacity         float32 `json:"available_capacity,omitempty" db:"available_capacity"`
-	AvailableDocksAtStation   int64   `json:"available_docks_at_station,omitempty" db:"available_docks_at_station"`
-	SecondsUntilNextAvailable int64   `json:"seconds_until_next_available" db:"seconds_until_next_available"`
+	DockId                    string   `json:"dock_id" db:"dock_id"`
+	StationId                 string   `json:"station_id" db:"station_id"`
+	ShipWeight                float32  `json:"ship_weight" db:"ship_weight"`
+	AvailableCapacity         *float32 `json:"available_capacity" db:"available_capacity"`
+	AvailableDocksAtStation   *int64   `json:"available_docks_at_station" db:"available_docks_at_station"`
+	SecondsUntilNextAvailable *int64   `json:"seconds_until_next_available" db:"seconds_until_next_available"`
+}
+type AvailableStationsForShip struct {
+	StationId       string   `json:"station_id" db:"station_id"`
+	Capacity        float32  `json:"capacity" db:"capacity"`
+	UsedCapacity    *float32 `json:"used_capacity" db:"used_capacity"`
+	DockId          string   `json:"dock_id" db:"dock_id"`
+	NumDockingPorts int64    `json:"numDockingPorts" db:"num_docking_ports"`
+	Occupied        *int64   `json:"occupied" db:"occupied"`
+	Weight          float32  `json:"weight" db:"weight"`
 }
 
 //TODO refactor
 const (
 	ShipsHaveLeftFunctionName                         = "ships_have_left"
+	GetAvailableStationsForShipFunctionName           = "stations_available_for_ship"
 	GetNextAvailableDockingStationForShipFunctionName = "get_next_available_docking_station_for_ship"
 )

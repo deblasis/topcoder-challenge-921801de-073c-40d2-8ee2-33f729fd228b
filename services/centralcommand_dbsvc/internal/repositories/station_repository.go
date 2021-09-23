@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"deblasis.net/space-traffic-control/common/errs"
@@ -26,7 +27,7 @@ func NewStationRepository(db *pg.DB, logger log.Logger) StationRepository {
 
 func (u stationRepository) GetById(ctx context.Context, id string) (resp *model.Station, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetById", "err", err)
 		}
 	}()
@@ -56,7 +57,7 @@ func (u stationRepository) GetById(ctx context.Context, id string) (resp *model.
 
 func (u stationRepository) Create(ctx context.Context, station model.Station) (resp *model.Station, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "Create", "err", err)
 		}
 	}()
@@ -96,7 +97,7 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (r
 
 func (u stationRepository) GetAll(ctx context.Context) (resp []model.Station, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetAll", "err", err)
 		}
 	}()
@@ -107,9 +108,61 @@ func (u stationRepository) GetAll(ctx context.Context) (resp []model.Station, er
 		Relation("Docks").
 		Select()
 	if err != nil {
-		err = errs.NewError(http.StatusInternalServerError, "cannot select docks", err)
+		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
 		return nil, err
 	}
 
 	return stations, nil
+}
+
+func (u stationRepository) GetAvailableForShip(ctx context.Context, shipId uuid.UUID) (resp []model.Station, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAvailableForShip", "err", err)
+		}
+	}()
+
+	stations := make([]model.Station, 0)
+	stationMap := make(map[string]*model.Station)
+
+	var availableStations []model.AvailableStationsForShip
+	_, err = u.Db.WithContext(ctx).Model(&availableStations).
+		Query(&availableStations, fmt.Sprintf("select * from %v(?)", model.GetAvailableStationsForShipFunctionName), shipId)
+
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
+		return nil, err
+	}
+
+	for _, a := range availableStations {
+		if _, ok := stationMap[a.StationId]; !ok {
+			stationMap[a.StationId] = &model.Station{
+				Id:           a.StationId,
+				Capacity:     a.Capacity,
+				UsedCapacity: a.UsedCapacity,
+				Docks:        []*model.Dock{},
+			}
+		}
+		stationMap[a.StationId].Docks = append(stationMap[a.StationId].Docks, &model.Dock{
+			Id:              a.DockId,
+			StationId:       a.StationId,
+			NumDockingPorts: a.NumDockingPorts,
+			Occupied:        a.Occupied,
+			Weight:          a.Weight,
+		})
+	}
+
+	for _, s := range stationMap {
+		stations = append(stations, *s)
+	}
+
+	return stations, nil
+}
+
+func Map(vs []string, f func(string) string) []string {
+	vsm := make([]string, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
 }

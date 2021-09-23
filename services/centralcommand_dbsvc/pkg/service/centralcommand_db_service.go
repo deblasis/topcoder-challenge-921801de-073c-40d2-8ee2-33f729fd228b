@@ -57,7 +57,7 @@ func NewCentralCommandDBService(
 
 func (s *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (resp *dtos.CreateShipResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "CreateShip", "err", err)
 		}
 	}()
@@ -96,7 +96,7 @@ func (s *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.
 
 func (s *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos.GetAllShipsRequest) (resp *dtos.GetAllShipsResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(s.logger).Log("method", "GetAllShips", "err", err)
 		}
 	}()
@@ -124,7 +124,7 @@ func (s *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos
 
 func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (resp *dtos.CreateStationResponse, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateStation", "err", err)
 		}
 	}()
@@ -159,9 +159,8 @@ func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dt
 }
 
 func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *dtos.GetAllStationsRequest) (resp *dtos.GetAllStationsResponse, err error) {
-
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
 		}
 	}()
@@ -174,7 +173,14 @@ func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *d
 		}, nil
 	}
 
-	ret, err := u.stationRepository.GetAll(ctx)
+	stations := make([]model.Station, 0)
+
+	if request.ShipId != nil {
+		stations, err = u.stationRepository.GetAvailableForShip(ctx, uuid.MustParse(*request.ShipId))
+	} else {
+		stations, err = u.stationRepository.GetAll(ctx)
+	}
+
 	if err != nil {
 		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
 		return &dtos.GetAllStationsResponse{
@@ -182,14 +188,14 @@ func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *d
 		}, nil
 	}
 	return &dtos.GetAllStationsResponse{
-		Stations: converters.StationsToDto(ret),
+		Stations: converters.StationsToDto(stations),
 	}, nil
 }
 
 func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Context, request *dtos.GetNextAvailableDockingStationRequest) (resp *dtos.GetNextAvailableDockingStationResponse, err error) {
 
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
 		}
 	}()
@@ -217,7 +223,7 @@ func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Con
 func (u *centralCommandDBService) LandShipToDock(ctx context.Context, request *dtos.LandShipToDockRequest) (resp *dtos.LandShipToDockResponse, err error) {
 
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
 		}
 	}()

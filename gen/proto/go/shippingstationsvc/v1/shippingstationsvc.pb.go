@@ -135,7 +135,8 @@ type RequestLandingResponse struct {
 	//	*RequestLandingResponse_DockingStationId
 	//	*RequestLandingResponse_Duration
 	DockingStationIdOrDuration isRequestLandingResponse_DockingStationIdOrDuration `protobuf_oneof:"docking_station_id_or_duration"`
-	Error                      *v1.Error                                           `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	//@gotags: model:"-"
+	Error *v1.Error `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *RequestLandingResponse) Reset() {
@@ -293,7 +294,8 @@ type LandingResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Error *v1.Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
+	//@gotags: model:"-"
+	Error *v1.Error `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *LandingResponse) Reset() {

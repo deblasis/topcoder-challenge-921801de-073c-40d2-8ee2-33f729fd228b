@@ -10,7 +10,7 @@ POST {{baseUrl}}/station HTTP/1.1
 Content-Type: application/json; charset=utf-8
 
 {
-    "id":"931ffe12-1d14-4cc5-a6bf-e9902ab7a302",
+    "id":"8e4b70d3-1ed4-4478-a1f6-9ceb364ae79f",
     "capacity": 2.21234,
     "docks" : [
         {
@@ -43,7 +43,11 @@ GET {{baseUrl}}/ships HTTP/1.1
 GET {{baseUrl}}/stations HTTP/1.1
 
 
+###
 
+###
+//Get All OK
+GET {{baseUrl}}/station/all?ship_id=17bd0ec7-398d-4b13-b986-8174ae9a2dde HTTP/1.1
 
 
 

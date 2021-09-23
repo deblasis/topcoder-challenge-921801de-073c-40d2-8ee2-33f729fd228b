@@ -28,7 +28,7 @@ func NewDockRepository(db *pg.DB, logger log.Logger) DockRepository {
 
 func (u dockRepository) GetById(ctx context.Context, id string) (resp *model.Dock, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()
@@ -49,7 +49,7 @@ func (u dockRepository) GetById(ctx context.Context, id string) (resp *model.Doc
 
 func (u dockRepository) Create(ctx context.Context, dock model.Dock) (resp *model.Dock, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()
@@ -71,7 +71,7 @@ func (u dockRepository) Create(ctx context.Context, dock model.Dock) (resp *mode
 
 func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (resp *model.NextAvailableDockingStation, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()
@@ -89,7 +89,7 @@ func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, ship
 
 func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (resp *model.DockedShip, err error) {
 	defer func() {
-		if err != nil {
+		if !errs.IsNil(err) {
 			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
 		}
 	}()

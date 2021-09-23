@@ -86,8 +86,8 @@ type LoginResponse struct {
 
 	//@gotags: json:"token,omitempty"
 	Token *Token `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	//@gotags: json:"error,omitempty"
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	//@gotags: json:"error,omitempty" model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *LoginResponse) Reset() {
@@ -209,8 +209,8 @@ type SignupResponse struct {
 
 	//@gotags: json:"token,omitempty"
 	Token *Token `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	//@gotags: json:"error,omitempty"
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	//@gotags: json:"error,omitempty" model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *SignupResponse) Reset() {
@@ -312,8 +312,8 @@ type CheckTokenResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	TokenPayload *TokenPayload `protobuf:"bytes,1,opt,name=token_payload,json=tokenPayload,proto3" json:"token_payload,omitempty"`
-	//@gotags: json:"error,omitempty"
-	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	//@gotags: json:"error,omitempty" model:"-"
+	Error *v1.Error `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty" model:"-"`
 }
 
 func (x *CheckTokenResponse) Reset() {

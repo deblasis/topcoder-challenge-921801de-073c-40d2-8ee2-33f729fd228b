@@ -30,7 +30,7 @@ paths:
       requestBody:
         description: '`SignupRequest` object that is used to identify a user'
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/SignupRequest'
         required: true
@@ -52,7 +52,7 @@ paths:
       requestBody:
         description: '`LoginRequest` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
         required: true
@@ -71,7 +71,7 @@ paths:
           #      type: string
           #      format: string     
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:          
                 $ref: '#/components/schemas/LoginResponse'
         401:
@@ -88,7 +88,7 @@ paths:
       requestBody:
         description: '`Station` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RegisterStationRequest'
         required: true
@@ -96,7 +96,7 @@ paths:
         200:
           description: Successfully registered
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/RegisterStationResponse'
         400:
@@ -117,7 +117,7 @@ paths:
         200:
           description: Stations list
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 $ref: '#/components/schemas/StationsListResponse'
                 
@@ -137,7 +137,7 @@ paths:
       requestBody:
         description: '`RegisterShipRequest` object '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RegisterShipRequest'
 
@@ -163,7 +163,7 @@ paths:
         200:
           description: Ships list
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 type: array
                 items:
@@ -184,7 +184,7 @@ paths:
       requestBody:
         description: Landing request
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/RequestLandingRequest'
         required: true
@@ -192,7 +192,7 @@ paths:
         200:
           description: Landing request instructions
           content:
-            application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+            application/json:
               schema:
                 oneOf:
                 - $ref: "#/components/schemas/LandCommand"
@@ -220,7 +220,7 @@ paths:
       requestBody:
         description: 'Land request '
         content:
-          application/vnd.deblasis.spacetrafficcontrol-v1+/json:
+          application/json:
             schema:
               $ref: '#/components/schemas/LandRequest'
         required: true

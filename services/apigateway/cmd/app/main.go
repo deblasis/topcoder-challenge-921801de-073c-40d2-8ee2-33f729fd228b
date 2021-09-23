@@ -457,6 +457,11 @@ func httpHeaderRewriter(logger log.Logger) func(c context.Context, rw http.Respo
 	return func(ctx context.Context, rw http.ResponseWriter, m proto.Message) error {
 		//TODO refactor
 
+		var (
+			code      int
+			noContent bool
+			err       error
+		)
 		logger.Log(
 			"msg", "checking metadata",
 		)
@@ -468,20 +473,33 @@ func httpHeaderRewriter(logger log.Logger) func(c context.Context, rw http.Respo
 		// set http status code
 		if vals := md.HeaderMD.Get("x-http-code"); len(vals) > 0 {
 			logger.Log("msg", "x-http-code is "+vals[0])
-			code, err := strconv.Atoi(vals[0])
+			code, err = strconv.Atoi(vals[0])
 			if err != nil {
 				logger.Log("err", err)
 				panic(err)
 			}
-			logger.Log("msg", "fanning out")
-			// delete the headers to not expose any grpc-metadata in http response
+		}
+		if vals := md.HeaderMD.Get("x-no-content"); len(vals) > 0 {
+			logger.Log("msg", "x-no-content exists")
+			noContent, err = strconv.ParseBool(vals[0])
+			if err != nil {
+				logger.Log("err", err)
+				panic(err)
+			}
+		}
+		// delete the headers to not expose any grpc-metadata in http response
+		if noContent {
+			delete(rw.Header(), "Grpc-Metadata-Content-Type")
+			delete(rw.Header(), "Grpc-Metadata-X-No-Content")
+		} else {
+			delete(rw.Header(), "Grpc-Metadata-X-Stc-Error")
+		}
+		if code != 0 {
 			delete(md.HeaderMD, "x-http-code")
 			delete(rw.Header(), "Grpc-Metadata-X-Http-Code")
-			delete(rw.Header(), "Grpc-Metadata-Content-Type")
-			delete(rw.Header(), "Grpc-Metadata-X-Stc-Error")
-
 			rw.WriteHeader(code)
 		}
+
 		return nil
 	}
 }

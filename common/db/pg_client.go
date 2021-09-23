@@ -18,6 +18,7 @@ const (
 	WriteTimeout = 30 * time.Second
 	PoolSize     = 10
 	MinIdleConns = 10
+	MaxRetries   = 1
 )
 
 type postgresClient struct {
@@ -63,6 +64,7 @@ func GetPgConnectionOptions(config config.Config) *pg.Options {
 		WriteTimeout:    WriteTimeout,
 		PoolSize:        PoolSize,
 		MinIdleConns:    MinIdleConns,
+		MaxRetries:      MaxRetries,
 		Dialer: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			conn, err := net.DialTimeout(network, addr, 5*time.Second)
 			if err != nil {
