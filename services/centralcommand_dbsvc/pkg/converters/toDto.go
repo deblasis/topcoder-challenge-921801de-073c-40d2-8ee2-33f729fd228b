@@ -126,10 +126,12 @@ func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetA
 	if !errs.IsNil(src.Error) {
 		return &dtos.GetAllStationsResponse{Error: errs.FromProtoV1(src.Error)}
 	}
-	if src.Stations == nil {
-		return &dtos.GetAllStationsResponse{Stations: []dtos.Station{}}
+	ret := &dtos.GetAllStationsResponse{
+		Stations: []dtos.Station{},
 	}
-	ret := &dtos.GetAllStationsResponse{}
+	if src.Stations == nil {
+		return ret
+	}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
 	}
@@ -143,8 +145,11 @@ func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShip
 	ret := &dtos.GetAllShipsResponse{
 		Ships: []dtos.Ship{},
 	}
-	if errs := m.Copy(ret.Ships, src.Ships); len(errs) > 0 {
-		//panic(errs[0])
+	if src.Ships == nil {
+		return ret
+	}
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
 	}
 	return ret
 }

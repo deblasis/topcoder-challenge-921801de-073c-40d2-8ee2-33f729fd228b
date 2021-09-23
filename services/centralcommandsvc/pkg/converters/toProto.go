@@ -1,6 +1,8 @@
 package converters
 
 import (
+	"reflect"
+
 	"deblasis.net/space-traffic-control/common/errs"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
@@ -36,6 +38,67 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 		return &pb.GetAllShipsResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.GetAllShipsResponse{}
+	m.AddConversion((*dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		//it's ignored so we map it manually
+		ret.Status = v.Status
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+	m.AddConversion((*dtos.Ship)(nil), (*pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		//it's ignored so we map it manually
+		ret.Status = v.Status
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+	m.AddConversion((**dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		//it's ignored so we map it manually
+		ret.Status = v.Status
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+	m.AddConversion((**dtos.Ship)(nil), (*pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		//it's ignored so we map it manually
+		ret.Status = v.Status
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
 	}

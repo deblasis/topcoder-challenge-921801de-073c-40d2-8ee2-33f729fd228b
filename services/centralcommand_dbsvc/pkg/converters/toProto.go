@@ -60,7 +60,7 @@ func GetAllShipsResponseToProto(src *dtos.GetAllShipsResponse) *pb.GetAllShipsRe
 	}
 	ret := &pb.GetAllShipsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
+		panic(errs[0])
 	}
 	return ret
 }

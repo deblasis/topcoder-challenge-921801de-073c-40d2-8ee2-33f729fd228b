@@ -156,7 +156,7 @@ func (g *grpcServer) GetAllShips(ctx context.Context, r *pb.GetAllShipsRequest) 
 	}
 
 	resp := rep.(*pb.GetAllShipsResponse)
-	json, _ := json.Marshal(resp.Ships)
+	json := serializeGetAllShipsResponse(resp)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -379,7 +379,7 @@ func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
 	type station struct {
 		Id           string   `json:"id"`
 		Capacity     int64    `json:"capacity"`
-		UsedCapacity *float32 `json:"used_capacity"`
+		UsedCapacity *float32 `json:"usedCapacity"`
 		Docks        []*dock  `json:"docks"`
 	}
 	stations := make([]station, 0)
@@ -405,5 +405,28 @@ func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
 		}
 	}
 	json, _ := json.Marshal(stations)
+	return json
+}
+
+func serializeGetAllShipsResponse(resp *pb.GetAllShipsResponse) []byte {
+	type ship struct {
+		Id     string  `json:"id"`
+		Status string  `json:"status"`
+		Weight float32 `json:"weight"`
+	}
+
+	ships := make([]ship, 0)
+
+	if resp.Ships != nil {
+		for _, s := range resp.Ships {
+			ship := ship{
+				Id:     s.Id,
+				Status: s.Status,
+				Weight: s.Weight,
+			}
+			ships = append(ships, ship)
+		}
+	}
+	json, _ := json.Marshal(ships)
 	return json
 }

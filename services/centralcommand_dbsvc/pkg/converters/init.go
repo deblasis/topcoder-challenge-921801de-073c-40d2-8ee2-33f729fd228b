@@ -236,6 +236,26 @@ func init() {
 		return reflect.ValueOf(*ret), nil
 	})
 
+	m.AddConversion((*dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		switch v.Status {
+		case "docked":
+			ret.Status = pb.Ship_STATUS_DOCKED
+		case "in-flight":
+			ret.Status = pb.Ship_STATUS_INFLIGHT
+		}
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
+	})
+
 	m.AddConversion((*[]*pb.Station)(nil), (*[]dtos.Station)(nil), func(in reflect.Value) (reflect.Value, error) {
 
 		ret := make([]dtos.Station, 0)

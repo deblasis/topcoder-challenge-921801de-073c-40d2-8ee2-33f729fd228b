@@ -34,7 +34,7 @@ Content-Type: application/json; charset=utf-8
 
 ###
 //Get All OK
-GET {{baseUrl}}/ships HTTP/1.1
+GET {{baseUrl}}/ship/all HTTP/1.1
 
 
 

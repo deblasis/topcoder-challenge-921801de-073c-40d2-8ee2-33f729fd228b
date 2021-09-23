@@ -210,8 +210,12 @@ var _ = Describe("CentralCommandSvc", func() {
 				})
 			})
 			It("should succeed returning 200", func() {
-				commandClient.GET(CentralCommandService_AllStations).
-					Expect().Status(http.StatusOK)
+				validCall := commandClient.GET(CentralCommandService_AllStations).
+					Expect()
+
+				validCall.Status(http.StatusOK)
+				validCall.JSON().Schema(getAllStationsResponseSchema)
+
 			})
 		})
 		When("a Ship token is provided", func() {
@@ -226,6 +230,8 @@ var _ = Describe("CentralCommandSvc", func() {
 					Expect()
 
 				validCall.Status(http.StatusOK)
+
+				validCall.JSON().Schema(getAllStationsResponseSchema)
 
 				// validCall.Body().Empty()
 				// Expect(validCall.Raw().ContentLength).To(BeEquivalentTo(0))
