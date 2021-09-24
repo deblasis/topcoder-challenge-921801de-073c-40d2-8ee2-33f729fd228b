@@ -1,7 +1,7 @@
 name: E2E Tests
 on: push
 jobs:
-  test:
+  run_integration_tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -48,7 +48,7 @@ all: $(SERVICES)
 install-buf:
 ifeq ("", "$(shell which buf)")
 		curl -sSL "https://github.com/bufbuild/buf/releases/download/v$(BUFVERSION)/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
-		tar -xvzf - -C "$(PREFIX)" --strip-components 1
+		sudo tar -xvzf - -C "$(PREFIX)" --strip-components 1
 endif
 
 .PHONY: protodeps
