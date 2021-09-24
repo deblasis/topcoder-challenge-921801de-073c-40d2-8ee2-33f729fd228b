@@ -17,7 +17,7 @@ APIGATEWAY?=http://localhost:8081
 APIGATEWAY_NOPROTOCOL=$(shell echo $(APIGATEWAY) | sed -E 's/^\s*.*:\/\///g')
 WAIT4IT=./scripts/wait-for-it.sh
 
-PREFIX=/usr/local"
+PREFIX=/usr/local
 BUFVERSION=1.0.0-rc2
 
 
@@ -50,10 +50,6 @@ ifeq ("", "$(shell which buf)")
 		curl -sSL "https://github.com/bufbuild/buf/releases/download/v$(BUFVERSION)/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
 		tar -xvzf - -C "$(PREFIX)" --strip-components 1
 endif
-
-# ifeq (, $(shell which buf))
-# @echo "must install buf"
-# endif
 
 .PHONY: protodeps
 protodeps: 
