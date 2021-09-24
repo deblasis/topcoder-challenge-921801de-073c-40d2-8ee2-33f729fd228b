@@ -17,7 +17,7 @@ jobs:
           && docker ps \
           && sleep 15 \
           && docker ps \
-          && curl -X POST http://apigateway:8081/auth/login \
+          && curl -X POST http://localhost:8081/auth/login \
           -H 'Content-Type: application/json' \
           -d '{"username":"deblasis","password":"password1!"}' \
           && DOCKERCOMPOSE="docker-compose" make integrationtests-run
