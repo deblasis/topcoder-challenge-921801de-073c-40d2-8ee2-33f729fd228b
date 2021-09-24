@@ -5,8 +5,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Gather env info
-        run: make envdetails    
+      - name: Env setup
+        run: export GO111MODULE=on  
       - name: Build the stack
         run: make integration-tests-env
       - name: E2E Tests
