@@ -13,4 +13,4 @@ jobs:
       - name: Seed initial user
         run: make seed-auth_dbsvc
       - name: E2E Tests
-        run: make integrationtests-run
+        run: DOCKERCOMPOSE="docker-compose" make integrationtests-run
