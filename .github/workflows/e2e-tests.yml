@@ -11,10 +11,8 @@ jobs:
       - name: Build, run, seed, e2e test
         run: |
           DOCKERCOMPOSE="docker-compose" COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 make integrationtests-up \
-          && @echo "\n\nSEED INITIAL USER\n\n" \
           && make seed-auth_dbsvc \
-          && @echo "\n\nE2E TESTS\n\n" \
-          DOCKERCOMPOSE="docker-compose" make integrationtests-run
+          && DOCKERCOMPOSE="docker-compose" make integrationtests-run
 # - name: Seed initial user
 #   run: make seed-auth_dbsvc
 # - name: E2E Tests
