@@ -41,13 +41,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 CREATE OR REPLACE FUNCTION reservations_expired(dock_holding_period INT) RETURNS INTEGER
     AS $$
 DECLARE ret INTEGER;    
 BEGIN
   WITH deleted AS (
-     DELETE FROM docked_ships WHERE waiting_for_ship_since + INTERVAL '1 second'*dock_holding_period < NOW() RETURNING *
+     DELETE FROM docked_ships WHERE docked_since is null AND waiting_for_ship_since + INTERVAL '1 second'*dock_holding_period < NOW() RETURNING *
   ) select count(*) into ret from deleted;
   RETURN ret;
 END;
@@ -90,10 +89,9 @@ CREATE OR REPLACE VIEW stations_view AS
    coalesce((select sum(weight) from docks_view where station_id=s.id group by station_id),0) as used_capacity
 	from stations as s;
 
+--select * from stations_available_for_ship('287c3674-3303-4ce4-a3d6-46bf7425a312');
 
---select * from stations_available_for_ship('632afa4d-6c76-4d56-967f-e61b4659d638');
-
-CREATE OR REPLACE FUNCTION stations_available_for_ship(ship_id UUID) RETURNS 
+CREATE OR REPLACE  FUNCTION stations_available_for_ship(ship_id UUID) RETURNS 
    TABLE (station_id UUID, capacity FLOAT, used_capacity FLOAT, dock_id UUID, num_docking_ports INTEGER, occupied BIGINT, weight FLOAT)
     AS $$
 BEGIN
@@ -110,8 +108,9 @@ BEGIN
          d.weight as weight
          from stations_view st 
          inner join docks_view d on (d.station_id = st.id and d.num_docking_ports-d.occupied>0)
+         inner join ship on (ship.id = ship_id)
          --inner join docks_view d on (d.station_id = st.id)
-         where st.capacity-st.used_capacity>=(select s.weight from ship s)
+         where st.capacity-st.used_capacity>=ship.weight
          -- group by (st.id, st.capacity, st.used_capacity)
       ) 
       select swc.station_id, swc.capacity, swc.used_capacity, swc.dock_id, swc.num_docking_ports, swc.occupied, swc.weight
@@ -120,15 +119,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
--- select * from get_next_available_docking_station_for_ship('632afa4d-6c76-4d56-967f-e61b4659d638');
-CREATE OR REPLACE FUNCTION get_next_available_docking_station_for_ship(ship_id UUID) RETURNS 
-   TABLE (dock_id UUID, station_id UUID, ship_weight FLOAT, available_capacity FLOAT, available_docks_at_station BIGINT, seconds_until_next_available INT)
-    AS $$
+-- select * from get_next_available_docking_station_for_ship('287c3674-3303-4ce4-a3d6-46bf7425a312');
+CREATE OR REPLACE FUNCTION get_next_available_docking_station_for_ship(_ship_id UUID) 
+RETURNS TABLE (dock_id UUID, station_id UUID, ship_weight FLOAT, available_capacity FLOAT, available_docks_at_station BIGINT, seconds_until_next_available INT) AS 
+$$
 BEGIN
-  return query
-      with ship as (
-         select id, weight from ships where id = ship_id
+--if the dock is reserved, we return that as the next available, it will be kept on hold and result as "occupied" until released or used for landing
+   IF EXISTS (SELECT FROM docked_ships ds where ds.ship_id = _ship_id) then
+      return query with ship as (
+         select id, weight from ships where id = _ship_id
+      )
+      select ds.dock_id, d.station_id, ship.weight as ship_weight, 
+      ship.weight as available_capacity, 1::bigint as available_docks_at_station, 0 as seconds_until_next_available
+      from docked_ships ds 
+      INNER JOIN ship on (ship.id=_ship_id)
+      INNER JOIN docks d on (d.id=ds.dock_id);
+   ELSE
+-- if the ship didn't reserve a dock already, we look for the first available, reserve it and return it   
+      return query with ship as (
+         select id, weight from ships where id = _ship_id
       ), stations_with_capacity as (
          select st.id, st.capacity-st.used_capacity as available_capacity,
          d.num_docking_ports-d.occupied as available_docks_at_station,
@@ -140,21 +149,21 @@ BEGIN
          inner join docks_view d on (d.station_id = st.id)
          --where capacity-used_capacity>(select weight from ship)
       ), next_available as ( 
-      select swc.dock_id, swc.station_id, (select weight from ship) as ship_weight, swc.available_capacity, swc.available_docks_at_station, 
+      select swc.dock_id, swc.station_id, ship.weight as ship_weight, swc.available_capacity, swc.available_docks_at_station, 
       CASE 
          when swc.seconds_until_next_available is null then 0
          ELSE (select extract(epoch from swc.seconds_until_next_available))::int
       END
       as seconds_until_next_available
       from stations_with_capacity swc 
+      inner join ship on (ship.id = _ship_id)
       order by available_capacity desc, available_docks_at_station desc, seconds_until_next_available asc limit 1
       ), reservation as (
          insert into docked_ships(dock_id, ship_id, waiting_for_ship_since)
-         select n.dock_id, ship_id, NOW() from next_available n
+         select n.dock_id, _ship_id, NOW() from next_available n
       )
       select * from next_available;
-
-
+   END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -163,7 +172,7 @@ CREATE OR REPLACE VIEW ships_view AS
    WITH docked as (
       SELECT s.id as id, s.weight as weight,
       ds.dock_id as dock_id FROM ships s 
-      LEFT JOIN docked_ships ds ON (s.id = ds.ship_id)
+      LEFT JOIN docked_ships ds ON (s.id = ds.ship_id AND ds.docked_since is not null)
    )
    select id, weight, dock_id,
    CASE 
