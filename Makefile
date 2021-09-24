@@ -65,7 +65,7 @@ envdetails:
 
 .PHONY: protodeps
 protodeps: 
-	go get github.com/favadi/protoc-go-inject-tag@v1.3.0
+	go install github.com/favadi/protoc-go-inject-tag@v1.3.0
 	go install \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
     google.golang.org/protobuf/cmd/protoc-gen-go \
