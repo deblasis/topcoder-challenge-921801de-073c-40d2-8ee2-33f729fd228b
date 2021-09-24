@@ -17,7 +17,7 @@ services:
     environment: 
       - APIGATEWAY=http://apigateway:8081
     depends_on:
-      - accountapi
+      - apigateway
     working_dir: /go/src/deblasis/stc-integrationtester
     volumes: 
       - .:/go/src/deblasis/stc-integrationtester
