@@ -115,7 +115,7 @@ build-on-host: proto makebins
 
 .PHONY: integration-tests-env
 integration-tests-env: proto makebins
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml build --parallel
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.ephemeral.yml build --parallel
 	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
 
 .PHONY: dockertest
