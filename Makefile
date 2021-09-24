@@ -15,8 +15,11 @@ DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
 INJECTPROTOTAGS = inject_prototags_ $(addprefix inject_prototags_,$(SERVICES))
 APIGATEWAY?=http://localhost:8081
 APIGATEWAY_NOPROTOCOL=$(shell echo $(APIGATEWAY) | sed -E 's/^\s*.*:\/\///g')
-
 WAIT4IT=./scripts/wait-for-it.sh
+
+PREFIX=/usr/local"
+BUFVERSION=1.0.0-rc2
+
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(1) services/$(1)/cmd/app/main.go
@@ -41,27 +44,22 @@ endef
 
 all: $(SERVICES)
 
-.PHONY: install-buf
-install-buf:
-	@echo "<<< Installing buf >>>"
 
-ifeq (, $(shell which buf)) 
-# Substitute BIN for your bin directory.
-# Substitute VERSION for the current released version.
-# Substitute BINARY_NAME for "buf", "protoc-gen-buf-breaking", or "protoc-gen-buf-lint".
-BIN="/usr/local/bin" && \
-VERSION="1.0.0-rc2" && \
-BINARY_NAME="buf" && \
-  curl -sSL \
-    "https://github.com/bufbuild/buf/releases/download/v${VERSION}/${BINARY_NAME}-$(uname -s)-$(uname -m)" \
-    -o "${BIN}/${BINARY_NAME}" && \
-  chmod +x "${BIN}/${BINARY_NAME}"
+ifeq (, $(shell which buf))
+@echo "must install"
 endif
 
-.PHONY: envdetails
-envdetails:
-	go version
-	go env
+
+.PHONY: install-buf
+install-buf:
+ifeq ("", "$(shell which buf)")
+		curl -sSL "https://github.com/bufbuild/buf/releases/download/v$(BUFVERSION)/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
+		tar -xvzf - -C "$(PREFIX)" --strip-components 1
+endif
+
+# ifeq (, $(shell which buf))
+# @echo "must install buf"
+# endif
 
 .PHONY: protodeps
 protodeps: 

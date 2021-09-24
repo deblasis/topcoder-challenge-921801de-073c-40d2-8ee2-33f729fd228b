@@ -8,8 +8,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.17.1'  
-      - name: Gather env info
-        run: make envdetails    
       - name: Build the stack
         run: make integration-tests-env
       - name: E2E Tests
