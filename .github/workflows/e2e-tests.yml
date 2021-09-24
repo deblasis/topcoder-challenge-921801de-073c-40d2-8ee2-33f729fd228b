@@ -11,4 +11,4 @@ jobs:
       - name: Build the stack
         run: DOCKERCOMPOSE="docker-compose" make integration-tests-env
       - name: E2E Tests
-        run: docker-compose run integrationtester
+        run: docker-compose -f docker-compose.yml -f docker-compose.ephemeral.yml run integrationtester
