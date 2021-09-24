@@ -5,7 +5,7 @@ GOOS ?= linux
 
 #built using Docker version 20.10.2, build 2291f61 on Windows with WSL2
 #depending on your setup, you might have to change the below line to DOCKERCOMPOSE = docker-compose 
-DOCKERCOMPOSE = docker compose
+DOCKERCOMPOSE = ${DOCKERCOMPOSE:-docker compose}
 
 SERVICES = apigateway auth_dbsvc centralcommand_dbsvc authsvc centralcommandsvc shippingstationsvc clessidrasvc
 MIGRATORS = auth_dbsvc_migrator centralcommand_dbsvc_migrator
@@ -13,7 +13,7 @@ SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
 INJECTPROTOTAGS = inject_prototags_ $(addprefix inject_prototags_,$(SERVICES))
-APIGATEWAY?=http://localhost:8081
+APIGATEWAY=$(APIGATEWAY:-http://localhost:8081}
 APIGATEWAY_NOPROTOCOL=$(shell echo $(APIGATEWAY) | sed -E 's/^\s*.*:\/\///g')
 WAIT4IT=./scripts/wait-for-it.sh
 
