@@ -44,12 +44,6 @@ endef
 
 all: $(SERVICES)
 
-
-ifeq (, $(shell which buf))
-@echo "must install"
-endif
-
-
 .PHONY: install-buf
 install-buf:
 ifeq ("", "$(shell which buf)")
