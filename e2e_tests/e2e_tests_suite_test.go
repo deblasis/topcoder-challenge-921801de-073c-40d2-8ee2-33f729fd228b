@@ -5,6 +5,7 @@ package e2e_tests
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/gavv/httpexpect/v2"
@@ -21,7 +22,12 @@ var (
 func TestE2ETests(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	client = httpexpect.New(&ginkgoTestReporter{}, "http://localhost:8081") //TODO CONFIG
+	target := "http://localhost:8081"
+	if envTarget := os.Getenv("APIGATEWAY"); envTarget != "" {
+		target = envTarget
+	}
+
+	client = httpexpect.New(&ginkgoTestReporter{}, target)
 	GinkgoWriter.Write([]byte("\n⏳ Initializing test harness, creating test users and getting their credentials...\n"))
 	personas = make(map[string]string)
 	personas[Persona_Command_Initial] = GetCommandUserToken(client)

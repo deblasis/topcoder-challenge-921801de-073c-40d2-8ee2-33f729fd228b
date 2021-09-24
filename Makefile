@@ -22,13 +22,13 @@ BUFVERSION=1.0.0-rc2
 
 
 define compile_service
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(1) services/$(1)/cmd/app/main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o ./build/deblasis-$(1) ./services/$(1)/cmd/app/main.go
 endef
 define compile_migrator
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(subst _migrator,,$(1))_migrator services/$(subst _migrator,,$(1))/cmd/migrator/main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o ./build/deblasis-$(subst _migrator,,$(1))_migrator ./services/$(subst _migrator,,$(1))/cmd/migrator/main.go
 endef
 define compile_seeder
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(subst _seeder,,$(1))_seeder services/$(subst _seeder,,$(1))/cmd/seeder/main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o ./build/deblasis-$(subst _seeder,,$(1))_seeder ./services/$(subst _seeder,,$(1))/cmd/seeder/main.go
 endef
 define make_docker_cleanbuild
 	docker build --no-cache --build-arg SVC_NAME=$(subst docker_clean_,,$(1)) --tag=deblasis/stc_$(subst docker_clean_,,$(1)) .
@@ -48,7 +48,7 @@ all: $(SERVICES)
 install-buf:
 ifeq ("", "$(shell which buf)")
 		curl -sSL "https://github.com/bufbuild/buf/releases/download/v$(BUFVERSION)/buf-$(shell uname -s)-$(shell uname -m).tar.gz" | \
-		sudo tar -xvzf - -C "$(PREFIX)" --strip-components 1
+		tar -xvzf - -C "$(PREFIX)" --strip-components 1
 endif
 
 .PHONY: protodeps
@@ -79,11 +79,11 @@ migrate-centralcommand_dbsvc: ## do migration
 seed-auth_dbsvc: ## do migration
 # the following commented line is one way to seed if the db is accessible from localhost
 ##	cd ./services/auth_dbsvc/cmd/seeder && go run main.go -file ../../scripts/seeding/users.csv
-# thie is a better approach that injects the file into the container and uses the current environment
-	docker cp ./services/auth_dbsvc/scripts/seeding $(shell docker ps -qf "name=^deblasis-stc_auth_dbsvc"):/seeding
-	docker exec -it $(shell docker ps -qf "name=^deblasis-stc_auth_dbsvc") /bin/bash -c "./seeder -file ./seeding/users.csv"
+# this is a better approach that injects the file into the container and uses the current environment
+	docker cp ./services/auth_dbsvc/scripts/seeding $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest"):/seeding
+	docker exec -it $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest") /bin/bash -c "./seeder -file ./seeding/users.csv"
 # the seeding seeds a tmp table, a service restart is required to seed the real table, this is for security reasons	
-	docker restart $(shell docker ps -qf "name=^deblasis-stc_auth_dbsvc")
+	docker restart $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest")
 
 .PHONY: gencert
 gencert:
@@ -94,37 +94,55 @@ gencert:
 	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
 	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
 
-	 
 
-.PHONY: build-parallel
-build-parallel: proto
+.PHONY: builder
+builder:
+	docker build . --tag=deblasis/stc_builder  
+
+.PHONY: dockerbuild
+docker-build: builder
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
-.PHONY: run-parallel
-run-parallel: build-parallel
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
+.PHONY: hostbuild
+host-build: proto binaries
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
 
-.PHONY: makebins
-makebins:
+.PHONY: integrationtests-build
+integrationtests-build: builder
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
+
+
+
+# .PHONY: build-parallel
+# build-parallel: proto
+# 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
+# .PHONY: run-parallel
+# run-parallel: build-parallel
+# 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
+
+
+.PHONY: integrationtests-up
+integrationtests-up: integrationtests-build
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
+
+.PHONY: integrationtests-run
+integrationtests-run: 
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up integrationtester
+
+
+.PHONY: binaries
+binaries:
 	make services
 	make migrators
 	make seeders
 
-.PHONY: build-on-host
-build-on-host: proto makebins
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
-
-.PHONY: integration-tests-env
-integration-tests-env: proto makebins
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.ephemeral.yml build --parallel
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
 
 .PHONY: dockertest
 dockertest:
 	go install github.com/onsi/ginkgo/ginkgo@v1.16.4
-	$(WAIT4IT) $(APIGATEWAY_NOPROTOCOL) --timeout=120 --strict -- ginkgo -race -cover -v -tags integration ./e2e_tests
+	ginkgo -race -v -tags integration ./e2e_tests
 
 .PHONY: run-fast
-run-fast: build-on-host
+run-fast: hostbuild
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --remove-orphans
 
 services: $(SERVICES)
