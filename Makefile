@@ -65,6 +65,13 @@ proto: protodeps install-buf
 	buf generate
 	make injectprototags
 
+.PHONY: binaries
+binaries:
+	make services
+	make migrators
+	make seeders
+
+
 .PHONY: migrate-auth_dbsvc
 migrate-auth_dbsvc: ## do migration
 	cd ./services/auth_dbsvc/cmd/migrator && go run main.go -dir ../../scripts/migrations -init
@@ -81,7 +88,7 @@ seed-auth_dbsvc: ## do migration
 ##	cd ./services/auth_dbsvc/cmd/seeder && go run main.go -file ../../scripts/seeding/users.csv
 # this is a better approach that injects the file into the container and uses the current environment
 	docker cp ./services/auth_dbsvc/scripts/seeding $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest"):/seeding
-	docker exec -it $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest") /bin/bash -c "./seeder -file ./seeding/users.csv"
+	docker exec -t $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest") /bin/bash -c "./seeder -file ./seeding/users.csv"
 # the seeding seeds a tmp table, a service restart is required to seed the real table, this is for security reasons	
 	docker restart $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest")
 
@@ -110,16 +117,6 @@ host-build: proto binaries
 integrationtests-build: builder
 	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
 
-
-
-# .PHONY: build-parallel
-# build-parallel: proto
-# 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
-# .PHONY: run-parallel
-# run-parallel: build-parallel
-# 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
-
-
 .PHONY: integrationtests-up
 integrationtests-up: integrationtests-build
 	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
@@ -129,11 +126,7 @@ integrationtests-run:
 	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up integrationtester
 
 
-.PHONY: binaries
-binaries:
-	make services
-	make migrators
-	make seeders
+
 
 
 .PHONY: dockertest
