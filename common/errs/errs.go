@@ -183,8 +183,6 @@ func ToProtoV1(e error) *common_v1.Error {
 
 	var ee *Err
 	if errors.As(e, &ee) {
-		fmt.Println(ee.Message)
-		fmt.Println(ee.Code)
 		return ee.ToProtoV1()
 	}
 

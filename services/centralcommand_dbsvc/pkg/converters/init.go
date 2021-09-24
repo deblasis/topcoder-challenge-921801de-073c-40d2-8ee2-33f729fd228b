@@ -14,15 +14,18 @@ import (
 func init() {
 
 	m.AddConversion((*float32)(nil), (**float32)(nil), func(in reflect.Value) (reflect.Value, error) {
-		return reflect.ValueOf(in.Float()), nil
+		r := float32(in.Float())
+		return reflect.ValueOf(&r), nil
 	})
 
 	m.AddConversion((*int64)(nil), (**int64)(nil), func(in reflect.Value) (reflect.Value, error) {
-		return reflect.ValueOf(in.Int()), nil
+		r := in.Int()
+		return reflect.ValueOf(&r), nil
 	})
 
 	m.AddConversion((*int32)(nil), (**int32)(nil), func(in reflect.Value) (reflect.Value, error) {
-		return reflect.ValueOf(in.Int()), nil
+		r := int32(in.Int())
+		return reflect.ValueOf(&r), nil
 	})
 
 	m.AddConversion((**float32)(nil), (*float32)(nil), func(in reflect.Value) (reflect.Value, error) {

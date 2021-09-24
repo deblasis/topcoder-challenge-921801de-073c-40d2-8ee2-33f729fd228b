@@ -15,7 +15,7 @@ shippingstation:
   dockholdingperiod: 120
 
 clessidra:
-  pollinterval: 2
+  pollinginterval: 2
 
 # ssl:
 #   serverCert: ../../../../certs/deblasis-stc.pem
