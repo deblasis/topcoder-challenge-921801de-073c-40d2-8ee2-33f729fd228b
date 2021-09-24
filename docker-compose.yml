@@ -3,11 +3,6 @@ version: '3.6'
 services:
   consul:
     image: consul:1.10.2
-    ports:
-      - 8300:8300
-      - 8400:8400
-      - 8500:8500
-      - 8600:8600
     environment: 
       NODE: consul  
       CONSUL_LOCAL_CONFIG: "{'skip_leave_on_interrupt': true}"
@@ -28,8 +23,6 @@ services:
 
   apigateway:
     image: deblasis/stc_apigateway:latest
-    ports:
-      - 8081:8081
     depends_on: 
       - consul
       - authsvc
@@ -67,8 +60,6 @@ services:
       DEBLASIS_CONSULT_HOST: consul
       DEBLASIS_CONSULT_PORT: 8500
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    ports:
-      - "5432:5432"
 
     networks: 
       - auth_backend    
@@ -82,9 +73,6 @@ services:
 
   auth_dbsvc:
     image: deblasis/stc_auth_dbsvc:latest
-    ports:
-      - 9181:9181
-      - 9182:9182
     depends_on: 
       - consul
       - auth_db
@@ -106,9 +94,6 @@ services:
 
   authsvc:
     image: deblasis/stc_authsvc:latest
-    ports:
-      - 9081:9081
-      - 9082:9082
     depends_on: 
       - consul
       - auth_dbsvc
@@ -144,8 +129,6 @@ services:
       DEBLASIS_CONSULT_HOST: consul
       DEBLASIS_CONSULT_PORT: 8500
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
-    ports:
-      - "5433:5432"
     networks: 
       - net  
     healthcheck:
@@ -157,9 +140,6 @@ services:
 
   centralcommand_dbsvc:
     image: deblasis/stc_centralcommand_dbsvc:latest
-    ports:
-      - 9381:9381
-      - 9382:9382
     depends_on: 
       - consul
       - centralcommand_db
@@ -181,9 +161,6 @@ services:
 
   centralcommandsvc:
     image: deblasis/stc_centralcommandsvc:latest
-    ports:
-      - 9481:9481
-      - 9482:9482
     depends_on: 
       - consul
       - centralcommand_dbsvc
@@ -205,9 +182,6 @@ services:
 
   shippingstationsvc:
     image: deblasis/stc_shippingstationsvc:latest
-    ports:
-      - 9281:9281
-      - 9282:9282
     depends_on: 
       - consul
       - centralcommandsvc
@@ -228,8 +202,6 @@ services:
 
   clessidrasvc:
     image: deblasis/stc_clessidrasvc:latest
-    ports:
-      - 9500:9500
     depends_on: 
       - consul
       - centralcommand_dbsvc
