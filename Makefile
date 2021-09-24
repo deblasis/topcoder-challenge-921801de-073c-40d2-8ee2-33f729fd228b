@@ -43,7 +43,9 @@ all: $(SERVICES)
 
 .PHONY: install-buf
 install-buf:
- ifeq (, $(shell which buf))
+	@echo "<<< Installing buf >>>"
+
+ifeq (, $(shell which buf)) 
 # Substitute BIN for your bin directory.
 # Substitute VERSION for the current released version.
 # Substitute BINARY_NAME for "buf", "protoc-gen-buf-breaking", or "protoc-gen-buf-lint".
@@ -54,7 +56,7 @@ BINARY_NAME="buf" && \
     "https://github.com/bufbuild/buf/releases/download/v${VERSION}/${BINARY_NAME}-$(uname -s)-$(uname -m)" \
     -o "${BIN}/${BINARY_NAME}" && \
   chmod +x "${BIN}/${BINARY_NAME}"
- endif
+endif
 
 .PHONY: envdetails
 envdetails:
@@ -63,8 +65,7 @@ envdetails:
 
 .PHONY: protodeps
 protodeps: 
-# go install github.com/favadi/protoc-go-inject-tag@v1.3.0
-	go install github.com/favadi/protoc-go-inject-tag
+	go get github.com/favadi/protoc-go-inject-tag@v1.3.0
 	go install \
     github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
     google.golang.org/protobuf/cmd/protoc-gen-go \
