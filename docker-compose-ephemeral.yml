@@ -1,0 +1,26 @@
+version: '3.6'
+
+services:
+  auth_db:
+    command: ["postgres", "-c", "log_statement=all"]
+    volumes: []
+
+  centralcommand_db:
+    image: postgres:13.4-alpine3.14
+    command: ["postgres", "-c", "log_statement=all"]
+    volumes: []
+
+
+
+  integrationtester:
+    image: golang:1.17 
+    environment: 
+      - APIGATEWAY=http://apigateway:8081
+    depends_on:
+      - accountapi
+    working_dir: /go/src/deblasis/stc-integrationtester
+    volumes: 
+      - .:/go/src/deblasis/stc-integrationtester
+    command: "make dockertest"
+    networks:  
+      net:    

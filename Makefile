@@ -13,7 +13,10 @@ SEEDERS = auth_dbsvc_seeder
 DOCKERBUILD = $(addprefix docker_,$(SERVICES))
 DOCKERCLEANBUILD = $(addprefix docker_clean_,$(SERVICES))
 INJECTPROTOTAGS = inject_prototags_ $(addprefix inject_prototags_,$(SERVICES))
+APIGATEWAY?=http://localhost:8081
+APIGATEWAY_NOPROTOCOL=$(shell echo $(APIGATEWAY) | sed -E 's/^\s*.*:\/\///g')
 
+WAIT4IT=./scripts/wait-for-it.sh
 
 define compile_service
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) GOARCH=$(GOARCH) GOARM=$(GOARM) go build -ldflags "-s -w" -o build/deblasis-$(1) services/$(1)/cmd/app/main.go
@@ -89,12 +92,25 @@ build-parallel: proto
 run-parallel: build-parallel
 	$(DOCKERCOMPOSE) -f docker-compose.yml up --force-recreate --remove-orphans
 
-.PHONY: build-on-host
-build-on-host: proto
+.PHONY: makebins
+makebins:
 	make services
 	make migrators
 	make seeders
+
+.PHONY: build-on-host
+build-on-host: proto makebins
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-hostbuild.yml build --parallel
+
+.PHONY: integration-tests-env
+integration-tests-env: proto makebins
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-hostbuild.yml -f docker-compose-ephemeral.yml build --parallel
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-hostbuild.yml -f docker-compose-ephemeral.yml up -d --force-recreate --remove-orphans --abort-on-container-exit	
+
+.PHONY: dockertest
+dockertest:
+	go install github.com/onsi/ginkgo/ginkgo@v1.16.4
+	$(WAIT4IT) $(APIGATEWAY_NOPROTOCOL) --timeout=120 --strict -- ginkgo -race -cover -v -tags integration ./e2e_tests
 
 .PHONY: run-fast
 run-fast: build-on-host
