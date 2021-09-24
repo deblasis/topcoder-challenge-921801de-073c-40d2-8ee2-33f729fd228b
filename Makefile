@@ -101,7 +101,7 @@ build-parallel: proto
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
 .PHONY: run-parallel
 run-parallel: build-parallel
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
 
 .PHONY: makebins
 makebins:
@@ -125,7 +125,7 @@ dockertest:
 
 .PHONY: run-fast
 run-fast: build-on-host
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.prod.yml up --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --remove-orphans
 
 services: $(SERVICES)
 migrators: $(MIGRATORS)

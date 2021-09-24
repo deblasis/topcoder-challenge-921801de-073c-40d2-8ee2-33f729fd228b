@@ -1,6 +1,10 @@
 version: '3.6'
 
 services:
+  apigateway:
+    ports:
+    - 8081:8081
+    
   auth_db:
     command: ["postgres"]
     volumes:
