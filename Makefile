@@ -41,6 +41,12 @@ endef
 
 all: $(SERVICES)
 
+
+.PHONY: envdetails
+envdetails:
+	go version
+
+.PHONY: protodeps
 protodeps:
 	go install github.com/favadi/protoc-go-inject-tag@v1.3.0
 	go install \
@@ -49,7 +55,7 @@ protodeps:
     google.golang.org/grpc/cmd/protoc-gen-go-grpc
 
 
-PHONY: proto
+.PHONY: proto
 proto: protodeps
 	buf generate
 	make injectprototags
