@@ -41,6 +41,20 @@ endef
 
 all: $(SERVICES)
 
+.PHONY: install-buf
+install-buf:
+ ifeq (, $(shell which buf))
+# Substitute BIN for your bin directory.
+# Substitute VERSION for the current released version.
+# Substitute BINARY_NAME for "buf", "protoc-gen-buf-breaking", or "protoc-gen-buf-lint".
+BIN="/usr/local/bin" && \
+VERSION="1.0.0-rc2" && \
+BINARY_NAME="buf" && \
+  curl -sSL \
+    "https://github.com/bufbuild/buf/releases/download/v${VERSION}/${BINARY_NAME}-$(uname -s)-$(uname -m)" \
+    -o "${BIN}/${BINARY_NAME}" && \
+  chmod +x "${BIN}/${BINARY_NAME}"
+ endif
 
 .PHONY: envdetails
 envdetails:
@@ -48,7 +62,7 @@ envdetails:
 	go env
 
 .PHONY: protodeps
-protodeps:
+protodeps: 
 # go install github.com/favadi/protoc-go-inject-tag@v1.3.0
 	go install github.com/favadi/protoc-go-inject-tag
 	go install \
@@ -58,7 +72,7 @@ protodeps:
 
 
 .PHONY: proto
-proto: protodeps
+proto: protodeps install-buf
 	buf generate
 	make injectprototags
 
