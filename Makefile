@@ -45,6 +45,7 @@ all: $(SERVICES)
 .PHONY: envdetails
 envdetails:
 	go version
+	go env
 
 .PHONY: protodeps
 protodeps:
