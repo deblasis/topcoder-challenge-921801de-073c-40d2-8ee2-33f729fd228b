@@ -19,6 +19,7 @@ import (
 	authpb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	sspb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
+	"github.com/etherlabsio/healthcheck/v2"
 
 	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
 
@@ -29,7 +30,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -153,7 +153,28 @@ func main() {
 			go func() {
 				logger.Log("transport", "HTTP", "addr", httpAddr)
 
-				router := LoggerMw(logger, allowCORS(NewRouter(authGw, ccGw, ssGw)), "grpc-gw")
+				healthchecks := []healthcheck.Option{
+					healthcheck.WithChecker(
+						"AuthService", healthcheck.CheckerFunc(func(ctx context.Context) error {
+							timeout := 2 * time.Second
+							_, err := net.DialTimeout("tcp", cfg.APIGateway.AuthServiceGRPCEndpoint, timeout)
+							return err
+						})),
+					healthcheck.WithChecker(
+						"CentralCommandService", healthcheck.CheckerFunc(func(ctx context.Context) error {
+							timeout := 2 * time.Second
+							_, err := net.DialTimeout("tcp", cfg.APIGateway.CentralCommandServiceGRPCEndpoint, timeout)
+							return err
+						})),
+					healthcheck.WithChecker(
+						"ShippingStationService", healthcheck.CheckerFunc(func(ctx context.Context) error {
+							timeout := 2 * time.Second
+							_, err := net.DialTimeout("tcp", cfg.APIGateway.ShippingStationGRPCEndpoint, timeout)
+							return err
+						})),
+				}
+
+				router := LoggerMw(logger, allowCORS(NewRouter(authGw, ccGw, ssGw, healthchecks)), "grpc-gw")
 
 				errc <- http.ListenAndServe(fmt.Sprintf(":%v", cfg.HttpServerPort), router)
 
@@ -290,18 +311,6 @@ func preflightHandler(w http.ResponseWriter, r *http.Request) {
 	glog.Infof("preflight request for %s", r.URL.Path)
 }
 
-// healthzServer returns a simple health handler which returns ok.
-func healthzServer(conn *grpc.ClientConn) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		if s := conn.GetState(); s != connectivity.Ready {
-			http.Error(w, fmt.Sprintf("grpc server is %s", s), http.StatusBadGateway)
-			return
-		}
-		fmt.Fprintln(w, "ok")
-	}
-}
-
 type Route struct {
 	Name        string
 	Method      string
@@ -311,7 +320,7 @@ type Route struct {
 
 type Routes []Route
 
-func NewRouter(authGw http.Handler, ccGw http.Handler, ssGw http.Handler) *mux.Router {
+func NewRouter(authGw http.Handler, ccGw http.Handler, ssGw http.Handler, healthchecks []healthcheck.Option) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
 	//TODO index route, maybe swagger?
@@ -392,6 +401,9 @@ func NewRouter(authGw http.Handler, ccGw http.Handler, ssGw http.Handler) *mux.R
 			Handler(handler)
 	}
 
+	if len(healthchecks) > 0 {
+		router.Handle("/health", healthcheck.Handler(healthchecks...))
+	}
 	return router
 }
 

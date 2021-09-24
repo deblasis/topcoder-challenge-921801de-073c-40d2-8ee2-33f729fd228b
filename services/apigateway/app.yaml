@@ -15,7 +15,7 @@ apigateway:
   retrytimeoutms: 5000
   authservice_grpcendpoint: deblasis-v1-AuthService.service.consul:9082
   centralcommandservice_grpcendpoint: deblasis-v1-CentralCommandService.service.consul:9482
-  shippingstationendpoint: deblasis-v1-ShippingStationService.service.consul:9282
+  shippingstationservice_grpcendpoint: deblasis-v1-ShippingStationService.service.consul:9282
 
 
 # ssl:
