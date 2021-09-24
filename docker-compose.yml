@@ -69,8 +69,7 @@ services:
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "5432:5432"
-    volumes:
-      - data_auth:/var/lib/postgresql/data
+
     networks: 
       - auth_backend    
       - net  
@@ -133,9 +132,6 @@ services:
       retries: 3
 
 
-
-
-
   centralcommand_db:
     image: postgres:13.4-alpine3.14
     command: ["postgres"] # , "-c", "log_statement=all"]
@@ -150,8 +146,6 @@ services:
       DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
     ports:
       - "5433:5432"
-    volumes:
-      - data_centralcommand:/var/lib/postgresql/data
     networks: 
       - net  
     healthcheck:
@@ -255,98 +249,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3  
-      
-      
-      
-volumes:
-  data_auth:      
-  data_centralcommand:      
-  data_shippingstation:      
-
-  # prometheus:
-  #   image: prom/prometheus
-  #   depends_on:
-  #     - fluentd
-  #   ports:
-  #     - 9090:9090
-  #   volumes:
-  #     - ./services/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: alpha.efk.prometheus
-  #   networks:
-  #     - net
-
-  # grafana:
-  #   image: grafana/grafana
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=password
-  #   depends_on:
-  #     - fluentd
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - ./extra/grafana_db:/var/lib/grafana grafana/grafana
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-
-  #       tag: alpha.efk.grafana
-  #   networks:
-  #     - net
-
-  # fluentd:
-  #   build: ./services/fluentd
-  #   depends_on:
-  #     - elasticsearch
-  #   volumes:
-  #     - ./services/fluentd/conf:/fluentd/etc
-  #   ports:
-  #     - 24224:24224
-  #     - 24224:24224/udp
-  #   networks:
-  #     - net
-
-  # elasticsearch:
-  #   image: elasticsearch:6.8.18
-  #   volumes:
-  #     - ./esdata:/usr/share/elasticsearch/data
-  #   environment:
-  #     #- bootstrap.memory_lock=true
-  #     #- "ES_JAVA_OPTS=-Xms256m -Xms256m"
-  #     - discovery.type=single-node
-  #   expose:
-  #     - 9200
-  #   ports:
-  #     - 9200:9200
-  #   networks:
-  #     - net
-
-  # kibana:
-  #   image: kibana:6.8.18
-  #   depends_on:
-  #     - elasticsearch
-  #     - fluentd
-  #   ports:
-  #     - 5601:5601
-  #   logging:
-  #     driver: fluentd
-  #     options:
-  #       fluentd-address: localhost:24224
-  #       tag: alpha.efk.kibana
-  #   networks:
-  #     - net      
-
-
-
-
-
-
-
-  
 
 networks: 
   #auth_frontend:    
@@ -354,9 +256,3 @@ networks:
   centralcommand_backend:
   net:
   ##  driver: bridge
-
-  consul_network:
-    driver: bridge
-    ipam:
-     config:
-       - subnet: 33.10.0.0/16  

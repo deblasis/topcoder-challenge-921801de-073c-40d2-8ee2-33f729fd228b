@@ -98,10 +98,10 @@ gencert:
 
 .PHONY: build-parallel
 build-parallel: proto
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-build.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
 .PHONY: run-parallel
 run-parallel: build-parallel
-	$(DOCKERCOMPOSE) -f docker-compose.yml up --force-recreate --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.prod.yml up --force-recreate --remove-orphans
 
 .PHONY: makebins
 makebins:
@@ -111,12 +111,12 @@ makebins:
 
 .PHONY: build-on-host
 build-on-host: proto makebins
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-hostbuild.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
 
 .PHONY: integration-tests-env
 integration-tests-env: proto makebins
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-ephemeral.yml build --parallel
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose-ephemeral.yml up -d --force-recreate --remove-orphans
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml build --parallel
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
 
 .PHONY: dockertest
 dockertest:
@@ -125,7 +125,7 @@ dockertest:
 
 .PHONY: run-fast
 run-fast: build-on-host
-	$(DOCKERCOMPOSE) -f docker-compose.yml up --remove-orphans
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.prod.yml up --remove-orphans
 
 services: $(SERVICES)
 migrators: $(MIGRATORS)

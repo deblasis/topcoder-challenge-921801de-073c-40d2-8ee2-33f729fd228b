@@ -3,12 +3,9 @@ version: '3.6'
 services:
   auth_db:
     command: ["postgres", "-c", "log_statement=all"]
-    volumes: []
 
   centralcommand_db:
-    image: postgres:13.4-alpine3.14
     command: ["postgres", "-c", "log_statement=all"]
-    volumes: []
 
 
 
