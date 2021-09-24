@@ -19,12 +19,12 @@ CREATE TABLE if not exists docks(
 );
 
 
-
 CREATE TABLE if not exists docked_ships(
    dock_id UUID NOT NULL,
    ship_id UUID NOT NULL UNIQUE,
-   docked_since TIMESTAMP,
+   docked_since TIMESTAMP NULL,
    dock_duration INT,
+   waiting_for_ship_since TIMESTAMP,
 
    PRIMARY KEY(dock_id, ship_id)
 );
@@ -36,6 +36,18 @@ DECLARE ret INTEGER;
 BEGIN
   WITH deleted AS (
      DELETE FROM docked_ships WHERE docked_since + INTERVAL '1 second'*dock_duration < NOW() RETURNING *
+  ) select count(*) into ret from deleted;
+  RETURN ret;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION reservations_expired(dock_holding_period INT) RETURNS INTEGER
+    AS $$
+DECLARE ret INTEGER;    
+BEGIN
+  WITH deleted AS (
+     DELETE FROM docked_ships WHERE waiting_for_ship_since + INTERVAL '1 second'*dock_holding_period < NOW() RETURNING *
   ) select count(*) into ret from deleted;
   RETURN ret;
 END;
@@ -127,7 +139,7 @@ BEGIN
          --inner join docks_view d on (d.station_id = st.id and d.num_docking_ports-d.occupied>0)
          inner join docks_view d on (d.station_id = st.id)
          --where capacity-used_capacity>(select weight from ship)
-      ) 
+      ), next_available as ( 
       select swc.dock_id, swc.station_id, (select weight from ship) as ship_weight, swc.available_capacity, swc.available_docks_at_station, 
       CASE 
          when swc.seconds_until_next_available is null then 0
@@ -135,7 +147,14 @@ BEGIN
       END
       as seconds_until_next_available
       from stations_with_capacity swc 
-      order by available_capacity desc, available_docks_at_station desc, seconds_until_next_available asc limit 1;
+      order by available_capacity desc, available_docks_at_station desc, seconds_until_next_available asc limit 1
+      ), reservation as (
+         insert into docked_ships(dock_id, ship_id, waiting_for_ship_since)
+         select n.dock_id, ship_id, NOW() from next_available n
+      )
+      select * from next_available;
+
+
 END;
 $$ LANGUAGE plpgsql;
 

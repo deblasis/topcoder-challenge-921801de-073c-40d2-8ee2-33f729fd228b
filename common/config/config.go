@@ -27,6 +27,9 @@ type Config struct {
 	APIGateway APIGatewayConfig `mapstructure:"apigateway"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
 
+	ShippingStation ShippingStationConfig `mapstructure:"shippingstation"`
+	Clessidra       ClessidraConfig       `mapstructure:"clessidra"`
+
 	Logger log.Logger
 }
 
@@ -70,6 +73,13 @@ type APIGatewayConfig struct {
 	AuthServiceGRPCEndpoint           string `mapstructure:"authservice_grpcendpoint"`
 	CentralCommandServiceGRPCEndpoint string `mapstructure:"centralcommandservice_grpcendpoint"`
 	ShippingStationGRPCEndpoint       string `mapstructure:"shippingstationservice_grpcendpoint"`
+}
+
+type ShippingStationConfig struct {
+	DockHoldingPeriod int
+}
+type ClessidraConfig struct {
+	PollingInterval int64
 }
 
 // LoadConfig load config from file
