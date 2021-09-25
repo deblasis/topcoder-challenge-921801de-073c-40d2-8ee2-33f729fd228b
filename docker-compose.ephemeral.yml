@@ -13,6 +13,7 @@ services:
     image: golang:1.17 
     environment: 
       - APIGATEWAY=http://apigateway:8081
+      - CENTRALCOMMAND_AUX_DBENDPOINT=centralcommand_dbsvc:9383
     depends_on:
       - apigateway
     working_dir: /go/src/deblasis/stc-integrationtester

@@ -129,8 +129,8 @@ builder:
 docker-build: builder
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
 	
-.PHONY: hostbuild
-host-build: proto binaries
+.PHONY: host-build
+host-build: proto binaries builder
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
 
 .PHONY: integrationtests-build
@@ -155,7 +155,7 @@ dockertest:
 	ginkgo -race -v -tags integration ./e2e_tests
 
 .PHONY: run-fast
-run-fast: hostbuild
+run-fast: host-build
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --remove-orphans
 
 services: $(SERVICES)

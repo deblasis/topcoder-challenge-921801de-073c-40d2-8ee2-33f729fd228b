@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package deblasis.state.v1;
+
+import "v1/error.proto";
+
+option go_package = "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/proto/v1;centralcommand_dbsvc_v1";
+
+service CentralCommandDBAuxService {
+  rpc Cleanup (CleanupRequest) returns (CleanupResponse) {}
+}
+message CleanupRequest{}
+message CleanupResponse{
+  deblasis.common.v1.Error error = 1;
+}

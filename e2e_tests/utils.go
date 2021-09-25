@@ -4,10 +4,18 @@
 package e2e_tests
 
 import (
+	"context"
+	"os"
+
+	"github.com/go-kit/kit/log"
+
 	"deblasis.net/space-traffic-control/common/consts"
+	centralcommand_dbsvc_v1 "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
+	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"
 	"github.com/bxcodec/faker/v3"
 	"github.com/gavv/httpexpect/v2"
 	. "github.com/onsi/gomega"
+	"google.golang.org/grpc"
 )
 
 func GetCommandUserToken(client *httpexpect.Expect) string {
@@ -109,4 +117,28 @@ func bootstrapInitialUsers() {
 		}
 	}
 
+}
+
+func CleanupDB(ctx context.Context, logger log.Logger) error {
+	var (
+		conn *grpc.ClientConn
+		err  error
+	)
+	target := "localhost:9383"
+	if envTarget := os.Getenv("CENTRALCOMMAND_AUX_DBENDPOINT"); envTarget != "" {
+		target = envTarget
+	}
+
+	conn, err = grpc.Dial(target, grpc.WithInsecure())
+	defer conn.Close()
+	if err != nil {
+		return err
+	}
+
+	client := transport.NewAuxGrpcClient(conn, logger)
+	resp, err := client.Cleanup(ctx, &centralcommand_dbsvc_v1.CleanupRequest{})
+	if err != nil {
+		return err
+	}
+	return resp.Error
 }

@@ -14,9 +14,10 @@ const configFileName = "app"
 
 // Config declare the application configuration variables
 type Config struct {
-	ListenAddr     string
-	HttpServerPort string
-	GrpcServerPort string
+	ListenAddr        string
+	HttpServerPort    string
+	GrpcServerPort    string
+	AuxGrpcServerPort string
 
 	BindOnLocalhost bool
 
