@@ -95,10 +95,9 @@ seed-auth_dbsvc: ## do migration
 .PHONY: certdeps
 certdeps:
 	sudo apt install libnss3-tools
-	git clone https://github.com/FiloSottile/mkcert && cd mkcert \
-	&& go build -ldflags "-X main.Version=$(git describe --tags)" \
-	&& cp ./mkcert/mkcert /usr/local/bin/mkcert
-
+	wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64 \
+	&& chmod +x mkcert-v1.4.3-linux-amd64 \
+	&& mv mkcert-v1.4.3-linux-amd64 /usr/local/bin/mkcert
 
 .PHONY: gencert
 gencert: certdeps
