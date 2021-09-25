@@ -97,7 +97,7 @@ certdeps:
 	sudo apt install libnss3-tools
 	git clone https://github.com/FiloSottile/mkcert && cd mkcert \
 	&& go build -ldflags "-X main.Version=$(git describe --tags)" \
-	&& cp mkcert/mkcert /usr/local/bin/mkcert
+	&& cp ./mkcert/mkcert /usr/local/bin/mkcert
 
 
 .PHONY: gencert
