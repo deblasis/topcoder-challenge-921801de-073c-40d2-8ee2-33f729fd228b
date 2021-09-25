@@ -9,7 +9,7 @@ do
     then
         echo ⏳ [status:$status] waiting for apigateway... 
         sleep 5
-    elif
+    else
         echo ✅ apigateway ready!
         break
     fi
