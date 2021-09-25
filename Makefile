@@ -94,7 +94,8 @@ seed-auth_dbsvc: ## do migration
 
 .PHONY: gencert
 gencert:
-	docker build -f ./common/tools/jose-jwk/Dockerfile ./common/tools/jose-jwk -t jose-jwt \
+	mkdir -p /certs \
+	&& docker build -f ./common/tools/jose-jwk/Dockerfile ./common/tools/jose-jwk -t jose-jwt \
 	&& docker run jose-jwt -c "jose jwk gen -i '{\"alg\": \"RS256\"}'" > ./certs/jwk-private.json \
 	&& cat ./certs/jwk-private.json | jq '{kid: "$(shell openssl rand -base64 32)", alg: .alg, kty: .kty , use: "sig", n: .n , e: .e }'  > ./certs/jwk.json \
 	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
