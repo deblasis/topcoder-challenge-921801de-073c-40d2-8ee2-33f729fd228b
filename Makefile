@@ -92,8 +92,15 @@ seed-auth_dbsvc: ## do migration
 # the seeding seeds a tmp table, a service restart is required to seed the real table, this is for security reasons	
 	docker restart $(shell docker ps -qf "ancestor=deblasis/stc_auth_dbsvc:latest")
 
+.PHONY: certdeps
+certdeps:
+	sudo apt install libnss3-tools
+	git clone https://github.com/FiloSottile/mkcert && cd mkcert \
+	&& go build -ldflags "-X main.Version=$(git describe --tags)" 
+	
+
 .PHONY: gencert
-gencert:
+gencert: certdeps
 	mkdir -p ./certs \
 	&& docker build -f ./common/tools/jose-jwk/Dockerfile ./common/tools/jose-jwk -t jose-jwt \
 	&& docker run jose-jwt -c "jose jwk gen -i '{\"alg\": \"RS256\"}'" > ./certs/jwk-private.json \
