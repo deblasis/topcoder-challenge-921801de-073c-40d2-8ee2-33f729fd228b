@@ -10,7 +10,7 @@ services:
   centralcommand_dbsvc:
     environment:
 # this enables the auxiliary endpoint that enables destructive operations like truncating tables during testing...
-      - DEBLASIS_AUXGRPCSERVERPORT: 9383
+      DEBLASIS_AUXGRPCSERVERPORT: 9383
 
   integrationtester:
     image: golang:1.17 
