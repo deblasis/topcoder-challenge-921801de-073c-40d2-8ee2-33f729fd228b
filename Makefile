@@ -120,7 +120,7 @@ integrationtests-build: builder
 
 .PHONY: integrationtests-up
 integrationtests-up: integrationtests-build
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up  --force-recreate --remove-orphans
 
 .PHONY: integrationtests-run
 integrationtests-run: 
