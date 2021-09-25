@@ -28,7 +28,7 @@ RUN apk update && apk upgrade && apk add bash && apk add supervisor
 RUN mkdir -p /var/log/supervisor
 COPY --from=build_base /bin/consul /bin/goreman /bin/
 COPY --from=server_builder /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh /Procfile  /
-
+COPY ./certs/jwt.pem.pub /certs/jwt.pem.pub
 
 ENTRYPOINT [ "goreman" ]
 CMD [ "-f", "/Procfile", "start" ]

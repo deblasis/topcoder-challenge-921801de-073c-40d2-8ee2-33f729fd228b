@@ -40,5 +40,4 @@ COPY ./services ./services
 COPY ./scripts ./scripts
 COPY ./scripts/*.sh /
 
-
 RUN make binaries

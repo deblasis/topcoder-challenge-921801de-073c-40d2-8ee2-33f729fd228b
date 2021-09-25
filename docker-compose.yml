@@ -27,12 +27,12 @@ services:
       - consul
       - authsvc
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/apigateway/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
      DEBLASIS_APIGATEWAY_AUTHSERVICE_GRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
      DEBLASIS_APIGATEWAY_CENTRALCOMMANDSERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
      DEBLASIS_APIGATEWAY_SHIPPINGSTATIONSERVICE_GRPCENDPOINT: deblasis-v1-ShippingStationService.service.consul:9282
@@ -77,13 +77,13 @@ services:
       - consul
       - auth_db
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/auth_dbsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_DB_ADDRESS: auth_db:5432
-     DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    #  DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net
     healthcheck:
@@ -98,10 +98,10 @@ services:
       - consul
       - auth_dbsvc
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/authsvc/app.yaml:/app.yaml
-      - ./certs/jwt.pem.key:/certs/jwt.pem.key
-      - ./certs/jwt.pem.pub:/certs/jwt.pem.pub
+      # - ./certs/jwt.pem.key:/certs/jwt.pem.key
+      # - ./certs/jwt.pem.pub:/certs/jwt.pem.pub
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
@@ -144,13 +144,13 @@ services:
       - consul
       - centralcommand_db
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/centralcommand_dbsvc/app.yaml:/app.yaml
     environment: 
       DEBLASIS_BINDONLOCALHOST: "false"
       DEBLASIS_DB_ADDRESS: centralcommand_db:5432
-      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-      DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+      # DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
+      # DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net
     healthcheck:
@@ -165,12 +165,12 @@ services:
       - consul
       - centralcommand_dbsvc
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/centralcommandsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net      
     healthcheck:
@@ -186,12 +186,12 @@ services:
       - consul
       - centralcommandsvc
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/shippingstationsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-     DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
+    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net      
     healthcheck:
@@ -206,7 +206,7 @@ services:
       - consul
       - centralcommand_dbsvc
     volumes:
-      - ./certs:/certs
+      # - ./certs:/certs
       - ./services/clessidrasvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_CENTRALCOMMANDDB: centralcommand_db:5432
