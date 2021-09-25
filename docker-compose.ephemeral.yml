@@ -17,19 +17,9 @@ services:
       - apigateway
     working_dir: /go/src/deblasis/stc-integrationtester
     volumes: 
+      - ./e2e_tests/entrypoint.sh:/entrypoint.sh
       - .:/go/src/deblasis/stc-integrationtester
-    command: |
-      bash -c 'while [[ true ]]
-      do
-        status="$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health)"
-        if [[ $status != "200" ]]
-        then
-          echo ⏳ [status:$status] waiting for apigateway... 
-          sleep 5
-        fi
-      done
-      echo ✅ apigateway ready!
-      make dockertest'
+    command: /entrypoint.sh
     # command: bash -c 'while [[ "201" != "200" ]]; do echo $$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health); sleep 5; done; echo ✅ apigateway ready!;make dockertest'
     networks:  
       net:    
