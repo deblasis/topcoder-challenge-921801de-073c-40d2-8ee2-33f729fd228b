@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CentralCommandSvc", func() {
+var _ = Describe("ShippingStationSvc", func() {
 
 	It("Testing harness should be initialized successfully", func() {
 		Expect(client).NotTo(BeNil())
@@ -198,12 +198,12 @@ var _ = Describe("CentralCommandSvc", func() {
 		})
 		When("a Station token is provided", func() {
 			BeforeEach(func() {
-				stationClient = client.Builder(func(r *httpexpect.Request) {
+				shipClient = client.Builder(func(r *httpexpect.Request) {
 					r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_DeathStar])
 				})
 			})
 			It("should fail returning 400", func() {
-				stationClient.GET(CentralCommandService_AllStations).
+				shipClient.GET(CentralCommandService_AllStations).
 					Expect().Status(http.StatusBadRequest)
 			})
 		})
@@ -225,73 +225,34 @@ var _ = Describe("CentralCommandSvc", func() {
 		When("a Ship token is provided", func() {
 			BeforeEach(func() {
 				newShipToken := GetNewShipUserToken(client)
-				shipClient = client.Builder(func(r *httpexpect.Request) {
+				stationClient = client.Builder(func(r *httpexpect.Request) {
 					r.WithHeader("Authorization", "Bearer "+newShipToken)
 				})
 			})
 			It("should succeed returning 200", func() {
-				validCall := shipClient.GET(CentralCommandService_AllStations).
+				validCall := stationClient.GET(CentralCommandService_AllStations).
 					Expect()
 
 				validCall.Status(http.StatusOK)
 
 				validCall.JSON().Schema(GetAllStationsResponseSchema)
 
+				// validCall.Body().Empty()
+				// Expect(validCall.Raw().ContentLength).To(BeEquivalentTo(0))
+
+				// stationClient.GET(CentralCommandService_AllStations).
+				// 	Expect().Status(http.StatusBadRequest)
+				// stationClient.GET(CentralCommandService_AllStations).
+				// 	Expect().Status(http.StatusBadRequest)
+				// stationClient.GET(CentralCommandService_AllStations).
+				// 	Expect().Status(http.StatusBadRequest)
+
 			})
 		})
 
 	})
 	Describe("List Ships", func() {
-		var (
-			shipClient    *httpexpect.Expect
-			stationClient *httpexpect.Expect
-			commandClient *httpexpect.Expect
-		)
 
-		When("a token is not provided", func() {
-
-			It("should fail returning 401", func() {
-				client.GET(CentralCommandService_AllShips).
-					Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Station token is provided", func() {
-			BeforeEach(func() {
-				stationClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_DeathStar])
-				})
-			})
-			It("should fail returning 401", func() {
-				stationClient.GET(CentralCommandService_AllShips).
-					Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Command token is provided", func() {
-			BeforeEach(func() {
-				commandClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Command_Initial])
-				})
-			})
-			It("should succeed returning 200", func() {
-				validCall := commandClient.GET(CentralCommandService_AllShips).
-					Expect()
-
-				validCall.Status(http.StatusOK)
-				validCall.JSON().Schema(GetAllShipsResponseSchema)
-
-			})
-		})
-		When("a Ship token is provided", func() {
-			BeforeEach(func() {
-				shipClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Ship_USSEnterprise])
-				})
-			})
-			It("should fail returning 401", func() {
-				shipClient.GET(CentralCommandService_AllShips).
-					Expect().Status(http.StatusUnauthorized)
-			})
-		})
 	})
 
 })

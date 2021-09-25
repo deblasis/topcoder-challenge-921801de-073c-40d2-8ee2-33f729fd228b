@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package e2e_tests
+package utils
 
 const (
 	Persona_Command_Initial = "Persona_Command_Initial"

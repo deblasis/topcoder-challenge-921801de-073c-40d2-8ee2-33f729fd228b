@@ -71,7 +71,7 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 	m.AddConversion((**dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
 
 		ret := &pb.Ship{}
-		v := in.Interface().(dtos.Ship)
+		v := in.Interface().(*dtos.Ship)
 		errs := m.Copy(ret, v)
 
 		//it's ignored so we map it manually
