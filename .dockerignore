@@ -22,6 +22,7 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 README.md
+certs/*
 extra/*
 esdata/*
 **/__debug_bin
