@@ -9,7 +9,9 @@ do
     then
         echo ⏳ [status:$status] waiting for apigateway... 
         sleep 5
+    elif
+        echo ✅ apigateway ready!
+        break
     fi
 done
-echo ✅ apigateway ready! \
-&& make dockertest
+make dockertest
