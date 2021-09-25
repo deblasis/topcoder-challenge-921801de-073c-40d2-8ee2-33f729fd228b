@@ -107,7 +107,7 @@ host-gencerts:
 	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
 	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
 	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
-	&& ls ./certs
+	&& ls
 
 
 .PHONY: docker-gencerts
@@ -118,7 +118,7 @@ docker-gencerts: certdeps
 	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
 	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
 	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
-	&& ls ./certs
+	&& ls
 	
 
 .PHONY: builder
