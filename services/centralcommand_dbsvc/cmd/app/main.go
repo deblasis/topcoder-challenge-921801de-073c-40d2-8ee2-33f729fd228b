@@ -178,35 +178,39 @@ func main() {
 			grpcListener.Close()
 		})
 	}
+
 	{
-		grpcListener, err := net.Listen("tcp", auxGrpcAddr)
-		if err != nil {
-			level.Error(cfg.Logger).Log("transport", "gRPC", "during", "Listen", "err", err)
-			os.Exit(1)
-		}
-		g.Add(func() error {
-			level.Debug(cfg.Logger).Log("transport", "gRPC", "addr", auxGrpcAddr)
-
-			var baseServer *grpc.Server
-			if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
-				creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
-				if err != nil {
-					level.Error(cfg.Logger).Log("serviceName", service.AuxServiceName, "certificates", creds, "err", err)
-					os.Exit(1)
-				}
-				level.Info(cfg.Logger).Log("serviceName", service.AuxServiceName, "protocol", "GRPC", "exposed", cfg.AuxGrpcServerPort, "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor), grpc.Creds(creds))
-			} else {
-				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+		//this acts like a feature flag, this endpoint is used only in integration-testing
+		if auxGrpcAddr != "" {
+			grpcListener, err := net.Listen("tcp", auxGrpcAddr)
+			if err != nil {
+				level.Error(cfg.Logger).Log("transport", "aux-gRPC", "during", "Listen", "err", err)
+				os.Exit(1)
 			}
-			pb.RegisterCentralCommandDBAuxServiceServer(baseServer, auxGrpcServer)
+			g.Add(func() error {
+				level.Debug(cfg.Logger).Log("transport", "aux-gRPC", "addr", auxGrpcAddr)
 
-			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
+				var baseServer *grpc.Server
+				if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
+					creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
+					if err != nil {
+						level.Error(cfg.Logger).Log("serviceName", service.AuxServiceName, "certificates", creds, "err", err)
+						os.Exit(1)
+					}
+					level.Info(cfg.Logger).Log("serviceName", service.AuxServiceName, "protocol", "GRPC", "exposed", cfg.AuxGrpcServerPort, "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
+					baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor), grpc.Creds(creds))
+				} else {
+					baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+				}
+				pb.RegisterCentralCommandDBAuxServiceServer(baseServer, auxGrpcServer)
 
-			return baseServer.Serve(grpcListener)
-		}, func(error) {
-			grpcListener.Close()
-		})
+				grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
+
+				return baseServer.Serve(grpcListener)
+			}, func(error) {
+				grpcListener.Close()
+			})
+		}
 	}
 	{
 		cancelInterrupt := make(chan struct{})
