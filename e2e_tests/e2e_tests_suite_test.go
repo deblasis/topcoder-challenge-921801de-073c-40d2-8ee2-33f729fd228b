@@ -4,11 +4,13 @@
 package e2e_tests
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/gavv/httpexpect/v2"
+	"github.com/go-kit/log"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -41,6 +43,15 @@ func TestE2ETests(t *testing.T) {
 var _ = BeforeSuite(func() {
 	Expect(client).NotTo(BeNil())
 	Expect(personas[Persona_Command_Initial]).NotTo(BeEmpty())
+})
+
+var _ = AfterSuite(func() {
+
+	ctx := context.Background()
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	err := CleanupDB(ctx, logger)
+	Expect(err).Should(Not(HaveOccurred()))
+
 })
 
 type ginkgoTestReporter struct{}

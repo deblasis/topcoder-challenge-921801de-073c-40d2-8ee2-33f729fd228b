@@ -23,6 +23,7 @@ COPY ./services/shippingstationsvc/proto ./services/shippingstationsvc/proto
 #TODO refactor this
 COPY ./gen/proto/go/v1/extensions.go ./gen/proto/go/v1/extensions.go
 COPY ./gen/proto/go/authsvc/v1/extensions.go ./gen/proto/go/authsvc/v1/extensions.go
+COPY ./gen/proto/go/centralcommand_dbsvc/v1/extensions.go ./gen/proto/go/centralcommand_dbsvc/v1/extensions.go
 COPY ./gen/proto/go/centralcommandsvc/v1/extensions.go ./gen/proto/go/centralcommandsvc/v1/extensions.go
 COPY ./gen/proto/go/shippingstationsvc/v1/extensions.go ./gen/proto/go/shippingstationsvc/v1/extensions.go
 ###

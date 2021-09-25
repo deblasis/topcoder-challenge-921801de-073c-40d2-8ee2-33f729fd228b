@@ -15,7 +15,9 @@ service CentralCommandDBService {
 
   rpc GetNextAvailableDockingStation (GetNextAvailableDockingStationRequest) returns (GetNextAvailableDockingStationResponse) {}
   rpc LandShipToDock (LandShipToDockRequest) returns (LandShipToDockResponse) {}
+  
 }
+
 
 message Dock {
   string id = 1;

@@ -1,5 +1,6 @@
 httpserverport: 9381
 grpcserverport: 9382
+auxgrpcserverport: 9383
 
 bindOnLocalhost: true
 

@@ -24,3 +24,7 @@ type DockRepository interface {
 	GetNextAvailableDockingStation(ctx context.Context, shipId uuid.UUID) (*model.NextAvailableDockingStation, error)
 	LandShipToDock(ctx context.Context, shipId uuid.UUID, dockId uuid.UUID, duration int64) (*model.DockedShip, error)
 }
+
+type AuxRepository interface {
+	Cleanup(ctx context.Context) error
+}

@@ -17,9 +17,10 @@ import (
 )
 
 var (
-	ServiceName = "deblasis-state-v1-CentralCommandDBService"
-	Namespace   = "stc"
-	Tags        = []string{}
+	ServiceName    = "deblasis-state-v1-CentralCommandDBService"
+	AuxServiceName = "deblasis-state-v1-CentralCommandDBAuxService"
+	Namespace      = "stc"
+	Tags           = []string{}
 )
 
 type CentralCommandDBService interface {

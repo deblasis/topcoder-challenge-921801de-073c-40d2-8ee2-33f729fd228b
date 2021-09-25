@@ -45,8 +45,9 @@ func main() {
 	}
 
 	var (
-		httpAddr = net.JoinHostPort(cfg.ListenAddr, cfg.HttpServerPort)
-		grpcAddr = net.JoinHostPort(cfg.ListenAddr, cfg.GrpcServerPort)
+		httpAddr    = net.JoinHostPort(cfg.ListenAddr, cfg.HttpServerPort)
+		grpcAddr    = net.JoinHostPort(cfg.ListenAddr, cfg.GrpcServerPort)
+		auxGrpcAddr = net.JoinHostPort(cfg.ListenAddr, cfg.AuxGrpcServerPort)
 	)
 
 	level.Debug(cfg.Logger).Log("DB address", cfg.Db.Address)
@@ -99,6 +100,11 @@ func main() {
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
+
+		auxRepo       = repositories.NewAuxRepository(connection, log.With(cfg.Logger, "component", "AuxRepository"))
+		auxsvc        = service.NewCentralCommandDBAuxService(auxRepo, log.With(cfg.Logger, "component", "CentralCommandDBAuxService"))
+		auxeps        = endpoints.NewAuxEndpointSet(auxsvc, log.With(cfg.Logger, "component", "AuxEndpointSet"))
+		auxGrpcServer = transport.NewAuxGrpcServer(auxeps, log.With(cfg.Logger, "component", "AUXGRPCServer"))
 	)
 
 	// consul
@@ -164,6 +170,36 @@ func main() {
 				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
 			}
 			pb.RegisterCentralCommandDBServiceServer(baseServer, grpcServer)
+
+			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
+
+			return baseServer.Serve(grpcListener)
+		}, func(error) {
+			grpcListener.Close()
+		})
+	}
+	{
+		grpcListener, err := net.Listen("tcp", auxGrpcAddr)
+		if err != nil {
+			level.Error(cfg.Logger).Log("transport", "gRPC", "during", "Listen", "err", err)
+			os.Exit(1)
+		}
+		g.Add(func() error {
+			level.Debug(cfg.Logger).Log("transport", "gRPC", "addr", auxGrpcAddr)
+
+			var baseServer *grpc.Server
+			if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
+				creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
+				if err != nil {
+					level.Error(cfg.Logger).Log("serviceName", service.AuxServiceName, "certificates", creds, "err", err)
+					os.Exit(1)
+				}
+				level.Info(cfg.Logger).Log("serviceName", service.AuxServiceName, "protocol", "GRPC", "exposed", cfg.AuxGrpcServerPort, "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
+				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor), grpc.Creds(creds))
+			} else {
+				baseServer = grpc.NewServer(grpc.UnaryInterceptor(grpcgokit.Interceptor))
+			}
+			pb.RegisterCentralCommandDBAuxServiceServer(baseServer, auxGrpcServer)
 
 			grpc_health_v1.RegisterHealthServer(baseServer, &healthcheck.HealthSvcImpl{})
 
