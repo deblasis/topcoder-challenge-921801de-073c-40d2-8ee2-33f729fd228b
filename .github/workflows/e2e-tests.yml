@@ -14,6 +14,7 @@ jobs:
           && make seed-auth_dbsvc \
           && sleep 15 \
           && docker ps \
+          && COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml exec -t apigateway bash -c 'while [[ "$$(curl --connect-timeout 2 -s -w ''%{http_code}'' ${APIGATEWAY:-http://localhost:8081}/health)" != "200" ]]; do echo ⏳ waiting for apigateway...; sleep 5; done; echo ✅ apigateway ready!;make dockertest'
           && DOCKERCOMPOSE="docker-compose" make integrationtests-run
 # - name: Seed initial user
 #   run: make seed-auth_dbsvc

@@ -106,9 +106,10 @@ gencert:
 builder:
 	docker build . --tag=deblasis/stc_builder  
 
-.PHONY: dockerbuild
+.PHONY: docker-build
 docker-build: builder
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
+	
 .PHONY: hostbuild
 host-build: proto binaries
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
