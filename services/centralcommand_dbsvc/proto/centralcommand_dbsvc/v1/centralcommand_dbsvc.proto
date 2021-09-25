@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package deblasis.state.v1;
 
+import "v1/error.proto";
+
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/proto/v1;centralcommand_dbsvc_v1";
 
 service CentralCommandDBService {
@@ -57,15 +59,16 @@ message CreateShipRequest {
 }
 message CreateShipResponse {
   Ship ship = 1;
-  string error = 2;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 2;
 }
 
 
-message GetAllShipsRequest {
-}
+message GetAllShipsRequest {}
 message GetAllShipsResponse {
   repeated Ship ships = 1;
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 
 message CreateStationRequest {
@@ -73,13 +76,16 @@ message CreateStationRequest {
 }
 message CreateStationResponse {
   Station station = 1;
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 message GetAllStationsRequest {
+  optional string ship_id = 1;
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
-  string error = 2;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 2;
 }
 
 
@@ -89,7 +95,8 @@ message GetNextAvailableDockingStationRequest {
 }
 message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
-  string error = 2;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 2;
 }
 
 
@@ -102,5 +109,6 @@ message LandShipToDockRequest {
   int64 duration = 3;
 }
 message LandShipToDockResponse {
-  string error = 1;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 1;
 }

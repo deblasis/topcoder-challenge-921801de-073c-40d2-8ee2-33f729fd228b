@@ -52,8 +52,8 @@ type ServiceStatusResponse struct {
 }
 
 func serviceStatus(ctx context.Context, logger log.Logger) (int64, error) {
-	level.Debug(logger).Log("handling request", "ServiceStatus")
-	defer level.Debug(logger).Log("handled request", "ServiceStatus")
+	level.Debug(logger).Log("handlingrequest", "ServiceStatus")
+	defer level.Debug(logger).Log("handledrequest", "ServiceStatus")
 	return http.StatusOK, nil
 }
 

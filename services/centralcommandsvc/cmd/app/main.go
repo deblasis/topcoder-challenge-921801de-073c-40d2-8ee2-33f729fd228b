@@ -17,7 +17,6 @@ import (
 	"deblasis.net/space-traffic-control/common/bootstrap"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
-	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/healthcheck"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	dbe "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
@@ -45,7 +44,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -127,8 +125,16 @@ func main() {
 		tags         = []string{"centralCommandDBService"}
 		passingOnly  = true
 		db_endpoints = dbe.EndpointSet{}
-		instancer    = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+		instancer    sd.Instancer
 	)
+
+	if cfg.BindOnLocalhost {
+		instancer = sd.FixedInstancer{"localhost:9382"} //TODO from config
+	} else {
+		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
+
+	}
+
 	instancesChannel := make(chan sd.Event)
 	go func() {
 		for event := range instancesChannel {
@@ -161,13 +167,7 @@ func main() {
 		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
-			logger.Log("received_err", received)
-			if st, ok := status.FromError(received); !ok && st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
-				return false, nil
-			}
-			return n < retryMax, nil
-		})
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateShipEndpoint = retry
 	}
 	{
@@ -181,15 +181,7 @@ func main() {
 		factory := centralCommandServiceFactory(dbe.MakeCreateStationEndpoint, cfg, tracer, zipkinTracer, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
-		retry := lb.RetryWithCallback(time.Duration(retryTimeout), balancer, func(n int, received error) (keepTrying bool, replacement error) {
-			st, _ := status.FromError(received)
-			logger.Log("received_err", received, "st_code", st.Code(), "st_err", st.Err())
-
-			if st.Err() == errs.ErrCannotInsertAlreadyExistingEntity {
-				return false, nil
-			}
-			return n < retryMax, nil
-		})
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateStationEndpoint = retry
 	}
 	{
@@ -213,13 +205,12 @@ func main() {
 
 		jwtHandler                = auth.NewJwtHandler(log.With(cfg.Logger, "component", "JwtHandler"), cfg.JWT)
 		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
-
-		svc         = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
-		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
-		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
-		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
+		httpAuthProvider          = auth.NewHttpAuthProvider(log.With(cfg.Logger, "component", "HttpAuthProvider"), jwtHandler)
+		svc                       = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
+		eps                       = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		httpHandler               = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
+		grpcServer                = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
 	)
-	fmt.Printf("svc %v", svc)
 
 	// consul
 	{
@@ -253,10 +244,10 @@ func main() {
 		g.Add(func() error {
 			if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
 				level.Debug(cfg.Logger).Log("transport", "HTTP", "addr", httpAddr, "TLS", "enabled")
-				return http.ServeTLS(httpListener, httpHandler, cfg.SSL.ServerCert, cfg.SSL.ServerKey)
+				return http.ServeTLS(httpListener, httpAuthProvider.Handler(httpHandler), cfg.SSL.ServerCert, cfg.SSL.ServerKey)
 			} else {
 				level.Debug(cfg.Logger).Log("transport", "HTTP", "addr", httpAddr, "TLS", "disabled")
-				return http.Serve(httpListener, httpHandler)
+				return http.Serve(httpListener, httpAuthProvider.Handler(httpHandler))
 			}
 		}, func(error) {
 			httpListener.Close()

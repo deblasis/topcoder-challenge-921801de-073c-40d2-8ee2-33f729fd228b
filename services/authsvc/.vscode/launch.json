@@ -11,7 +11,7 @@
             "mode": "auto",
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
-                "DEBLASIS_BINDTOLOCALHOST": "true",
+                "DEBLASIS_BINDONLOCALHOST": "true",
                 "DEBLASIS_HTTPSERVERPORT": "9081",
                 "DEBLASIS_GRPCSERVERPORT": "9082",
                 "DEBLASIS_JWT_PRIVKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.key",

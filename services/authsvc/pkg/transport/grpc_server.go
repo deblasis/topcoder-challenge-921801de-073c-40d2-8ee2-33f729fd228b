@@ -15,7 +15,7 @@ import (
 )
 
 type grpcServer struct {
-	pb.AuthServiceServer
+	pb.UnimplementedAuthServiceServer
 	signup     grpctransport.Handler
 	login      grpctransport.Handler
 	checkToken grpctransport.Handler
@@ -61,11 +61,9 @@ func encodeGRPCSignupResponse(ctx context.Context, grpcResponse interface{}) (in
 
 	resp := grpcResponse.(*pb.SignupResponse)
 	//TODO: refactor
-	if resp.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(resp.Error)
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(resp.Error))),
-			"x-stc-error", resp.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
@@ -88,11 +86,9 @@ func encodeGRPCLoginResponse(ctx context.Context, grpcResponse interface{}) (int
 
 	resp := grpcResponse.(*pb.LoginResponse)
 	//TODO: refactor
-	if resp.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(resp.Error)
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(resp.Error))),
-			"x-stc-error", resp.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}

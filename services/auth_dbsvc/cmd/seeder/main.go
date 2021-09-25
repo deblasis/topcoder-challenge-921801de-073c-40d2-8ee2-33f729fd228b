@@ -70,7 +70,7 @@ func (s *seeder) csvParse(filePath string, tableName string) (err error) {
 
 	for sc.Scan() {
 		txt := sc.Text()
-		level.Info(s.logger).Log("msg", txt)
+		level.Info(s.logger).Log("msg", txt[:6]+"...")
 
 		if idx == 0 {
 			csvReader := csv.NewReader(strings.NewReader(txt))

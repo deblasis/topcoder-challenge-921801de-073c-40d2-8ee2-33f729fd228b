@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
 	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/endpoints"
@@ -75,8 +74,7 @@ func encodeGRPCRequestLandingResponse(ctx context.Context, grpcResponse interfac
 	if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
 
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(f.Failed())),
-			"x-stc-error", f.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 			"x-no-content", "true",
 		)
 		grpc.SendHeader(ctx, header)
@@ -94,10 +92,8 @@ func encodeGRPCLandingResponse(ctx context.Context, grpcResponse interface{}) (i
 	response := grpcResponse.(*pb.LandingResponse)
 	//TODO: refactor
 	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}

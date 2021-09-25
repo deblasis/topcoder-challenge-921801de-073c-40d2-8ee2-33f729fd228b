@@ -8,7 +8,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CentralCommandServiceClient interface {
 	RegisterStation(ctx context.Context, in *RegisterStationRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
-	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 	GetAllShips(ctx context.Context, in *GetAllShipsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 	GetAllStations(ctx context.Context, in *GetAllStationsRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 	GetNextAvailableDockingStation(ctx context.Context, in *GetNextAvailableDockingStationRequest, opts ...grpc.CallOption) (*GetNextAvailableDockingStationResponse, error)
@@ -45,8 +44,8 @@ func (c *centralCommandServiceClient) RegisterStation(ctx context.Context, in *R
 	return out, nil
 }
 
-func (c *centralCommandServiceClient) RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *centralCommandServiceClient) RegisterShip(ctx context.Context, in *RegisterShipRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/deblasis.v1.CentralCommandService/RegisterShip", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -95,7 +94,7 @@ func (c *centralCommandServiceClient) RegisterShipLanding(ctx context.Context, i
 // for forward compatibility
 type CentralCommandServiceServer interface {
 	RegisterStation(context.Context, *RegisterStationRequest) (*httpbody.HttpBody, error)
-	RegisterShip(context.Context, *RegisterShipRequest) (*emptypb.Empty, error)
+	RegisterShip(context.Context, *RegisterShipRequest) (*httpbody.HttpBody, error)
 	GetAllShips(context.Context, *GetAllShipsRequest) (*httpbody.HttpBody, error)
 	GetAllStations(context.Context, *GetAllStationsRequest) (*httpbody.HttpBody, error)
 	GetNextAvailableDockingStation(context.Context, *GetNextAvailableDockingStationRequest) (*GetNextAvailableDockingStationResponse, error)
@@ -110,7 +109,7 @@ type UnimplementedCentralCommandServiceServer struct {
 func (UnimplementedCentralCommandServiceServer) RegisterStation(context.Context, *RegisterStationRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterStation not implemented")
 }
-func (UnimplementedCentralCommandServiceServer) RegisterShip(context.Context, *RegisterShipRequest) (*emptypb.Empty, error) {
+func (UnimplementedCentralCommandServiceServer) RegisterShip(context.Context, *RegisterShipRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterShip not implemented")
 }
 func (UnimplementedCentralCommandServiceServer) GetAllShips(context.Context, *GetAllShipsRequest) (*httpbody.HttpBody, error) {

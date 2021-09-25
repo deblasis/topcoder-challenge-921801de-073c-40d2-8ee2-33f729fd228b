@@ -1,0 +1,50 @@
+version: '3.6'
+
+services:
+  consul:
+    ports:
+      - 8300:8300
+      - 8400:8400
+      - 8500:8500
+      - 8600:8600
+
+  apigateway:
+    ports:
+      - 8081:8081
+
+  auth_db:
+    ports:
+      - "5432:5432"
+
+  auth_dbsvc:
+    ports:
+      - 9181:9181
+      - 9182:9182
+
+  authsvc:
+    ports:
+      - 9081:9081
+      - 9082:9082
+
+  centralcommand_db:
+    ports:
+      - "5433:5432"
+
+  centralcommand_dbsvc:
+    ports:
+      - 9381:9381
+      - 9382:9382
+
+  centralcommandsvc:
+    ports:
+      - 9481:9481
+      - 9482:9482
+
+  shippingstationsvc:
+    ports:
+      - 9281:9281
+      - 9282:9282
+
+  clessidrasvc:
+    ports:
+      - 9500:9500

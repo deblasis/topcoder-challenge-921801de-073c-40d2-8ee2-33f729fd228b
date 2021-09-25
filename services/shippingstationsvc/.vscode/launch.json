@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch centralcommandsvc",
+            "name": "Launch ShippingStationSvc",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
-                "DEBLASIS_BINDTOLOCALHOST": "true",
+                "DEBLASIS_BINDONLOCALHOST": "true",
                 "DEBLASIS_HTTPSERVERPORT": "9481",
                 "DEBLASIS_GRPCSERVERPORT": "9482",
                 "DEBLASIS_JWT_PRIVKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.key",

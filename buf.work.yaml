@@ -1,5 +1,6 @@
 version: v1
 directories:
+  - common/proto/deblasis
   - services/auth_dbsvc/proto
   - services/centralcommand_dbsvc/proto
   - services/authsvc/proto

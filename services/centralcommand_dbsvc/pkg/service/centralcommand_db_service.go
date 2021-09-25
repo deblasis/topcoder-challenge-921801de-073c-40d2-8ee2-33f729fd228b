@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common"
 	"deblasis.net/space-traffic-control/common/errs"
@@ -10,9 +11,9 @@ import (
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 )
 
 var (
@@ -54,29 +55,37 @@ func NewCentralCommandDBService(
 	}
 }
 
-func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (*dtos.CreateShipResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (s *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.CreateShipRequest) (resp *dtos.CreateShipResponse, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(s.logger).Log("method", "CreateShip", "err", err)
+		}
+	}()
+	verr := s.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.CreateShipResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
-	existing, err := u.shipRepository.GetById(ctx, request.Id)
+	existing, err := s.shipRepository.GetById(ctx, request.Id)
 	if existing != nil {
+		err = errs.NewError(http.StatusBadRequest, "ship already existing", errs.ErrCannotInsertAlreadyExistingEntity)
 		return &dtos.CreateShipResponse{
-			Error: errs.ErrCannotInsertAlreadyExistingEntity.Error(),
+			Error: err,
 		}, nil
 	}
 
-	ret, err := u.shipRepository.Create(ctx, model.Ship{
+	ret, err := s.shipRepository.Create(ctx, model.Ship{
 		Id:     request.Id,
 		Weight: request.Weight,
 	})
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot create ship", err)
 		return &dtos.CreateShipResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 
@@ -85,19 +94,26 @@ func (u *centralCommandDBService) CreateShip(ctx context.Context, request *dtos.
 	}, nil
 }
 
-func (u *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos.GetAllShipsRequest) (*dtos.GetAllShipsResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (s *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos.GetAllShipsRequest) (resp *dtos.GetAllShipsResponse, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(s.logger).Log("method", "GetAllShips", "err", err)
+		}
+	}()
+	verr := s.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.GetAllShipsResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
-	ret, err := u.shipRepository.GetAll(ctx)
+	ret, err := s.shipRepository.GetAll(ctx)
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "unable to select ships", err)
 		return &dtos.GetAllShipsResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 
@@ -106,26 +122,34 @@ func (u *centralCommandDBService) GetAllShips(ctx context.Context, request *dtos
 	}, nil
 }
 
-func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (*dtos.CreateStationResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dtos.CreateStationRequest) (resp *dtos.CreateStationResponse, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "CreateStation", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.CreateStationResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
 	existing, err := u.stationRepository.GetById(ctx, request.Id)
 	if existing != nil {
+		err = errs.NewError(http.StatusBadRequest, "station already exists", errs.ErrCannotInsertAlreadyExistingEntity)
 		return &dtos.CreateStationResponse{
-			Error: errs.ErrCannotInsertAlreadyExistingEntity.Error(),
+			Error: err,
 		}, nil
 	}
 
 	ret, err := u.stationRepository.Create(ctx, converters.StationToModel(dtos.Station(*request)))
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot insert station", err)
 		return &dtos.CreateStationResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 
@@ -134,39 +158,61 @@ func (u *centralCommandDBService) CreateStation(ctx context.Context, request *dt
 	}, nil
 }
 
-func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *dtos.GetAllStationsRequest) (*dtos.GetAllStationsResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *centralCommandDBService) GetAllStations(ctx context.Context, request *dtos.GetAllStationsRequest) (resp *dtos.GetAllStationsResponse, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.GetAllStationsResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
-	ret, err := u.stationRepository.GetAll(ctx)
+	stations := make([]model.Station, 0)
+
+	if request.ShipId != nil {
+		stations, err = u.stationRepository.GetAvailableForShip(ctx, uuid.MustParse(*request.ShipId))
+	} else {
+		stations, err = u.stationRepository.GetAll(ctx)
+	}
+
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
 		return &dtos.GetAllStationsResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 	return &dtos.GetAllStationsResponse{
-		Stations: converters.StationsToDto(ret),
+		Stations: converters.StationsToDto(stations),
 	}, nil
 }
 
-func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Context, request *dtos.GetNextAvailableDockingStationRequest) (*dtos.GetNextAvailableDockingStationResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Context, request *dtos.GetNextAvailableDockingStationRequest) (resp *dtos.GetNextAvailableDockingStationResponse, err error) {
+
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.GetNextAvailableDockingStationResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 
 	ret, err := u.dockRepository.GetNextAvailableDockingStation(ctx, uuid.MustParse(request.ShipId))
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot get next available docking station", err)
 		return &dtos.GetNextAvailableDockingStationResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 	return &dtos.GetNextAvailableDockingStationResponse{
@@ -174,18 +220,26 @@ func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Con
 	}, nil
 }
 
-func (u *centralCommandDBService) LandShipToDock(ctx context.Context, request *dtos.LandShipToDockRequest) (*dtos.LandShipToDockResponse, error) {
-	err := u.validate.Struct(request)
-	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
+func (u *centralCommandDBService) LandShipToDock(ctx context.Context, request *dtos.LandShipToDockRequest) (resp *dtos.LandShipToDockResponse, err error) {
+
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAllStations", "err", err)
+		}
+	}()
+	verr := u.validate.Struct(request)
+	if verr != nil {
+		validationErrors := verr.(validator.ValidationErrors)
+		err = errs.NewError(http.StatusBadRequest, "validation failed", validationErrors)
 		return &dtos.LandShipToDockResponse{
-			Error: errors.Wrap(validationErrors, "Validation failed").Error(),
+			Error: err,
 		}, nil
 	}
 	_, err = u.dockRepository.LandShipToDock(ctx, uuid.MustParse(request.ShipId), uuid.MustParse(request.DockId), request.Duration)
 	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot land ship to docking station", err)
 		return &dtos.LandShipToDockResponse{
-			Error: errs.Err2str(err),
+			Error: err,
 		}, nil
 	}
 	return &dtos.LandShipToDockResponse{}, nil

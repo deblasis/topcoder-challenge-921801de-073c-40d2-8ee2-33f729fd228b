@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/internal/model"
@@ -23,44 +25,54 @@ func NewStationRepository(db *pg.DB, logger log.Logger) StationRepository {
 	}
 }
 
-func (u stationRepository) GetById(ctx context.Context, id string) (*model.Station, error) {
-	//TODO use validate
+func (u stationRepository) GetById(ctx context.Context, id string) (resp *model.Station, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetById", "err", err)
+		}
+	}()
+
 	if id == "" {
-		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
-		return nil, errs.ErrBadRequest
+		err = errs.NewError(http.StatusBadRequest, "empty id", errs.ErrBadRequest)
+		return nil, err
 	}
 
 	var ret model.Station
-	err := u.Db.WithContext(ctx).Model(&ret).
+	err = u.Db.WithContext(ctx).Model(&ret).
 		Relation("Docks").
 		Where("id = ?", id).
 		Select()
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("msg", "no rows")
+		level.Debug(u.logger).Log("method", "GetById", "msg", "no rows")
 		return nil, nil
 	}
 
 	if err != nil {
-		return nil, errs.ErrCannotSelectEntity
+		err = errs.NewError(http.StatusInternalServerError, "cannot get station", errs.ErrCannotSelectEntity)
+		return nil, err
 	}
 
 	return &ret, nil
 }
 
-func (u stationRepository) Create(ctx context.Context, station model.Station) (*model.Station, error) {
-
-	err := u.Db.RunInTransaction(ctx, func(t *pg.Tx) error {
+func (u stationRepository) Create(ctx context.Context, station model.Station) (resp *model.Station, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "Create", "err", err)
+		}
+	}()
+	err = u.Db.RunInTransaction(ctx, func(t *pg.Tx) error {
 
 		result, err := t.Exec("insert into stations (id, capacity) VALUES (?,?)", station.Id, station.Capacity)
 		if err != nil {
-			level.Debug(u.logger).Log("err", err)
-			return errs.ErrCannotInsertEntity
+			err = errs.NewError(http.StatusInternalServerError, "cannot insert station", err)
+			return err
 		}
 
 		if result != nil {
 			if result.RowsAffected() == 0 {
-				level.Debug(u.logger).Log("err", err)
-				return errs.ErrCannotInsertEntity
+				err = errs.NewError(http.StatusInternalServerError, "cannot insert station", errs.ErrCannotInsertEntity)
+				return err
 			}
 		}
 
@@ -73,8 +85,8 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 				ExcludeColumn("occupied", "weight").
 				Returning("id").Insert(&dock.Id)
 			if err != nil {
-				level.Debug(u.logger).Log("err", err)
-				return errs.ErrCannotInsertEntity
+				err = errs.NewError(http.StatusInternalServerError, "cannot insert dock", err)
+				return err
 			}
 		}
 		return nil
@@ -83,17 +95,74 @@ func (u stationRepository) Create(ctx context.Context, station model.Station) (*
 	return &station, err
 }
 
-func (u stationRepository) GetAll(ctx context.Context) ([]model.Station, error) {
+func (u stationRepository) GetAll(ctx context.Context) (resp []model.Station, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAll", "err", err)
+		}
+	}()
 	var stations []model.Station
 
-	err := u.Db.WithContext(ctx).
+	err = u.Db.WithContext(ctx).
 		Model(&stations).
 		Relation("Docks").
 		Select()
 	if err != nil {
-		level.Debug(u.logger).Log("err", err)
-		return nil, errs.ErrCannotSelectEntities
+		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
+		return nil, err
 	}
 
 	return stations, nil
+}
+
+func (u stationRepository) GetAvailableForShip(ctx context.Context, shipId uuid.UUID) (resp []model.Station, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetAvailableForShip", "err", err)
+		}
+	}()
+
+	stations := make([]model.Station, 0)
+	stationMap := make(map[string]*model.Station)
+
+	var availableStations []model.AvailableStationsForShip
+	_, err = u.Db.WithContext(ctx).Model(&availableStations).
+		Query(&availableStations, fmt.Sprintf("select * from %v(?)", model.GetAvailableStationsForShipFunctionName), shipId)
+
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "cannot select stations", err)
+		return nil, err
+	}
+
+	for _, a := range availableStations {
+		if _, ok := stationMap[a.StationId]; !ok {
+			stationMap[a.StationId] = &model.Station{
+				Id:           a.StationId,
+				Capacity:     a.Capacity,
+				UsedCapacity: a.UsedCapacity,
+				Docks:        []*model.Dock{},
+			}
+		}
+		stationMap[a.StationId].Docks = append(stationMap[a.StationId].Docks, &model.Dock{
+			Id:              a.DockId,
+			StationId:       a.StationId,
+			NumDockingPorts: a.NumDockingPorts,
+			Occupied:        a.Occupied,
+			Weight:          a.Weight,
+		})
+	}
+
+	for _, s := range stationMap {
+		stations = append(stations, *s)
+	}
+
+	return stations, nil
+}
+
+func Map(vs []string, f func(string) string) []string {
+	vsm := make([]string, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
 }

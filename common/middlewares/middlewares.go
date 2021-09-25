@@ -48,7 +48,13 @@ func LoggingMiddleware(logger log.Logger) endpoint.Middleware {
 
 func JsonHeaderMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		rw.Header().Add("Content-Type", "application/vnd.deblasis.spacetrafficcontrol-v1+/json; charset=utf-8")
+		rw.Header().Add("Content-Type", "application/json; charset=utf-8")
 		next.ServeHTTP(rw, r)
 	})
+}
+
+func HttpAuthMiddleware(rw http.ResponseWriter, req *http.Request, next http.Handler) {
+	ctx := context.WithValue(req.Context(), "userid", req.Header.Get("userid"))
+	req = req.WithContext(ctx)
+	next.ServeHTTP(rw, req)
 }

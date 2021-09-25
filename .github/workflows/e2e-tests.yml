@@ -1,0 +1,18 @@
+name: E2E Tests
+on: push
+jobs:
+  run_integration_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.17.1'  
+      - name: Build and Run the stack
+        run: DOCKERCOMPOSE="docker-compose" COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 make integrationtests-up
+      - name: Seed initial data
+        run: make seed-auth_dbsvc
+      - name: Check status
+        run: sleep 15 && docker ps
+      - name: Run E2E Tests
+        run: DOCKERCOMPOSE="docker-compose" make integrationtests-run

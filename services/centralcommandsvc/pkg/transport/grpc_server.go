@@ -10,13 +10,11 @@ import (
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
-	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type grpcServer struct {
@@ -135,18 +133,20 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 	}
 }
 
-func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*emptypb.Empty, error) {
-	_, rep, err := g.registerShip.ServeGRPC(ctx, r)
+func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*httpbody.HttpBody, error) {
+	_, _, err := g.registerShip.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	resp := rep.(*pb.RegisterShipResponse)
-	if resp.Error == errs.ErrCannotInsertAlreadyExistingEntity.Error() {
-		//this will trigger the error handlers so we can alter body and header
-		return nil, errs.ErrCannotInsertAlreadyExistingEntity
-	}
+	//resp := rep.(*pb.RegisterShipResponse)
+	// if errors.Is(resp.Error, errs.ErrCannotInsertAlreadyExistingEntity) {
+	// 	//this will trigger the error handlers so we can alter body and header
+	// 	return nil, resp.Error
+	// }
 
-	return &emptypb.Empty{}, nil
+	return &httpbody.HttpBody{
+		ContentType: "application/json",
+	}, nil
 
 }
 func (g *grpcServer) GetAllShips(ctx context.Context, r *pb.GetAllShipsRequest) (*httpbody.HttpBody, error) {
@@ -156,7 +156,7 @@ func (g *grpcServer) GetAllShips(ctx context.Context, r *pb.GetAllShipsRequest) 
 	}
 
 	resp := rep.(*pb.GetAllShipsResponse)
-	json, _ := json.Marshal(resp.Ships)
+	json := serializeGetAllShipsResponse(resp)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -171,13 +171,15 @@ func (g *grpcServer) RegisterStation(ctx context.Context, r *pb.RegisterStationR
 		return nil, err
 	}
 	resp := rep.(*pb.RegisterStationResponse)
-	json, _ := json.Marshal(resp)
+
+	json := serializeRegisterStationResponse(resp)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
 		Data:        []byte(json),
 	}, nil
 }
+
 func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsRequest) (*httpbody.HttpBody, error) {
 	_, rep, err := g.getAllStations.ServeGRPC(ctx, r)
 	if err != nil {
@@ -185,7 +187,7 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 	}
 
 	resp := rep.(*pb.GetAllStationsResponse)
-	json, _ := json.Marshal(resp.Stations)
+	json := serializeGetAllStationsResponse(resp)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -226,21 +228,19 @@ func decodeGRPCRegisterShipRequest(c context.Context, grpcReq interface{}) (inte
 
 }
 func encodeGRPCRegisterShipResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.RegisterShipResponse)
+	resp := grpcResponse.(*pb.RegisterShipResponse)
 
+	header := metadata.Pairs(
+		"x-no-content", "true",
+	)
 	//TODO refactor
-	if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
-
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(f.Failed())),
-			"x-stc-error", f.Failed().Error(),
-			"x-no-content", "true",
-		)
-		grpc.SendHeader(ctx, header)
+	if !errs.IsNil(resp.Failed()) {
+		header.Set("x-http-code", fmt.Sprintf("%v", resp.Error.Code))
 	}
+	grpc.SendHeader(ctx, header)
 
 	//return converters.RegisterShipResponseToProto(*response), nil
-	return response, nil
+	return resp, nil
 }
 
 func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -249,19 +249,16 @@ func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (inter
 }
 func encodeGRPCGetAllShipsResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
 
-	response := grpcResponse.(*pb.GetAllShipsResponse)
+	resp := grpcResponse.(*pb.GetAllShipsResponse)
 	//TODO: refactor
-	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
-
 	//return converters.GetAllShipsResponseToProto(*response), nil
-	return response, nil
+	return resp, nil
 }
 
 func decodeGRPCRegisterStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -280,20 +277,18 @@ func encodeGRPCRegisterStationResponse(ctx context.Context, grpcResponse interfa
 	// if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
 	// 	return errorEncoder(ctx, f.Failed(), grpcResponse.(*pb.RegisterStationResponse))
 	// }
-	response := grpcResponse.(*pb.RegisterStationResponse)
+	resp := grpcResponse.(*pb.RegisterStationResponse)
 
-	//TODO refactor
-	if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
-
+	//TODO: refactor
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(f.Failed())),
-			"x-stc-error", f.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
 
 	//return converters.RegisterStationResponseToProto(*response), nil
-	return response, nil
+	return resp, nil
 }
 
 func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -305,20 +300,18 @@ func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (in
 	return req, nil
 }
 func encodeGRPCGetAllStationsResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetAllStationsResponse)
+	resp := grpcResponse.(*pb.GetAllStationsResponse)
 
 	//TODO: refactor
-	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
 
 	//return converters.GetAllStationsResponseToProto(*response), nil
-	return response, nil
+	return resp, nil
 }
 
 func decodeGRPCGetNextAvailableDockingStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -330,20 +323,18 @@ func decodeGRPCGetNextAvailableDockingStationRequest(c context.Context, grpcReq 
 	return req, nil
 }
 func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
+	resp := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
 
 	//TODO: refactor
-	if response.Failed() != nil {
-		errs.GetErrorContainer(ctx).Domain = errs.Str2err(response.Error)
+	if !errs.IsNil(resp.Failed()) {
 		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", errs.Err2code(errs.Str2err(response.Error))),
-			"x-stc-error", response.Failed().Error(),
+			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
 		)
 		grpc.SendHeader(ctx, header)
 	}
 
 	//return converters.GetNextAvailableDockingStationResponseToProto(*response), nil
-	return response, nil
+	return resp, nil
 }
 
 func decodeGRPCRegisterShipLandingRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -353,4 +344,89 @@ func decodeGRPCRegisterShipLandingRequest(c context.Context, grpcReq interface{}
 func encodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	response := grpcResponse.(*dtos.LandShipToDockResponse)
 	return response, nil
+}
+
+func serializeRegisterStationResponse(resp *pb.RegisterStationResponse) []byte {
+	type dock struct {
+		Id              string `json:"id"`
+		NumDockingPorts int64  `json:"numDockingPorts"`
+	}
+	var station map[string]interface{}
+	if resp.Station != nil {
+		station = map[string]interface{}{
+			"id":    resp.Station.Id,
+			"docks": []dock{},
+		}
+
+		for _, d := range resp.Station.Docks {
+			station["docks"] = append(station["docks"].([]dock), dock{
+				Id:              d.Id,
+				NumDockingPorts: d.NumDockingPorts,
+			})
+		}
+	}
+	json, _ := json.Marshal(station)
+	return json
+}
+
+func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
+	type dock struct {
+		Id              string   `json:"id"`
+		NumDockingPorts int64    `json:"numDockingPorts"`
+		Occupied        *int64   `json:"occupied"`
+		Weight          *float32 `json:"weight"`
+	}
+	type station struct {
+		Id           string   `json:"id"`
+		Capacity     int64    `json:"capacity"`
+		UsedCapacity *float32 `json:"usedCapacity"`
+		Docks        []*dock  `json:"docks"`
+	}
+	stations := make([]station, 0)
+	if resp.Stations != nil {
+		for _, s := range resp.Stations {
+
+			station := station{
+				Id:           s.Id,
+				Capacity:     int64(s.Capacity),
+				UsedCapacity: &s.UsedCapacity,
+				Docks:        []*dock{},
+			}
+			for _, d := range s.Docks {
+				station.Docks = append(station.Docks, &dock{
+					Id:              d.Id,
+					NumDockingPorts: d.NumDockingPorts,
+					Occupied:        &d.Occupied,
+					Weight:          &d.Weight,
+				})
+			}
+
+			stations = append(stations, station)
+		}
+	}
+	json, _ := json.Marshal(stations)
+	return json
+}
+
+func serializeGetAllShipsResponse(resp *pb.GetAllShipsResponse) []byte {
+	type ship struct {
+		Id     string  `json:"id"`
+		Status string  `json:"status"`
+		Weight float32 `json:"weight"`
+	}
+
+	ships := make([]ship, 0)
+
+	if resp.Ships != nil {
+		for _, s := range resp.Ships {
+			ship := ship{
+				Id:     s.Id,
+				Status: s.Status,
+				Weight: s.Weight,
+			}
+			ships = append(ships, ship)
+		}
+	}
+	json, _ := json.Marshal(ships)
+	return json
 }

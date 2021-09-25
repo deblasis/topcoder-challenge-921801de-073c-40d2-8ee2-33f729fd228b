@@ -156,6 +156,7 @@ func ConfigMappers() {
 			if len(errs) > 0 {
 				return reflect.Zero(in.Type()), errs[0]
 			}
+			r.Status = x.Status
 			ret = append(ret, r)
 		}
 

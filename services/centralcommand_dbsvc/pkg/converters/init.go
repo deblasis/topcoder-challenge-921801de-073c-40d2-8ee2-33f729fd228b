@@ -12,6 +12,34 @@ import (
 
 //TODO DRY
 func init() {
+
+	m.AddConversion((*float32)(nil), (**float32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		r := float32(in.Float())
+		return reflect.ValueOf(&r), nil
+	})
+
+	m.AddConversion((*int64)(nil), (**int64)(nil), func(in reflect.Value) (reflect.Value, error) {
+		r := in.Int()
+		return reflect.ValueOf(&r), nil
+	})
+
+	m.AddConversion((*int32)(nil), (**int32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		r := int32(in.Int())
+		return reflect.ValueOf(&r), nil
+	})
+
+	m.AddConversion((**float32)(nil), (*float32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(float32(in.Elem().Float())), nil
+	})
+
+	m.AddConversion((**int64)(nil), (*int64)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(in.Elem().Int()), nil
+	})
+
+	m.AddConversion((**int32)(nil), (*int32)(nil), func(in reflect.Value) (reflect.Value, error) {
+		return reflect.ValueOf(int32(in.Elem().Int())), nil
+	})
+
 	m.AddConversion((*model.Dock)(nil), (*dtos.Dock)(nil), func(in reflect.Value) (reflect.Value, error) {
 
 		ret := &dtos.Dock{}
@@ -209,6 +237,26 @@ func init() {
 		}
 
 		return reflect.ValueOf(*ret), nil
+	})
+
+	m.AddConversion((*dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
+
+		ret := &pb.Ship{}
+		v := in.Interface().(dtos.Ship)
+		errs := m.Copy(ret, v)
+
+		switch v.Status {
+		case "docked":
+			ret.Status = pb.Ship_STATUS_DOCKED
+		case "in-flight":
+			ret.Status = pb.Ship_STATUS_INFLIGHT
+		}
+
+		if len(errs) > 0 {
+			return reflect.Zero(in.Type()), errs[0]
+		}
+
+		return reflect.ValueOf(ret), nil
 	})
 
 	m.AddConversion((*[]*pb.Station)(nil), (*[]dtos.Station)(nil), func(in reflect.Value) (reflect.Value, error) {

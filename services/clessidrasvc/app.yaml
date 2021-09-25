@@ -11,6 +11,11 @@ db:
   drivername: postgres
   sslmode: disable
 
+shippingstation:
+  dockholdingperiod: 120
+
+clessidra:
+  pollinginterval: 2
 
 # ssl:
 #   serverCert: ../../../../certs/deblasis-stc.pem

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"net/http"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/internal/model"
@@ -23,41 +24,55 @@ func NewUserRepository(db *pg.DB, logger log.Logger) UserRepository {
 	}
 }
 
-func (u userRepository) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+func (u userRepository) GetUserByUsername(ctx context.Context, username string) (resp *model.User, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetUserByUsername", "err", err)
+		}
+	}()
 	if username == "" {
-		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
-		return nil, errs.ErrBadRequest
+		err = errs.NewError(http.StatusBadRequest, "empty username", errs.ErrBadRequest)
+		return nil, err
 	}
 
 	var user model.User
-	err := u.Db.WithContext(ctx).Model(&user).Where("username = ?", username).Select()
+	err = u.Db.WithContext(ctx).Model(&user).Where("username = ?", username).Select()
+	level.Debug(u.logger).Log("method", "GetUserByUsername", "msg", "no rows")
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("no rows")
 		return nil, nil
 	}
-	return &user, errs.ErrCannotSelectEntity
+	return &user, nil
 }
 
-func (u userRepository) GetUserById(ctx context.Context, id string) (*model.User, error) {
+func (u userRepository) GetUserById(ctx context.Context, id string) (resp *model.User, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "GetUserById", "err", err)
+		}
+	}()
 	if id == "" {
-		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
-		return nil, errs.ErrBadRequest
+		err = errs.NewError(http.StatusBadRequest, "empty id", errs.ErrBadRequest)
+		return nil, err
 	}
 
 	var user model.User
-	err := u.Db.WithContext(ctx).Model(&user).Where("id = ?", id).Select()
+	err = u.Db.WithContext(ctx).Model(&user).Where("id = ?", id).Select()
 	if err == pg.ErrNoRows {
-		level.Debug(u.logger).Log("no rows")
+		level.Debug(u.logger).Log("method", "GetUserById", "msg", "no rows")
 		return nil, nil
 	}
-	return &user, errs.ErrCannotSelectEntity
+	return &user, nil
 }
 
-func (u userRepository) CreateUser(ctx context.Context, user *model.User) (*uuid.UUID, error) {
-
+func (u userRepository) CreateUser(ctx context.Context, user *model.User) (resp *uuid.UUID, err error) {
+	defer func() {
+		if !errs.IsNil(err) {
+			level.Debug(u.logger).Log("method", "CreateUser", "err", err)
+		}
+	}()
 	if user == nil {
-		level.Debug(u.logger).Log("err", errs.ErrBadRequest)
-		return nil, errs.ErrBadRequest
+		err = errs.NewError(http.StatusBadRequest, "empty user", errs.ErrBadRequest)
+		return nil, err
 	}
 
 	id := uuid.New()
@@ -67,18 +82,18 @@ func (u userRepository) CreateUser(ctx context.Context, user *model.User) (*uuid
 	if err != nil {
 		pgErr, ok := err.(pg.Error)
 		if ok && pgErr.IntegrityViolation() {
-			level.Debug(u.logger).Log("err", pgErr)
-			return nil, errs.ErrCannotInsertAlreadyExistingEntity
+			err = errs.NewError(http.StatusBadRequest, "user already exists", pgErr)
+			return nil, err
 		} else {
-			level.Debug(u.logger).Log("err", err)
-			return nil, errs.ErrCannotInsertEntity
+			err = errs.NewError(http.StatusInternalServerError, "cannot insert user", err)
+			return nil, err
 		}
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
-			level.Debug(u.logger).Log("err", err)
-			return nil, errs.ErrCannotInsertEntity
+			err = errs.NewError(http.StatusInternalServerError, "cannot insert user", errs.ErrCannotInsertEntity)
+			return nil, err
 		}
 	}
 

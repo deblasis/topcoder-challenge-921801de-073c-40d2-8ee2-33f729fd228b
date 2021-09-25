@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package deblasis.v1;
 
+import "v1/error.proto";
 import "google/protobuf/empty.proto";
 import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
@@ -18,7 +19,7 @@ service CentralCommandService {
       //response_body: "station"
     };
   }
-  rpc RegisterShip(RegisterShipRequest) returns (google.protobuf.Empty) {
+  rpc RegisterShip(RegisterShipRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/centcom/ship/register"
       body: "*"
@@ -52,6 +53,7 @@ message Dock {
   string id = 1;
   //@gotags: json:"-"
   string station_id =2;
+  //@gotags: json:"numDockingPorts"
   int64 num_docking_ports = 3[(google.api.field_behavior) = REQUIRED];
   int64 occupied = 4;
   float weight = 5;
@@ -91,7 +93,8 @@ message RegisterStationRequest {
 }
 message RegisterStationResponse {
   Station station = 1;
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 
 message RegisterShipRequest {
@@ -99,7 +102,8 @@ message RegisterShipRequest {
 }
 message RegisterShipResponse {
   Ship ship = 1;
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 
 
@@ -107,13 +111,15 @@ message GetAllShipsRequest {
 }
 message GetAllShipsResponse {
   repeated Ship ships = 1;
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 message GetAllStationsRequest {
 }
 message GetAllStationsResponse {
   repeated Station stations = 1;
-  string error = 2;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 2;
 }
 
 message GetNextAvailableDockingStationRequest {
@@ -122,7 +128,8 @@ message GetNextAvailableDockingStationRequest {
 }
 message GetNextAvailableDockingStationResponse {
   NextAvailableDockingStation next_available_docking_station = 1;  
-  string error = 2;
+  //@gotags: model:"-"  
+  deblasis.common.v1.Error error = 2;
 }
 
 message RegisterShipLandingRequest {
@@ -135,5 +142,6 @@ message RegisterShipLandingRequest {
 }
 
 message RegisterShipLandingResponse {
-  string error = 1;
+  //@gotags: model:"-"
+  deblasis.common.v1.Error error = 1;
 }

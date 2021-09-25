@@ -11,7 +11,7 @@
             "mode": "auto",
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
-                "DEBLASIS_BINDTOLOCALHOST": "true",
+                "DEBLASIS_BINDONLOCALHOST": "true",
                 "DEBLASIS_HTTPSERVERPORT": "8081",
                 "DEBLASIS_GRPCSERVERPORT": "8082",
                 "DEBLASIS_APIGATEWAY_AUTHSERVICE_GRPCENDPOINT": "localhost:9082",

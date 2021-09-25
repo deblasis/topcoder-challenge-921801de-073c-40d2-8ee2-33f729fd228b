@@ -2,19 +2,25 @@ package errs
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 
+	common_v1 "deblasis.net/space-traffic-control/gen/proto/go/v1"
+	"github.com/go-kit/kit/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
+	m "gopkg.in/jeevatkm/go-model.v1"
 )
 
 var (
+	ErrException  = errors.New("exception")
 	ErrUnknown    = errors.New("not found")
 	ErrBadRequest = errors.New("bad request")
+
+	ErrValidationFailed = errors.New("validation failed")
 
 	ErrCannotSelectEntities              = errors.New("cannot select entities")
 	ErrCannotSelectEntity                = errors.New("cannot select entity")
@@ -25,62 +31,176 @@ var (
 	ErrUnauthorized    = errors.New("access denied")
 )
 
-func Str2err(s string) error {
-	if s == "" {
-		return nil
-	}
-	return errors.New(s)
-}
-
-func Err2str(err error) string {
-	if err == nil {
-		return ""
-	}
-	return err.Error()
-}
-
-func CompareStatusErrors(error_a, error_b error) bool {
-	return status.Convert(error_a).Err() == status.Convert(error_b).Err()
-}
-
 func EncodeErrorHTTP(ctx context.Context, err error, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/vnd.deblasis.spacetrafficcontrol-v1+/json; charset=utf-8")
-	GetErrorContainer(ctx).Transport = err
-
-	w.WriteHeader(Err2code(err))
-
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if e, ok := err.(*Err); ok {
+		w.WriteHeader(int(e.Code))
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": e.Message,
+		})
+		return
+	}
+	w.WriteHeader(http.StatusInternalServerError)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
 	})
 }
 
-func ErrorHandlerGRPC(ctx context.Context, err error) {
-	GetErrorContainer(ctx).Transport = err
-	header := metadata.Pairs(
-		"x-http-code", fmt.Sprintf("%v", Err2code(err)),
-		"x-stc-error-message", err.Error(),
-	)
-	grpc.SendHeader(ctx, header)
+func TranportErrorHandler(logger log.Logger) func(ctx context.Context, err error) {
 
+	return func(ctx context.Context, err error) {
+		logger.Log("err", err)
+		if e, ok := err.(*Err); ok {
+			GetErrorContainer(ctx).Transport = e
+			header := metadata.Pairs(
+				"x-http-code", fmt.Sprintf("%v", e.Code),
+			)
+			grpc.SendHeader(ctx, header)
+		}
+	}
 }
 
-func Err2code(err error) int {
-	switch err.Error() {
-	case ErrBadRequest.Error(), ErrCannotInsertAlreadyExistingEntity.Error():
-		return http.StatusBadRequest
-	case ErrUnknown.Error():
-		return http.StatusNotFound
-	case ErrUnauthenticated.Error(), ErrUnauthorized.Error():
-		return http.StatusUnauthorized
+// func Err2code(err error) int {
+
+// 	switch {
+// 	case Is(err, ErrBadRequest) ||
+// 		Is(err, ErrCannotInsertAlreadyExistingEntity) ||
+// 		Is(err, ErrValidationFailed):
+// 		return http.StatusBadRequest
+// 	case Is(err, ErrUnknown):
+// 		return http.StatusNotFound
+// 	case Is(err, ErrUnauthenticated) ||
+// 		Is(err, ErrUnauthorized):
+// 		return http.StatusUnauthorized
+// 	}
+
+// 	return http.StatusInternalServerError
+// }
+
+func IsNil(e error) bool {
+	var err *Err
+	if errors.As(e, &err) {
+		return err == NilErr
+	}
+	var perr *common_v1.Error
+	if errors.As(e, &perr) {
+		return perr == common_v1.NilErr
+	}
+	return e == nil
+}
+
+var NilErr = (*Err)(nil)
+
+type Err struct {
+	Code    int32  `json:"-"`
+	Message string `json:"message,omitempty"`
+	Err     error  `json:"-,omitempty" model:"-,omitempty"`
+}
+
+func NewError(code int32, message string, err error) error {
+	return &Err{
+		Message: message,
+		Code:    code,
+		Err:     err,
+	}
+}
+
+func (e *Err) Error() string {
+	if e == (*Err)(nil) {
+		return ""
+	}
+	if e.Err != nil {
+		return e.Err.Error()
+	}
+	return e.Message
+}
+
+func (e *Err) Unwrap() error {
+	return e.Err
+}
+
+// Returns the inner most Error
+func (err *Err) Dig() *Err {
+	var ew *Err
+	if errors.As(err.Err, &ew) {
+		// Recursively digs until wrapper error is not in which case it will stop
+		return ew.Dig()
+	}
+	return err
+}
+
+func MarshalJSON(err error) []byte {
+	val, ok := err.(*Err)
+	if !ok {
+		return MarshalJSON(err)
+	}
+	j, err := json.Marshal(val)
+	if err != nil {
+		return MarshalJSON(&Err{
+			Code: val.Code,
+			Message: fmt.Sprint("can't convert error to JSON Base64:",
+				base64.StdEncoding.EncodeToString([]byte(val.Error()))),
+		})
+	}
+	return j
+}
+
+// func Is(err error, code string) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	switch v := err.(type) {
+// 	case *Error:
+// 		if v == nil {
+// 			return false
+// 		}
+// 		return v.Code == code
+// 	case *common_v1.Error:
+// 		if v == nil {
+// 			return false
+// 		}
+// 		return v.Code == code
+// 	default:
+// 		return false
+// 	}
+
+// }
+
+func (e Err) ToProtoV1() *common_v1.Error {
+	if e == (Err{}) {
+		return nil
+	}
+	return &common_v1.Error{
+		Code:    e.Code,
+		Message: e.Message,
+	}
+}
+
+func ToProtoV1(e error) *common_v1.Error {
+	if e == nil {
+		return nil
 	}
 
-	return http.StatusInternalServerError
+	var ee *Err
+	if errors.As(e, &ee) {
+		return ee.ToProtoV1()
+	}
+
+	ret := &common_v1.Error{}
+	ret.Code = http.StatusInternalServerError
+	ret.Message = e.Error()
+
+	return ret
 }
 
-// func ErrorEncoderGRPC(ctx context.Context, err error, grpcResponse *interface{}) (interface{}, error) {
-// 	if err != nil {
-// 		header := metadata.Pairs("x-http-code", fmt.Sprintf("%v", errs.Err2code(err)))
-// 		grpc.SendHeader(ctx, header)
-// 	}
-// 	return grpcResponse, nil
-// }
+func FromProtoV1(e *common_v1.Error) *Err {
+	if e == (*common_v1.Error)(nil) {
+		return nil
+	}
+	ret := &Err{}
+	errs := m.Copy(ret, e)
+	if len(errs) > 0 {
+		panic(errs[0])
+	}
+	return ret
+}

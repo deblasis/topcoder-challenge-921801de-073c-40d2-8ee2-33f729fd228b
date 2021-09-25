@@ -9,8 +9,9 @@ import (
 
 func GetCommonGRPCServerOptions(logger log.Logger) []grpctransport.ServerOption {
 	return []grpctransport.ServerOption{
-		grpctransport.ServerErrorLogger(logger),
 		grpctransport.ServerBefore(errs.ErrorContainerInjectorGRPC),
-		grpctransport.ServerErrorHandler(transport.ErrorHandlerFunc(errs.ErrorHandlerGRPC)),
+		grpctransport.ServerErrorHandler(transport.ErrorHandlerFunc(
+			errs.TranportErrorHandler(log.With(logger, "component", "TranportErrorHandler")),
+		)),
 	}
 }

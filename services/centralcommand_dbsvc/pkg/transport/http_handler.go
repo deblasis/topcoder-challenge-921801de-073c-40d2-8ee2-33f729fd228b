@@ -10,6 +10,7 @@ import (
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/gorilla/mux"
 
@@ -81,7 +82,7 @@ func decodeHTTPCreateShipRequest(_ context.Context, r *http.Request) (interface{
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }
 
 func decodeHTTPGetAllShipsRequest(_ context.Context, r *http.Request) (interface{}, error) {
@@ -98,10 +99,16 @@ func decodeHTTPCreateStationRequest(_ context.Context, r *http.Request) (interfa
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }
 
 func decodeHTTPGetAllStationsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+
+	qs := r.URL.Query().Get("ship_id")
+	if qs != "" {
+		return &dtos.GetAllStationsRequest{ShipId: &qs}, nil
+	}
+
 	return &dtos.GetAllStationsRequest{}, nil
 }
 
@@ -110,6 +117,11 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		errs.EncodeErrorHTTP(ctx, e, w)
 		return nil
 	}
+	if e, ok := response.(endpoint.Failer); ok && e != nil && e.Failed() != nil {
+		errs.EncodeErrorHTTP(ctx, e.Failed(), w)
+		return nil
+	}
+
 	return json.NewEncoder(w).Encode(response)
 }
 
@@ -123,7 +135,7 @@ func decodeHTTPGetNextAvailableDockingStationRequest(_ context.Context, r *http.
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }
 func decodeHTTPLandShipToDockRequest(_ context.Context, r *http.Request) (interface{}, error) {
 	var req dtos.LandShipToDockRequest
@@ -135,5 +147,5 @@ func decodeHTTPLandShipToDockRequest(_ context.Context, r *http.Request) (interf
 	if err != nil {
 		return nil, err
 	}
-	return req, nil
+	return &req, nil
 }

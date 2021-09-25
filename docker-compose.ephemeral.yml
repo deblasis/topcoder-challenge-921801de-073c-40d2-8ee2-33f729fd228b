@@ -1,0 +1,25 @@
+version: '3.6'
+
+services:
+  auth_db:
+    command: ["postgres", "-c", "log_statement=all"]
+
+  centralcommand_db:
+    command: ["postgres", "-c", "log_statement=all"]
+
+
+
+  integrationtester:
+    image: golang:1.17 
+    environment: 
+      - APIGATEWAY=http://apigateway:8081
+    depends_on:
+      - apigateway
+    working_dir: /go/src/deblasis/stc-integrationtester
+    volumes: 
+      - ./e2e_tests/entrypoint.sh:/entrypoint.sh
+      - .:/go/src/deblasis/stc-integrationtester
+    command: /entrypoint.sh
+    # command: bash -c 'while [[ "201" != "200" ]]; do echo $$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health); sleep 5; done; echo ✅ apigateway ready!;make dockertest'
+    networks:  
+      net:    

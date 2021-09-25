@@ -7,6 +7,7 @@ import (
 	"deblasis.net/space-traffic-control/common/consts"
 	"github.com/go-kit/kit/log"
 	"github.com/golang-jwt/jwt"
+	"google.golang.org/grpc/codes"
 )
 
 func AclRules() map[string]auth.ACLRule {
@@ -46,7 +47,7 @@ func AclRules() map[string]auth.ACLRule {
 		},
 		"/deblasis.v1.CentralCommandService/GetAllStations": func(req interface{}, logger log.Logger) auth.ACLDescriptor {
 
-			return auth.NewMustCheckTokenDescriptor(func(t *jwt.Token) error {
+			return auth.NewMustCheckTokenDescriptorWithCustomStatusCode(func(t *jwt.Token) error {
 
 				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
 				// role := claims["role"]
@@ -57,7 +58,7 @@ func AclRules() map[string]auth.ACLRule {
 					return fmt.Errorf("unauthorized: you must be a %v or %v in order to perform this operation", consts.ROLE_COMMAND, consts.ROLE_SHIP)
 				}
 				return nil
-			})
+			}, codes.InvalidArgument)
 		},
 		"/deblasis.v1.CentralCommandService/GetAllShips": func(req interface{}, logger log.Logger) auth.ACLDescriptor {
 

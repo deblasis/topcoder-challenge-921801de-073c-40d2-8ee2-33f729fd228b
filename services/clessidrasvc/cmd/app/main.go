@@ -49,7 +49,7 @@ func main() {
 	)
 	{
 		g.Add(func() error {
-			cockoo := time.NewTicker(2 * time.Second) //TODO cfg
+			cockoo := time.NewTicker(time.Duration(cfg.Clessidra.PollingInterval) * time.Second)
 			level.Info(cfg.Logger).Log("msg", "⏳ checking how many ships left... 🔍")
 
 			return func() error {
@@ -83,7 +83,49 @@ func main() {
 						return nil
 					}
 				}
-				return nil
+			}()
+
+		}, func(e error) {
+			level.Warn(cfg.Logger).Log("cancelling", e)
+		})
+	}
+	{
+		g.Add(func() error {
+			cockoo := time.NewTicker(time.Duration(cfg.Clessidra.PollingInterval) * time.Second)
+			level.Info(cfg.Logger).Log("msg", "⏳ checking how many reservations expired... 🔍")
+
+			return func() error {
+				for {
+					select {
+					case <-cockoo.C:
+
+						var reservations_cancelled int
+
+						level.Debug(cfg.Logger).Log("msg", "⏳ checking how many reservations expired... 🔍")
+
+						_, err := connection.WithContext(ctx).QueryOne(
+							pg.Scan(&reservations_cancelled), "select reservations_expired(?)", cfg.ShippingStation.DockHoldingPeriod,
+						)
+						if err != nil {
+							level.Error(cfg.Logger).Log("err", err)
+							return err
+						}
+
+						if reservations_cancelled > 0 {
+
+							stats.LastTimeShipsLeft = time.Now().UTC()
+							stats.LastTimeNumberShipsLeft = reservations_cancelled
+
+							level.Info(cfg.Logger).Log("msg", fmt.Sprintf("❌ %v reservations cancelled", reservations_cancelled))
+						} else {
+							level.Debug(cfg.Logger).Log("msg", fmt.Sprintf("❌ %v reservations cancelled", reservations_cancelled))
+						}
+					case <-cancelInterrupt:
+						cockoo.Stop()
+						cancel()
+						return nil
+					}
+				}
 			}()
 
 		}, func(e error) {
