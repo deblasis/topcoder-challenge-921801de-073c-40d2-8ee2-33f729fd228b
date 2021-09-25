@@ -1,7 +1,7 @@
 FROM golang:1.17-alpine AS build_base
 
 
-RUN apk add make protobuf git gcc g++ libc-dev curl jq npm nss-tools jose
+RUN apk add make protobuf git gcc g++ libc-dev curl jq npm openssl nss-tools jose
 WORKDIR /go/src/deblasis.net/space-traffic-control
 
 
