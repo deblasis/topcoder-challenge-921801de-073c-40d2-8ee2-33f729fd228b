@@ -1,7 +1,7 @@
 FROM golang:1.17-alpine AS build_base
 
 
-RUN apk add make protobuf git gcc g++ libc-dev curl
+RUN apk add make protobuf git gcc g++ libc-dev curl jq npm libnss3-tools jose
 WORKDIR /go/src/deblasis.net/space-traffic-control
 
 
@@ -27,12 +27,14 @@ COPY ./gen/proto/go/centralcommandsvc/v1/extensions.go ./gen/proto/go/centralcom
 COPY ./gen/proto/go/shippingstationsvc/v1/extensions.go ./gen/proto/go/shippingstationsvc/v1/extensions.go
 ###
 RUN make proto
+RUN make docker-gencerts
 
 FROM build_base AS server_builder
 
 WORKDIR /go/src/deblasis.net/space-traffic-control
 
 COPY --from=build_base /go/src/deblasis.net/space-traffic-control/gen ./gen
+COPY --from=build_base /go/src/deblasis.net/space-traffic-control/certs ./certs
 
 COPY ./Makefile ./Makefile
 COPY ./common ./common

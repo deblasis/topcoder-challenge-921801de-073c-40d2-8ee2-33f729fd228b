@@ -19,6 +19,6 @@ COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-contr
 FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash
 COPY --from=server_builder /entrypoint.sh /exe /wait-for-it.sh  /
-COPY ./certs/jwt.pem.pub /certs/jwt.pem.pub
+COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/certs/jwt.pem.pub /certs/jwt.pem.pub
 
 ENTRYPOINT ["/entrypoint.sh"]

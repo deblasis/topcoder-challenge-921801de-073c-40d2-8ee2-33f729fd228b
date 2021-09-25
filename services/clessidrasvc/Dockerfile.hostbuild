@@ -30,6 +30,6 @@ RUN apk update && apk upgrade && apk add bash && apk add supervisor
 COPY --from=server_builder /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh /Procfile  /
 COPY --from=server_builder /bin/consul /bin/goreman /bin/
 COPY --from=server_builder /consul/service.json /consul/service.json
-COPY ./certs/jwt.pem.pub /certs/jwt.pem.pub
+COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/certs/jwt.pem.pub /certs/jwt.pem.pub
 ENTRYPOINT [ "goreman" ]
 CMD [ "-f", "/Procfile", "start" ]
