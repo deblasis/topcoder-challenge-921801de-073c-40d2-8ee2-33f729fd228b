@@ -27,6 +27,7 @@ COPY ./gen/proto/go/centralcommandsvc/v1/extensions.go ./gen/proto/go/centralcom
 COPY ./gen/proto/go/shippingstationsvc/v1/extensions.go ./gen/proto/go/shippingstationsvc/v1/extensions.go
 ###
 RUN make proto
+#Provision certificates... the wrong way, the right one is out of scope here, I'd use Vault
 RUN make docker-gencerts
 
 FROM build_base AS server_builder

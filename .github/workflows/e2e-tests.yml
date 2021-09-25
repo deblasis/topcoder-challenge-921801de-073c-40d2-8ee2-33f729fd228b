@@ -8,8 +8,8 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.17.1'  
-      - name: Provision certificates... the wrong way, the right one is out of scope here, I'd use Vault
-        run: make gencert          
+# - name: Provision certificates... the wrong way, the right one is out of scope here, I'd use Vault
+#   run: make gencert          
       - name: Build, run, seed, e2e test
         run: |
           DOCKERCOMPOSE="docker-compose" COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 make integrationtests-up \
