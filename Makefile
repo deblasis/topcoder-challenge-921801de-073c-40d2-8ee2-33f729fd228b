@@ -94,7 +94,6 @@ seed-auth_dbsvc: ## do migration
 
 .PHONY: certdeps
 certdeps:
-	sudo apt install libnss3-tools
 	wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64 \
 	&& chmod +x mkcert-v1.4.3-linux-amd64 \
 	&& mv mkcert-v1.4.3-linux-amd64 /usr/local/bin/mkcert
@@ -112,7 +111,7 @@ host-gencerts:
 
 
 .PHONY: docker-gencerts
-docker-gencerts: 
+docker-gencerts: certdeps
 	mkdir -p ./certs \
 	&& jose jwk gen -i '{"alg": "RS256"}' > ./certs/jwk-private.json \
 	&& cat ./certs/jwk-private.json | jq '{kid: "$(shell openssl rand -base64 32)", alg: .alg, kty: .kty , use: "sig", n: .n , e: .e }'  > ./certs/jwk.json \
