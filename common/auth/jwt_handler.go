@@ -27,16 +27,24 @@ type JwtHandler struct {
 func NewJwtHandler(logger log.Logger, cfg config.JWTConfig) *JwtHandler {
 
 	privBytes, err := ioutil.ReadFile(cfg.PrivKeyPath)
-	fatal(err)
+	if err != nil {
+		level.Debug(logger).Log("err", err)
+	}
 
 	privK, err := jwt.ParseRSAPrivateKeyFromPEM(privBytes)
-	fatal(err)
+	if err != nil {
+		level.Debug(logger).Log("err", err)
+	}
 
 	pubBytes, err := ioutil.ReadFile(cfg.PubKeyPath)
-	fatal(err)
+	if err != nil {
+		level.Error(logger).Log("err", err)
+	}
 
 	pubK, err := jwt.ParseRSAPublicKeyFromPEM(pubBytes)
-	fatal(err)
+	if err != nil {
+		level.Error(logger).Log("err", err)
+	}
 
 	return &JwtHandler{
 		jwtConfig:  cfg,
