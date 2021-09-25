@@ -18,6 +18,7 @@ services:
     working_dir: /go/src/deblasis/stc-integrationtester
     volumes: 
       - .:/go/src/deblasis/stc-integrationtester
-    command: bash -c 'while [[ "$$(curl --connect-timeout 2 -s -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health)" != "200" ]]; do echo ⏳ waiting for apigateway...; sleep 5; done; echo ✅ apigateway ready!;make dockertest'
+    # command: bash -c 'while [[ "$$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health)" != "200" ]]; do echo ⏳ waiting for apigateway...; sleep 5; done; echo ✅ apigateway ready!;make dockertest'
+    command: bash -c 'while [[ "201" != "200" ]]; do echo $$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' ${APIGATEWAY:-http://apigateway:8081}/health); sleep 5; done; echo ✅ apigateway ready!;make dockertest'
     networks:  
       net:    
