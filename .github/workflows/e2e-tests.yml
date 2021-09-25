@@ -12,14 +12,8 @@ jobs:
         run: |
           DOCKERCOMPOSE="docker-compose" COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 make integrationtests-up \
           && make seed-auth_dbsvc \
-          && docker ps \
           && sleep 15 \
           && docker ps \
-          && sleep 15 \
-          && docker ps \
-          && curl -X POST http://localhost:8081/auth/login \
-          -H 'Content-Type: application/json' \
-          -d '{"username":"deblasis","password":"password1!"}' \
           && DOCKERCOMPOSE="docker-compose" make integrationtests-run
 # - name: Seed initial user
 #   run: make seed-auth_dbsvc
