@@ -104,8 +104,8 @@ host-gencerts:
 	&& docker build -f ./common/tools/jose-jwk/Dockerfile ./common/tools/jose-jwk -t jose-jwt \
 	&& docker run jose-jwt -c "jose jwk gen -i '{\"alg\": \"RS256\"}'" > ./certs/jwk-private.json \
 	&& cat ./certs/jwk-private.json | jq '{kid: "$(shell openssl rand -base64 32)", alg: .alg, kty: .kty , use: "sig", n: .n , e: .e }'  > ./certs/jwk.json \
-	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
-	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
+	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt.pem.key \
+	&& openssl rsa -in ./certs/jwt.pem.key -pubout -outform PEM -out ./certs/jwt.pem.pub \
 	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
 	&& ls
 
@@ -115,8 +115,8 @@ docker-gencerts: certdeps
 	mkdir -p ./certs \
 	&& jose jwk gen -i '{"alg": "RS256"}' > ./certs/jwk-private.json \
 	&& cat ./certs/jwk-private.json | jq '{kid: "$(shell openssl rand -base64 32)", alg: .alg, kty: .kty , use: "sig", n: .n , e: .e }'  > ./certs/jwk.json \
-	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt-key.pem \
-	&& openssl rsa -in ./certs/jwt-key.pem -pubout -outform PEM -out ./certs/jwt-pubout.pem \
+	&& npx pem-jwk ./certs/jwk-private.json > ./certs/jwt.pem.key \
+	&& openssl rsa -in ./certs/jwt.pem.key -pubout -outform PEM -out ./certs/jwt.pem.pub \
 	&& cd certs && mkcert -cert-file deblasis-stc.pem -key-file deblasis-stc-key.pem spacetrafficcontrol.127.0.0.1.nip.io localhost 127.0.0.1 ::1 authsvc \
 	&& ls
 	
