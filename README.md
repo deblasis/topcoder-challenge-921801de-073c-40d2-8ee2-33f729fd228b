@@ -1,4 +1,5 @@
 # @deblasis' Space Traffic Control
+![E2E Integration Tests](https://github.com/deblasis/f3accounts/actions/workflows/e2e-tests.yml/badge.svg)
 
 This is an implementation of the corresponding [Topcoder Challenge](https://www.topcoder.com/challenges/921801de-073c-40d2-8ee2-33f729fd228b?tab=details)
 
