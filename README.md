@@ -1,5 +1,5 @@
 # @deblasis' Space Traffic Control
-![E2E Integration Tests](https://github.com/deblasis/f3accounts/actions/workflows/e2e-tests.yml/badge.svg)
+![E2E Integration Tests](https://github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b/actions/workflows/e2e-tests.yml/badge.svg)
 
 This is an implementation of the corresponding [Topcoder Challenge](https://www.topcoder.com/challenges/921801de-073c-40d2-8ee2-33f729fd228b?tab=details)
 
@@ -10,23 +10,26 @@ This is an implementation of the corresponding [Topcoder Challenge](https://www.
 ### Architecture
 The architecture of this implementation is as follows:
 
-TODO insert diagram
+<img src="./docs/architecture-diagram.jpg" />
 
-//TODO
-//TODO
-//TODO
-//TODO
-//TODO
-//TODO
+There is also a single `Consul` leader instance and two additional `Agents` offering DNS for `APIGateway` and `ShippingStationSvc`.
+
+### Consul
+
+All services report health status via Grpc to Consul, that, along with the design, enables horizontal scaling.
+#### Services
+<img src="./docs/consul-services.jpg" />
+
+#### Nodes
+<img src="./docs/consul-nodes.jpg" />
 
 ### Gateway
-
 
 All http requests requests are served by a front facing `API Gateway` that implements *GRPC-Gateway*.
 It proxies requests, converts them into GRPC and also takes care of handling authorization headers.
 
-### AutZ / AuthN
-I used JWTs and I implemented handlers and ACL myself instead of using out-of-the-box solutions. 
+### AuthZ / AuthN
+I used JWTs RSA RS256 and I implemented handlers, interceptors and ACL myself instead of using out-of-the-box solutions. 
 
 ### TLS
 It's implemented but disabled by default to simplify testing/verification/debugging
