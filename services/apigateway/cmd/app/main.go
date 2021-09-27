@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package main
 
@@ -435,8 +435,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
 	return func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
-		//TODO refactor
-
 		logger.Log("msg", "checking metadata")
 		md, ok := runtime.ServerMetadataFromContext(ctx)
 		if !ok {
@@ -483,14 +481,8 @@ func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runt
 	}
 }
 
-type errorBody struct {
-	Error string `json:"error,omitempty"`
-}
-
 func httpHeaderRewriter(logger log.Logger) func(c context.Context, rw http.ResponseWriter, m proto.Message) error {
 	return func(ctx context.Context, rw http.ResponseWriter, m proto.Message) error {
-		//TODO refactor
-
 		var (
 			code      int
 			noContent bool
