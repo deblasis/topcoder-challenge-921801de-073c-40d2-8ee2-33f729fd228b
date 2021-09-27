@@ -51,8 +51,11 @@ In order to seed the database:
 ```bash
 make seed-auth_dbsvc
 ```
-The input file is located [here](./services/auth_dbsvc/scripts/seeding/users.csv)
+The input file is located [here](./services/auth_dbsvc/scripts/seeding/users.csv).
 
+There's also an initial user named `deblasis` added from the migrations with the same mechanism. This is only for convenience of testing/running the solution. Otherwise there would have been the need for an additional manual seeding step.
+
+CI/CD via Github Actions seeds the database with the additional user in order to test the seeder itself.
 ### Docker
 The docker/docker compose setup takes advantage of the various features available such as caching, build images and parallel builds.
 
