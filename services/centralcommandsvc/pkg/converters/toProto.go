@@ -71,7 +71,7 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 	m.AddConversion((**dtos.Ship)(nil), (**pb.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
 
 		ret := &pb.Ship{}
-		v := in.Interface().(dtos.Ship)
+		v := in.Interface().(*dtos.Ship)
 		errs := m.Copy(ret, v)
 
 		//it's ignored so we map it manually
@@ -112,6 +112,28 @@ func DBDtoGetAllStationsResponseToProto(src dtos.GetAllStationsResponse) *pb.Get
 	ret := &pb.GetAllStationsResponse{}
 	if errs := m.Copy(ret, src); len(errs) > 0 {
 		panic(errs[0])
+	}
+	return ret
+}
+
+func DBDtoGetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDockingStationResponse) *pb.GetNextAvailableDockingStationResponse {
+	ret := &pb.GetNextAvailableDockingStationResponse{}
+	na := src.NextAvailableDockingStation
+	if na != nil {
+		ret.NextAvailableDockingStation = &pb.NextAvailableDockingStation{
+			DockId:     na.DockId,
+			StationId:  na.StationId,
+			ShipWeight: na.ShipWeight,
+		}
+		if na.AvailableCapacity != nil {
+			ret.NextAvailableDockingStation.AvailableCapacity = *na.AvailableCapacity
+		}
+		if na.AvailableDocksAtStation != nil {
+			ret.NextAvailableDockingStation.AvailableDocksAtStation = *na.AvailableDocksAtStation
+		}
+		if na.SecondsUntilNextAvailable != nil {
+			ret.NextAvailableDockingStation.SecondsUntilNextAvailable = *na.SecondsUntilNextAvailable
+		}
 	}
 	return ret
 }

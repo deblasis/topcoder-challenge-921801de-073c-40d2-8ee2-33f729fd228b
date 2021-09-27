@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package e2e_tests
+package utils
 
 const (
 	AuthService_Signup                    = "/user/signup"

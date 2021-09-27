@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -239,7 +238,7 @@ func decodeGRPCGetNextAvailableDockingStationResponse(_ context.Context, grpcRes
 	return response, nil
 }
 func encodeGRPCRegisterShipLandingRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*dtos.LandShipToDockRequest)
+	req := request.(*pb.RegisterShipLandingRequest)
 	return req, nil
 }
 func decodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {

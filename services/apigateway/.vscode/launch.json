@@ -15,7 +15,8 @@
                 "DEBLASIS_HTTPSERVERPORT": "8081",
                 "DEBLASIS_GRPCSERVERPORT": "8082",
                 "DEBLASIS_APIGATEWAY_AUTHSERVICE_GRPCENDPOINT": "localhost:9082",
-                "DEBLASIS_APIGATEWAY_CENTRALCOMMANDSERVICE_GRPCENDPOINT": "localhost:9482"
+                "DEBLASIS_APIGATEWAY_CENTRALCOMMANDSERVICE_GRPCENDPOINT": "localhost:9482",
+                "DEBLASIS_APIGATEWAY_SHIPPINGSTATIONSERVICE_GRPCENDPOINT": "localhost:9282"
             },
             "program": "${workspaceFolder}/cmd/app/main.go"
         }

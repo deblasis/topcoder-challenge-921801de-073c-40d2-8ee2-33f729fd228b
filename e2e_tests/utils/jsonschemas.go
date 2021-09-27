@@ -1,10 +1,10 @@
 //go:build integration
 // +build integration
 
-package e2e_tests
+package utils
 
 var (
-	registerShipResponseSchema = `
+	RegisterStationResponseSchema = `
 	{
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "http://example.com/example.json",
@@ -52,7 +52,7 @@ var (
 }
 `
 
-	getAllStationsResponseSchema = `
+	GetAllStationsResponseSchema = `
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://example.com/example.json",
@@ -72,6 +72,7 @@ var (
                   "usedCapacity",
                   "docks"
               ],
+              "additionalProperties": false,
               "properties": {
                   "id": {
                       "$id": "#/items/anyOf/0/properties/id",
@@ -105,6 +106,7 @@ var (
                                       "numDockingPorts",
                                       "weight"
                                   ],
+                                  "additionalProperties": false,
                                   "properties": {
                                       "id": {
                                           "$id": "#/items/anyOf/0/properties/docks/items/anyOf/0/properties/id",
@@ -115,6 +117,11 @@ var (
                                           "$id": "#/items/anyOf/0/properties/docks/items/anyOf/0/properties/numDockingPorts",
                                           "type": "integer",
                                           "default": 0
+                                      },
+                                      "occupied": {
+                                        "$id": "#/items/anyOf/0/properties/docks/items/anyOf/0/properties/occupied",
+                                        "type": "integer",
+                                        "default": 0
                                       },
                                       "weight": {
                                           "$id": "#/items/anyOf/0/properties/docks/items/anyOf/0/properties/weight",
@@ -132,4 +139,93 @@ var (
   }
 }
 `
+
+	GetAllShipsResponseSchema = `
+  {
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "array",
+    "additionalItems": true,
+    "items": {
+        "$id": "#/items",
+        "anyOf": [
+            {
+                "$id": "#/items/anyOf/0",
+                "type": "object",
+                "title": "The first anyOf schema",
+                "required": [
+                    "id",
+                    "status",
+                    "weight"
+                ],
+                "properties": {
+                    "id": {
+                        "$id": "#/items/anyOf/0/properties/id",
+                        "type": "string"
+                    },
+                    "status": {
+                        "$id": "#/items/anyOf/0/properties/status",
+                        "type": "string"
+                    },
+                    "weight": {
+                        "$id": "#/items/anyOf/0/properties/weight",
+                        "type": "number"
+                    }
+                },
+                "additionalProperties": false
+            }
+        ]
+    }
+}
+`
+
+	RequestLandingLandCommandResponseSchema = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "required": [
+      "command",
+      "dockingStation"
+  ],
+  "properties": {
+      "command": {
+          "$id": "#/properties/command",
+          "type": "string",
+          "enum": [
+              "land"
+          ]
+      },
+      "dockingStation": {
+          "$id": "#/properties/dockingStation",
+          "type": "string"
+      }
+  },
+  "additionalProperties": false
+}`
+
+	RequestLandingWaitCommandResponseSchema = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "required": [
+      "command",
+      "duration"
+  ],
+  "properties": {
+      "command": {
+          "$id": "#/properties/command",
+          "type": "string",
+          "enum": [
+              "wait"
+          ]
+      },
+      "duration": {
+          "$id": "#/properties/duration",
+          "type": "number"
+      }
+  },
+  "additionalProperties": true
+}`
 )

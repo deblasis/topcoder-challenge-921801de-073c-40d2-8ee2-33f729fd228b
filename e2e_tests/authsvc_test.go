@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"deblasis.net/space-traffic-control/common/consts"
+	. "deblasis.net/space-traffic-control/e2e_tests/utils"
 	"github.com/bxcodec/faker/v3"
 	"github.com/gavv/httpexpect/v2"
 	. "github.com/onsi/ginkgo"
@@ -23,11 +24,11 @@ var _ = Describe("AuthSvc", func() {
 	Describe("Signup", func() {
 
 		var (
-			signupReq signupRequest
+			signupReq SignupRequest
 		)
 
 		BeforeEach(func() {
-			signupReq = signupRequest{}
+			signupReq = SignupRequest{}
 		})
 		Context("unauthenticated user", func() {
 			When("trying to sign up a Station user", func() {
@@ -241,11 +242,11 @@ var _ = Describe("AuthSvc", func() {
 
 	Describe("Login", func() {
 		var (
-			loginReq loginRequest
+			loginReq LoginRequest
 		)
 
 		BeforeEach(func() {
-			loginReq = loginRequest{}
+			loginReq = LoginRequest{}
 		})
 		When("providing empty credentials", func() {
 			It("should fail with 400", func() {
@@ -265,7 +266,7 @@ var _ = Describe("AuthSvc", func() {
 
 		When("providing correct credentials", func() {
 			BeforeEach(func() {
-				loginReq = loginRequest{
+				loginReq = LoginRequest{
 					Username: Persona_Ship_MilleniumFalcon,
 					Password: Persona_Ship_MilleniumFalcon,
 				}

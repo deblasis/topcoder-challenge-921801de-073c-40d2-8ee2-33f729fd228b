@@ -78,7 +78,9 @@ func (u dockRepository) GetNextAvailableDockingStation(ctx context.Context, ship
 	var nextAvail model.NextAvailableDockingStation
 	_, err = u.Db.WithContext(ctx).Model(&nextAvail).
 		QueryOne(&nextAvail, fmt.Sprintf("select * from %v(?)", model.GetNextAvailableDockingStationForShipFunctionName), shipId)
-
+	if err == pg.ErrNoRows {
+		return nil, errs.NewError(http.StatusServiceUnavailable, "there are no stations available for you at the moment, please make sure you are registered and try again later", err)
+	}
 	if err != nil {
 		err = errs.NewError(http.StatusInternalServerError, "cannot determine next available docking station", err)
 		return nil, err
@@ -100,15 +102,26 @@ func (u dockRepository) LandShipToDock(ctx context.Context, shipId uuid.UUID, do
 		DockDuration: int64(duration),
 	}
 
-	result, err := u.Db.WithContext(ctx).Model(dockedShip).Insert()
+	//checking if the dock is reserved
+	reserved, err := u.Db.WithContext(ctx).Model(dockedShip).Where("ship_id = ? and dock_id = ?", shipId, dockId).Count()
 	if err != nil {
-		err = errs.NewError(http.StatusInternalServerError, "failed to insert docked ship", err)
+		err = errs.NewError(http.StatusInternalServerError, "failed to check if the dock is reserved", err)
+		return nil, err
+	}
+	if reserved == 0 {
+		err = errs.NewError(http.StatusBadRequest, "the requested dock is not reserved for the ship, you must request landing first", err)
+		return nil, err
+	}
+
+	result, err := u.Db.WithContext(ctx).Model(dockedShip).WherePK().Update()
+	if err != nil {
+		err = errs.NewError(http.StatusInternalServerError, "failed to update docked ship", err)
 		return nil, err
 	}
 
 	if result != nil {
 		if result.RowsAffected() == 0 {
-			err = errs.NewError(http.StatusInternalServerError, "failed to insert docked ship", errs.ErrCannotInsertEntity)
+			err = errs.NewError(http.StatusInternalServerError, "failed to update docked ship", errs.ErrCannotInsertEntity)
 			return nil, err
 		}
 	}

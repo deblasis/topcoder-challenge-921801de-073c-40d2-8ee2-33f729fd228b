@@ -8,7 +8,6 @@ import (
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
-	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -197,7 +196,7 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 }
 
 func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.GetNextAvailableDockingStationRequest) (*pb.GetNextAvailableDockingStationResponse, error) {
-	_, rep, err := g.getAllStations.ServeGRPC(ctx, r)
+	_, rep, err := g.getNextAvailableDockingStation.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +206,7 @@ func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.G
 }
 
 func (g *grpcServer) RegisterShipLanding(ctx context.Context, r *pb.RegisterShipLandingRequest) (*pb.RegisterShipLandingResponse, error) {
-	_, rep, err := g.getAllStations.ServeGRPC(ctx, r)
+	_, rep, err := g.registerShipLanding.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
@@ -274,9 +273,6 @@ func decodeGRPCRegisterStationRequest(c context.Context, grpcReq interface{}) (i
 
 }
 func encodeGRPCRegisterStationResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	// if f, ok := grpcResponse.(endpoint.Failer); ok && f.Failed() != nil {
-	// 	return errorEncoder(ctx, f.Failed(), grpcResponse.(*pb.RegisterStationResponse))
-	// }
 	resp := grpcResponse.(*pb.RegisterStationResponse)
 
 	//TODO: refactor
@@ -342,11 +338,17 @@ func decodeGRPCRegisterShipLandingRequest(c context.Context, grpcReq interface{}
 	return req, nil
 }
 func encodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*dtos.LandShipToDockResponse)
+	response := grpcResponse.(*pb.RegisterShipLandingResponse)
 	return response, nil
 }
 
 func serializeRegisterStationResponse(resp *pb.RegisterStationResponse) []byte {
+
+	//TODO: apply where appropriate
+	if !errs.IsNil(resp.Failed()) {
+		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
+	}
+
 	type dock struct {
 		Id              string `json:"id"`
 		NumDockingPorts int64  `json:"numDockingPorts"`

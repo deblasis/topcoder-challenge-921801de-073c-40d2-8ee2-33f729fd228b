@@ -100,16 +100,12 @@ func GetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDoc
 }
 
 func GetNextAvailableDockingStationRequestToProto(src *dtos.GetNextAvailableDockingStationRequest) *pb.GetNextAvailableDockingStationRequest {
-	ret := &pb.GetNextAvailableDockingStationRequest{}
-	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		//panic(errs[0])
-	}
-	return ret
+	return &pb.GetNextAvailableDockingStationRequest{ShipId: src.ShipId}
 }
 func LandShipToDockRequestToProto(src *dtos.LandShipToDockRequest) *pb.LandShipToDockRequest {
 	ret := &pb.LandShipToDockRequest{}
-	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		//panic(errs[0])
+	if errs := m.Copy(ret, src); len(errs) > 0 {
+		panic(errs[0])
 	}
 	return ret
 }

@@ -121,6 +121,12 @@ docker-gencerts: certdeps
 	&& ls
 	
 
+.PHONY: getcerts
+getcerts:
+	docker cp $(shell docker ps -qf "ancestor=deblasis/stc_authsvc:latest"):/certs/jwt.pem.key ./certs/jwt.pem.key
+	docker cp $(shell docker ps -qf "ancestor=deblasis/stc_authsvc:latest"):/certs/jwt.pem.pub ./certs/jwt.pem.pub
+
+
 .PHONY: builder
 builder:
 	docker build . --tag=deblasis/stc_builder  
@@ -139,14 +145,11 @@ integrationtests-build: builder
 
 .PHONY: integrationtests-up
 integrationtests-up: integrationtests-build
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up -d --force-recreate --remove-orphans
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.integrationtests.yml up -d --force-recreate --remove-orphans
 
 .PHONY: integrationtests-run
 integrationtests-run: 
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.ephemeral.yml up integrationtester
-
-
-
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.integrationtests.yml up integrationtester
 
 
 .PHONY: dockertest
@@ -157,6 +160,14 @@ dockertest:
 .PHONY: run-fast
 run-fast: host-build
 	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.prod.yml up --remove-orphans
+
+.PHONY: run-fast-integrationtests
+run-fast-integrationtests: host-build
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.integrationtests.yml up -d --remove-orphans
+	make getcerts
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostports.yml -f docker-compose.integrationtests.yml up --remove-orphans
+
+
 
 services: $(SERVICES)
 migrators: $(MIGRATORS)
