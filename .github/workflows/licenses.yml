@@ -1,4 +1,10 @@
-- name: Check License Header
-  uses: apache/skywalking-eyes@main      # always prefer to use a revision instead of `main`.
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+name: E2E Tests
+on: push
+jobs:
+  run_integration_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check License Header
+        uses: apache/skywalking-eyes@ed749b83e23f10eae9c379870c3d5ed45ce4e67a
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
