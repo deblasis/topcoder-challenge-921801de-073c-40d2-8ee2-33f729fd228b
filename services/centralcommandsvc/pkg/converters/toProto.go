@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package converters
 
@@ -36,9 +36,7 @@ func DBDtoCreateShipResponseToProto(src dtos.CreateShipResponse) *pb.RegisterShi
 		return &pb.RegisterShipResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.RegisterShipResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -49,9 +47,7 @@ func DBDtoCreateStationResponseToProto(src dtos.CreateStationResponse) *pb.Regis
 	ret := &pb.RegisterStationResponse{
 		Station: &pb.Station{},
 	}
-	if errs := m.Copy(ret.Station, src.Station); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret.Station, src.Station)
 	return ret
 }
 
@@ -64,14 +60,10 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 
 		ret := &pb.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		//it's ignored so we map it manually
 		ret.Status = v.Status
-
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -79,14 +71,10 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 
 		ret := &pb.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		//it's ignored so we map it manually
 		ret.Status = v.Status
-
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -94,14 +82,10 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 
 		ret := &pb.Ship{}
 		v := in.Interface().(*dtos.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		//it's ignored so we map it manually
 		ret.Status = v.Status
-
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -109,21 +93,15 @@ func DBDtoGetAllShipsResponseToProto(src dtos.GetAllShipsResponse) *pb.GetAllShi
 
 		ret := &pb.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		//it's ignored so we map it manually
 		ret.Status = v.Status
 
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
-
 		return reflect.ValueOf(ret), nil
 	})
 
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -132,9 +110,7 @@ func DBDtoGetAllStationsResponseToProto(src dtos.GetAllStationsResponse) *pb.Get
 		return &pb.GetAllStationsResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.GetAllStationsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 

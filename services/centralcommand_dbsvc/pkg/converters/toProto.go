@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package converters
 
@@ -33,17 +33,14 @@ func CreateStationRequestToProto(src *dtos.CreateStationRequest) *pb.CreateStati
 	ret := &pb.CreateStationRequest{
 		Station: &pb.Station{},
 	}
-	if errs := m.Copy(ret.Station, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret.Station, src)
+
 	return ret
 }
 
 func CreateStationResponseToProto(src *dtos.CreateStationResponse) *pb.CreateStationResponse {
 	ret := &pb.CreateStationResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	ret.Error = errs.ToProtoV1(src.Error)
 	return ret
 }
@@ -51,17 +48,14 @@ func CreateShipRequestToProto(src *dtos.CreateShipRequest) *pb.CreateShipRequest
 	ret := &pb.CreateShipRequest{
 		Ship: &pb.Ship{},
 	}
-	if errs := m.Copy(ret.Ship, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret.Ship, src)
+
 	return ret
 }
 
 func CreateShipResponseToProto(src *dtos.CreateShipResponse) *pb.CreateShipResponse {
 	ret := &pb.CreateShipResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	ret.Error = errs.ToProtoV1(src.Error)
 	return ret
 }
@@ -70,9 +64,7 @@ func GetAllShipsRequestToProto(src *dtos.GetAllShipsRequest) *pb.GetAllShipsRequ
 	if *src == (dtos.GetAllShipsRequest{}) {
 		return ret
 	}
-	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, &src)
 	return ret
 }
 
@@ -81,9 +73,7 @@ func GetAllShipsResponseToProto(src *dtos.GetAllShipsResponse) *pb.GetAllShipsRe
 		return &pb.GetAllShipsResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.GetAllShipsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 func GetAllStationsRequestToProto(src *dtos.GetAllStationsRequest) *pb.GetAllStationsRequest {
@@ -91,9 +81,7 @@ func GetAllStationsRequestToProto(src *dtos.GetAllStationsRequest) *pb.GetAllSta
 	if *src == (dtos.GetAllStationsRequest{}) {
 		return ret
 	}
-	if errs := m.Copy(ret, &src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, &src)
 	return ret
 }
 
@@ -102,9 +90,7 @@ func GetAllStationsResponseToProto(src *dtos.GetAllStationsResponse) *pb.GetAllS
 		return &pb.GetAllStationsResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.GetAllStationsResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 
 	return ret
 }
@@ -114,10 +100,7 @@ func GetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDoc
 		return &pb.GetNextAvailableDockingStationResponse{Error: errs.ToProtoV1(src.Error)}
 	}
 	ret := &pb.GetNextAvailableDockingStationResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
-
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -126,9 +109,7 @@ func GetNextAvailableDockingStationRequestToProto(src *dtos.GetNextAvailableDock
 }
 func LandShipToDockRequestToProto(src *dtos.LandShipToDockRequest) *pb.LandShipToDockRequest {
 	ret := &pb.LandShipToDockRequest{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 

@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package converters
 
@@ -66,10 +66,7 @@ func init() {
 
 		ret := &dtos.Dock{}
 		v := in.Interface().(model.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(*ret), nil
 	})
@@ -78,10 +75,7 @@ func init() {
 
 		ret := &model.Dock{}
 		v := in.Interface().(dtos.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(*ret), nil
 	})
@@ -90,10 +84,7 @@ func init() {
 
 		ret := &dtos.Dock{}
 		v := in.Interface().(*model.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -102,10 +93,7 @@ func init() {
 
 		ret := &model.Dock{}
 		v := in.Interface().(*dtos.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -114,10 +102,7 @@ func init() {
 
 		ret := &pb.Station{}
 		v := in.Interface().(dtos.Station)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -126,10 +111,7 @@ func init() {
 
 		ret := &pb.Dock{}
 		v := in.Interface().(*dtos.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -137,10 +119,7 @@ func init() {
 
 		ret := &dtos.Dock{}
 		v := in.Interface().(*pb.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -149,10 +128,7 @@ func init() {
 
 		ret := &pb.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -161,10 +137,7 @@ func init() {
 
 		ret := &dtos.Dock{}
 		v := in.Interface().(model.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(*ret), nil
 	})
@@ -173,10 +146,7 @@ func init() {
 
 		ret := &model.Dock{}
 		v := in.Interface().(dtos.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(*ret), nil
 	})
@@ -185,10 +155,7 @@ func init() {
 
 		ret := &dtos.Dock{}
 		v := in.Interface().(*model.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -197,10 +164,7 @@ func init() {
 
 		ret := &model.Dock{}
 		v := in.Interface().(*dtos.Dock)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -209,10 +173,7 @@ func init() {
 
 		ret := &dtos.Station{}
 		v := in.Interface().(pb.Station)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -221,10 +182,7 @@ func init() {
 
 		ret := &pb.Station{}
 		v := in.Interface().(*dtos.Station)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -233,10 +191,7 @@ func init() {
 
 		ret := &pb.Ship{}
 		v := in.Interface().(*dtos.Ship)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -245,17 +200,13 @@ func init() {
 
 		ret := &dtos.Ship{}
 		v := in.Interface().(*pb.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		switch v.Status {
 		case pb.Ship_STATUS_DOCKED:
 			ret.Status = "docked"
 		case pb.Ship_STATUS_INFLIGHT:
 			ret.Status = "in-flight"
-		}
-
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
 		}
 
 		return reflect.ValueOf(*ret), nil
@@ -265,17 +216,13 @@ func init() {
 
 		ret := &pb.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
+		m.Copy(ret, v)
 
 		switch v.Status {
 		case "docked":
 			ret.Status = pb.Ship_STATUS_DOCKED
 		case "in-flight":
 			ret.Status = pb.Ship_STATUS_INFLIGHT
-		}
-
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
 		}
 
 		return reflect.ValueOf(ret), nil
@@ -287,10 +234,7 @@ func init() {
 		v := in.Interface().([]*pb.Station)
 		for _, x := range v {
 			r := &dtos.Station{}
-			errs := m.Copy(r, x)
-			if len(errs) > 0 {
-				return reflect.Zero(in.Type()), errs[0]
-			}
+			m.Copy(r, x)
 			ret = append(ret, *r)
 		}
 
@@ -300,40 +244,28 @@ func init() {
 	m.AddConversion((*dtos.Station)(nil), (*pbsvc.Station)(nil), func(in reflect.Value) (reflect.Value, error) {
 		ret := &pbsvc.Station{}
 		v := in.Interface().(dtos.Station)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 		return reflect.ValueOf(ret), nil
 	})
 
 	m.AddConversion((*pbsvc.Station)(nil), (*dtos.Station)(nil), func(in reflect.Value) (reflect.Value, error) {
 		ret := &dtos.Station{}
 		v := in.Interface().(pbsvc.Station)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 		return reflect.ValueOf(ret), nil
 	})
 
 	m.AddConversion((*dtos.Ship)(nil), (*pbsvc.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
 		ret := &pbsvc.Ship{}
 		v := in.Interface().(dtos.Ship)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 		return reflect.ValueOf(ret), nil
 	})
 
 	m.AddConversion((*pbsvc.Ship)(nil), (*dtos.Ship)(nil), func(in reflect.Value) (reflect.Value, error) {
 		ret := &dtos.Ship{}
 		v := in.Interface().(pbsvc.Ship)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 		return reflect.ValueOf(ret), nil
 	})
 
@@ -341,10 +273,7 @@ func init() {
 
 		ret := &dtos.NextAvailableDockingStation{}
 		v := in.Interface().(*pb.NextAvailableDockingStation)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})
@@ -353,10 +282,7 @@ func init() {
 
 		ret := &pb.NextAvailableDockingStation{}
 		v := in.Interface().(*dtos.NextAvailableDockingStation)
-		errs := m.Copy(ret, v)
-		if len(errs) > 0 {
-			return reflect.Zero(in.Type()), errs[0]
-		}
+		m.Copy(ret, v)
 
 		return reflect.ValueOf(ret), nil
 	})

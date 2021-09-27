@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package converters
 
@@ -32,9 +32,7 @@ import (
 
 func StationToDto(src *model.Station) *dtos.Station {
 	ret := &dtos.Station{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -48,9 +46,7 @@ func StationsToDto(src []model.Station) []dtos.Station {
 
 func DockToDto(src model.Dock) dtos.Dock {
 	ret := &dtos.Dock{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return *ret
 }
 
@@ -64,9 +60,7 @@ func DocksToDto(src []model.Dock) []dtos.Dock {
 
 func ShipToDto(src *model.Ship) *dtos.Ship {
 	ret := &dtos.Ship{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -83,9 +77,7 @@ func NextAvailableDockingStationToDto(src *model.NextAvailableDockingStation) *d
 		return nil
 	}
 	ret := &dtos.NextAvailableDockingStation{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -96,9 +88,7 @@ func ProtoCreateStationRequestToDto(src *pb.CreateStationRequest) *dtos.CreateSt
 		return ret
 	}
 
-	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, srcStuct)
 	return ret
 }
 
@@ -112,9 +102,7 @@ func ProtoCreateShipRequestToDto(src *pb.CreateShipRequest) *dtos.CreateShipRequ
 	if srcStuct == nil {
 		return ret
 	}
-	if errs := m.Copy(ret, srcStuct); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, srcStuct)
 	return ret
 }
 func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipResponse {
@@ -124,9 +112,8 @@ func ProtoCreateShipResponseToDto(src *pb.CreateShipResponse) *dtos.CreateShipRe
 	ret := &dtos.CreateShipResponse{
 		Ship: &dtos.Ship{},
 	}
-	if errs := m.Copy(ret.Ship, src.Ship); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret.Ship, src.Ship)
+
 	return ret
 }
 
@@ -137,9 +124,8 @@ func ProtoCreateStationResponseToDto(src *pb.CreateStationResponse) *dtos.Create
 	ret := &dtos.CreateStationResponse{
 		Station: &dtos.Station{},
 	}
-	if errs := m.Copy(ret.Station, src.Station); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret.Station, src.Station)
+
 	return ret
 }
 
@@ -153,9 +139,7 @@ func ProtoGetAllStationsResponseToDto(src *pb.GetAllStationsResponse) *dtos.GetA
 	if src.Stations == nil {
 		return ret
 	}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -169,9 +153,7 @@ func ProtoGetAllShipsResponseToDto(src *pb.GetAllShipsResponse) *dtos.GetAllShip
 	if src.Ships == nil {
 		return ret
 	}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -180,9 +162,7 @@ func ProtoGetNextAvailableDockingStationResponseToDto(src *pb.GetNextAvailableDo
 		return &dtos.GetNextAvailableDockingStationResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.GetNextAvailableDockingStationResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 
@@ -191,15 +171,11 @@ func ProtoLandShipToDockResponseToDto(src *pb.LandShipToDockResponse) *dtos.Land
 		return &dtos.LandShipToDockResponse{Error: errs.FromProtoV1(src.Error)}
 	}
 	ret := &dtos.LandShipToDockResponse{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }
 func ProtoLandShipToDockRequestToDto(src *pb.LandShipToDockRequest) *dtos.LandShipToDockRequest {
 	ret := &dtos.LandShipToDockRequest{}
-	if errs := m.Copy(ret, src); len(errs) > 0 {
-		//panic(errs[0])
-	}
+	m.Copy(ret, src)
 	return ret
 }

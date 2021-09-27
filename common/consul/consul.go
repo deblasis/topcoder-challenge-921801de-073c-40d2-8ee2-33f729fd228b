@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package consul
 
@@ -47,12 +47,11 @@ type ConsulRegister struct {
 
 func NewConsulRegister(consulAddress, serviceName string, servicePort, metricsPort int, tags []string, logger log.Logger, forceLocalhost bool) *ConsulRegister {
 	return &ConsulRegister{
-		ConsulAddress: consulAddress,
-		ServiceName:   serviceName,
-		Tags:          tags,
-		ServicePort:   servicePort,
-		MetricsPort:   metricsPort,
-		//TODO UNCOMMENT!!!! THIS IS FOR DEBUG
+		ConsulAddress:                  consulAddress,
+		ServiceName:                    serviceName,
+		Tags:                           tags,
+		ServicePort:                    servicePort,
+		MetricsPort:                    metricsPort,
 		DeregisterCriticalServiceAfter: time.Duration(1) * time.Minute,
 		Interval:                       time.Duration(20) * time.Second,
 		logger:                         logger,
@@ -86,8 +85,8 @@ func (r *ConsulRegister) NewConsulGRPCRegister() (*consulsd.Registrar, error) {
 		Check: &api.AgentServiceCheck{
 			Interval:                       r.Interval.String(),
 			GRPC:                           fmt.Sprintf("%v:%v/%v", IP, r.ServicePort, r.ServiceName),
-			GRPCUseTLS:                     false, //TODO config
-			TLSSkipVerify:                  true,  //TODO config
+			GRPCUseTLS:                     false,
+			TLSSkipVerify:                  true,
 			DeregisterCriticalServiceAfter: r.DeregisterCriticalServiceAfter.String(),
 		},
 	}
@@ -120,7 +119,7 @@ func (r *ConsulRegister) NewConsulHTTPRegister() (*consulsd.Registrar, error) {
 		Check: &api.AgentServiceCheck{
 			Interval:                       r.Interval.String(),
 			HTTP:                           fmt.Sprintf("http://%v:%v/%v", IP, r.ServicePort, "health"),
-			TLSSkipVerify:                  true, //TODO config
+			TLSSkipVerify:                  true,
 			DeregisterCriticalServiceAfter: r.DeregisterCriticalServiceAfter.String(),
 		},
 	}

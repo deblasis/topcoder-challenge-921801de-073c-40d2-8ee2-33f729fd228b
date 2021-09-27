@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package errs
 
@@ -31,6 +31,7 @@ import (
 	"net/http"
 
 	common_v1 "deblasis.net/space-traffic-control/gen/proto/go/v1"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -167,27 +168,6 @@ func MarshalJSON(err error) []byte {
 	return j
 }
 
-// func Is(err error, code string) bool {
-// 	if err == nil {
-// 		return false
-// 	}
-// 	switch v := err.(type) {
-// 	case *Error:
-// 		if v == nil {
-// 			return false
-// 		}
-// 		return v.Code == code
-// 	case *common_v1.Error:
-// 		if v == nil {
-// 			return false
-// 		}
-// 		return v.Code == code
-// 	default:
-// 		return false
-// 	}
-
-// }
-
 func (e Err) ToProtoV1() *common_v1.Error {
 	if e == (Err{}) {
 		return nil
@@ -220,9 +200,30 @@ func FromProtoV1(e *common_v1.Error) *Err {
 		return nil
 	}
 	ret := &Err{}
-	errs := m.Copy(ret, e)
-	if len(errs) > 0 {
-		panic(errs[0])
-	}
+	m.Copy(ret, e)
+
 	return ret
+}
+
+func InjectGrpcStatusCode(ctx context.Context, resp interface{}) {
+
+	var code int
+	var err *Err
+	var perr *common_v1.Error
+
+	if failer, ok := resp.(endpoint.Failer); ok {
+		e := failer.Failed()
+		if !IsNil(e) {
+			if errors.As(e, &err) {
+				code = int(err.Code)
+			}
+			if errors.As(e, &perr) {
+				code = int(perr.Code)
+			}
+			header := metadata.Pairs(
+				"x-http-code", fmt.Sprintf("%v", code),
+			)
+			grpc.SendHeader(ctx, header)
+		}
+	}
 }
