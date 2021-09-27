@@ -23,7 +23,7 @@
 name: Licenses
 on: push
 jobs:
-  run_integration_tests:
+  check_license_header:
     runs-on: ubuntu-latest
     steps:
       - name: Check License Header
