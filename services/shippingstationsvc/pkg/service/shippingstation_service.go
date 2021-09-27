@@ -60,6 +60,13 @@ func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb
 		//TODO check if this should be a domain error
 		return nil, err
 	}
+	userId := common.ExtractUserIdFromCtx(ctx)
+	if userId == "" {
+		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
+		return &pb.RequestLandingResponse{Error: errs.ToProtoV1(err)}, nil
+	}
+
+	request.Id = userId
 
 	err = s.validate.Struct(request)
 	if err != nil {
@@ -68,12 +75,6 @@ func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb
 		return &pb.RequestLandingResponse{
 			Error: errs.ToProtoV1(err),
 		}, nil
-	}
-
-	userId := common.ExtractUserIdFromCtx(ctx)
-	if userId == "" {
-		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
-		return &pb.RequestLandingResponse{Error: errs.ToProtoV1(err)}, nil
 	}
 
 	ret, err := s.centralcommand_endpointset.GetNextAvailableDockingStation(ctx, &ccpb.GetNextAvailableDockingStationRequest{
@@ -115,6 +116,12 @@ func (s *shippingStationService) Landing(ctx context.Context, request *pb.Landin
 	)
 	defer level.Info(s.logger).Log("handledrequest", "Landing")
 
+	request.ShipId = common.ExtractUserIdFromCtx(ctx)
+	if request.ShipId == "" {
+		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
+		return &pb.LandingResponse{Error: errs.ToProtoV1(err)}, nil
+	}
+
 	//TODO refactor
 	err = s.validate.Struct(request)
 	if err != nil {
@@ -125,16 +132,10 @@ func (s *shippingStationService) Landing(ctx context.Context, request *pb.Landin
 		}, nil
 	}
 
-	userId := common.ExtractUserIdFromCtx(ctx)
-	if userId == "" {
-		err = errs.NewError(http.StatusBadRequest, "id is empty", errs.ErrValidationFailed)
-		return &pb.LandingResponse{Error: errs.ToProtoV1(err)}, nil
-	}
-
 	req := &ccpb.RegisterShipLandingRequest{
-		ShipId:   userId,
+		ShipId:   request.ShipId,
 		DockId:   request.DockId,
-		Duration: request.Duration,
+		Duration: request.Time,
 	}
 
 	ret, err := s.centralcommand_endpointset.RegisterShipLanding(ctx, req)

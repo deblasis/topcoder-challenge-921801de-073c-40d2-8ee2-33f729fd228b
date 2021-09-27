@@ -15,8 +15,7 @@ import (
 )
 
 type grpcServer struct {
-	pb.CentralCommandDBServiceServer
-	serviceStatus grpctransport.Handler
+	pb.UnimplementedCentralCommandDBServiceServer
 
 	createShip  grpctransport.Handler
 	getAllShips grpctransport.Handler
@@ -108,6 +107,13 @@ func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.G
 		return nil, err
 	}
 	return rep.(*pb.GetNextAvailableDockingStationResponse), nil
+}
+func (g *grpcServer) LandShipToDock(ctx context.Context, r *pb.LandShipToDockRequest) (*pb.LandShipToDockResponse, error) {
+	_, rep, err := g.landShipToDock.ServeGRPC(ctx, r)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.LandShipToDockResponse), nil
 }
 
 func decodeGRPCCreateShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {

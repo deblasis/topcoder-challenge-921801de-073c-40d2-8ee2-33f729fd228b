@@ -4,6 +4,7 @@ package shippingstationsvc_v1
 
 import (
 	context "context"
+	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -18,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ShippingStationServiceClient interface {
-	RequestLanding(ctx context.Context, in *RequestLandingRequest, opts ...grpc.CallOption) (*RequestLandingResponse, error)
-	Landing(ctx context.Context, in *LandingRequest, opts ...grpc.CallOption) (*LandingResponse, error)
+	RequestLanding(ctx context.Context, in *RequestLandingRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	Landing(ctx context.Context, in *LandingRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type shippingStationServiceClient struct {
@@ -30,8 +31,8 @@ func NewShippingStationServiceClient(cc grpc.ClientConnInterface) ShippingStatio
 	return &shippingStationServiceClient{cc}
 }
 
-func (c *shippingStationServiceClient) RequestLanding(ctx context.Context, in *RequestLandingRequest, opts ...grpc.CallOption) (*RequestLandingResponse, error) {
-	out := new(RequestLandingResponse)
+func (c *shippingStationServiceClient) RequestLanding(ctx context.Context, in *RequestLandingRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/deblasis.v1.ShippingStationService/RequestLanding", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -39,8 +40,8 @@ func (c *shippingStationServiceClient) RequestLanding(ctx context.Context, in *R
 	return out, nil
 }
 
-func (c *shippingStationServiceClient) Landing(ctx context.Context, in *LandingRequest, opts ...grpc.CallOption) (*LandingResponse, error) {
-	out := new(LandingResponse)
+func (c *shippingStationServiceClient) Landing(ctx context.Context, in *LandingRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/deblasis.v1.ShippingStationService/Landing", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,8 +53,8 @@ func (c *shippingStationServiceClient) Landing(ctx context.Context, in *LandingR
 // All implementations must embed UnimplementedShippingStationServiceServer
 // for forward compatibility
 type ShippingStationServiceServer interface {
-	RequestLanding(context.Context, *RequestLandingRequest) (*RequestLandingResponse, error)
-	Landing(context.Context, *LandingRequest) (*LandingResponse, error)
+	RequestLanding(context.Context, *RequestLandingRequest) (*httpbody.HttpBody, error)
+	Landing(context.Context, *LandingRequest) (*httpbody.HttpBody, error)
 	mustEmbedUnimplementedShippingStationServiceServer()
 }
 
@@ -61,10 +62,10 @@ type ShippingStationServiceServer interface {
 type UnimplementedShippingStationServiceServer struct {
 }
 
-func (UnimplementedShippingStationServiceServer) RequestLanding(context.Context, *RequestLandingRequest) (*RequestLandingResponse, error) {
+func (UnimplementedShippingStationServiceServer) RequestLanding(context.Context, *RequestLandingRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestLanding not implemented")
 }
-func (UnimplementedShippingStationServiceServer) Landing(context.Context, *LandingRequest) (*LandingResponse, error) {
+func (UnimplementedShippingStationServiceServer) Landing(context.Context, *LandingRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Landing not implemented")
 }
 func (UnimplementedShippingStationServiceServer) mustEmbedUnimplementedShippingStationServiceServer() {

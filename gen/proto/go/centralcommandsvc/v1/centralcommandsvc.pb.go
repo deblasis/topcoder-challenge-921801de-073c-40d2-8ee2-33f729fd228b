@@ -332,7 +332,8 @@ type DockSpec struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	NumDockingPorts int64 `protobuf:"varint,1,opt,name=num_docking_ports,json=numDockingPorts,proto3" json:"num_docking_ports,omitempty"`
+	//@gotags: validate:"gt=0"
+	NumDockingPorts int64 `protobuf:"varint,1,opt,name=num_docking_ports,json=numDockingPorts,proto3" json:"num_docking_ports,omitempty" validate:"gt=0"`
 }
 
 func (x *DockSpec) Reset() {
@@ -379,8 +380,9 @@ type RegisterStationRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Capacity float32     `protobuf:"fixed32,1,opt,name=capacity,proto3" json:"capacity,omitempty"`
-	Docks    []*DockSpec `protobuf:"bytes,2,rep,name=docks,proto3" json:"docks,omitempty"`
+	Capacity float32 `protobuf:"fixed32,1,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	//@gotags: validate:"gt=0,dive,required"
+	Docks []*DockSpec `protobuf:"bytes,2,rep,name=docks,proto3" json:"docks,omitempty" validate:"gt=0,dive,required"`
 }
 
 func (x *RegisterStationRequest) Reset() {

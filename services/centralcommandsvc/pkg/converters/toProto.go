@@ -115,3 +115,25 @@ func DBDtoGetAllStationsResponseToProto(src dtos.GetAllStationsResponse) *pb.Get
 	}
 	return ret
 }
+
+func DBDtoGetNextAvailableDockingStationResponseToProto(src *dtos.GetNextAvailableDockingStationResponse) *pb.GetNextAvailableDockingStationResponse {
+	ret := &pb.GetNextAvailableDockingStationResponse{}
+	na := src.NextAvailableDockingStation
+	if na != nil {
+		ret.NextAvailableDockingStation = &pb.NextAvailableDockingStation{
+			DockId:     na.DockId,
+			StationId:  na.StationId,
+			ShipWeight: na.ShipWeight,
+		}
+		if na.AvailableCapacity != nil {
+			ret.NextAvailableDockingStation.AvailableCapacity = *na.AvailableCapacity
+		}
+		if na.AvailableDocksAtStation != nil {
+			ret.NextAvailableDockingStation.AvailableDocksAtStation = *na.AvailableDocksAtStation
+		}
+		if na.SecondsUntilNextAvailable != nil {
+			ret.NextAvailableDockingStation.SecondsUntilNextAvailable = *na.SecondsUntilNextAvailable
+		}
+	}
+	return ret
+}

@@ -12,8 +12,8 @@
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
                 "DEBLASIS_BINDONLOCALHOST": "true",
-                "DEBLASIS_HTTPSERVERPORT": "9481",
-                "DEBLASIS_GRPCSERVERPORT": "9482",
+                "DEBLASIS_HTTPSERVERPORT": "9281",
+                "DEBLASIS_GRPCSERVERPORT": "9282",
                 "DEBLASIS_JWT_PRIVKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.key",
                 "DEBLASIS_JWT_PUBKEYPATH": "${workspaceFolder}/../../certs/jwt.pem.pub",            
             },

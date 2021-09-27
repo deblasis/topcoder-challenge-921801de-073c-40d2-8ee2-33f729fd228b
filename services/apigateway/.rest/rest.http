@@ -7,13 +7,13 @@ GET {{baseUrl}}/health HTTP/1.1
 
 //CreateUser KO
 POST {{baseUrl}}/user/signup HTTP/1.1
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOGU0YjcwZDMtMWVkNC00NDc4LWExZjYtOWNlYjM2NGFlNzlmIiwidXNlcm5hbWUiOiJQZXJzb25hX1N0YXRpb25fRGVhdGhTdGFyIiwicm9sZSI6IlN0YXRpb24iLCJhdWQiOiJkZWJsYXNpcy5TcGFjZVRyYWZmaWNDb250cm9sIiwiZXhwIjoxNjMyMzc5NTYyLCJqdGkiOiJkMzZhMTdiMS00YWJmLTRlNzQtYjRmYy00MmQ4MTNmMWRlZDciLCJpYXQiOjE2MzIyOTMxNjIsImlzcyI6Imh0dHA6Ly9kZWJsYXNpcy12MS1BdXRoU2VydmljZSJ9.CQCq_-0wy_c5C9BXLWaPq6LXqVIl2vKW-HRPfJP7jh4fR5wbwleuf9G_WDaIj3icg_tbbdyEu6eHd0gNwHenDeIpoSjX6zZbYMLqiufTOppehWCmCy6d3WlL6hkGmCfhMHvTc124sbcKzSF2ajfSd2WuxWDZyA1lEfz2bD3MHWpSpM0BngqlGrvS_zFZfmc5p7SO-o70jDn89XbyGH-wuKTaNc0xN3KizQT4fFgRdj7OZQBYKXQ7LLao5gThRKxb0pzmbR5ZVECDateclHJ21M63x0ve1yGdDf1RN6bZEHcyseU4AvEhly8XBEcXsf_Ks6j0o9Hfj34gvVZv-iX2bQ
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmZlNGVkYTUtMTEyMS00NDkxLWExYjQtOTU4ZTczNjE3NzU2IiwidXNlcm5hbWUiOiJkZWJsYXNpcyIsInJvbGUiOiJDb21tYW5kIiwiYXVkIjoiZGVibGFzaXMuU3BhY2VUcmFmZmljQ29udHJvbCIsImV4cCI6MTYzMjc3OTQxOSwianRpIjoiNzg1ZjE1NGUtZjZjMC00N2FmLThiNGYtYTUxMjgwMWY5ZGM2IiwiaWF0IjoxNjMyNjkzMDE5LCJpc3MiOiJodHRwOi8vZGVibGFzaXMtdjEtQXV0aFNlcnZpY2UifQ.cqS_9zuVbpr9-5dkA1C5aQUJmGcnfbPtEJA_wWzEUsvklbC-WR50kmxVu96EW7eA2KvJibyKcvIE1yEN2ZnVIH5_YOsze4hYTlLr6OLcnQ-rQu0Y7q3xUsb0R0Bnntu4LIhd1M74zGsAiztXmTydvIjfu6xjlBx9fMCl0j38GufSXc4ShEckdsATqoNYxuX4wK_VvEDSeb_QBgqjNVBtb6WzcwSccreoxn1hK7CV9xv1D8Iuu91jVWZOCGZa1Tc_7eKLC_0KaLrBbr91N_0dJhI1_2Vai6vvRoSvC-7SMqwctjxW17Tpi20H2hb_9oZLgehgV7tzH9wzZhE1tzBWAw
 Content-Type: application/json; charset=utf-8
 
 {
-    "username": "asdasasddaaafvagaasuaw4a",
+    "username": "asdasaasddaaafvagaasuaw4a",
     "password": "asddaeawea",
-    "role": "Ship"
+    "role": "Station"
 }
 
 ###
@@ -43,15 +43,10 @@ Content-Type: application/json; charset=utf-8
 //RegisterStation
 POST {{baseUrl}}/centcom/station/register HTTP/1.1
 Content-Type: application/json; charset=utf-8
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNmZlNGVkYTUtMTEyMS00NDkxLWExYjQtOTU4ZTczNjE3NzU2IiwidXNlcm5hbWUiOiJkZWJsYXNpcyIsInJvbGUiOiJDb21tYW5kIiwiYXVkIjoiZGVibGFzaXMuU3BhY2VUcmFmZmljQ29udHJvbCIsImV4cCI6MTYzMjY5MjYzMSwianRpIjoiOTExM2NiYTctNWE5NS00MzY3LTg5MTktZjdhNWViYTc1MzI4IiwiaWF0IjoxNjMyNjA2MjMxLCJpc3MiOiJodHRwOi8vZGVibGFzaXMtdjEtQXV0aFNlcnZpY2UifQ.lAc-ENUx3r_lF9zl23RttokB0whnPlqtzG0dZiHJTT6TwqbU_g5e0cegSVOaGL5_ChcmMrdzh1qMSY4bjFv2Inky7vrx4bya9BbpD_prDaHN7MacGsydLhpUUKwUL2fitMdP9BKTQXqXXtralNVLotipVSeW8h-7V9g3a6GghNmeGaUhYxs0xVSzKUxtD2yEBZDhvM8PPNkdSUSypxK4vmYA06IhK2T044NADMoWIvwlUDMmRqw_ydkZmfOFYD6z4CN34QdOIcC_jyAQjYfpl_lFnWxQzHPCL2Gi-SNLUbQhmQ46aykLcg4tCWwl1yB_vMKTZfpXpotGtkVRnw8Mng
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZWM5NzUwNzQtYjg0Zi00Y2VlLWE5OWUtMzJlZWE5MzViMjhkIiwidXNlcm5hbWUiOiJhc2Rhc2Fhc2RkYWFhZnZhZ2Fhc3VhdzRhIiwicm9sZSI6IlN0YXRpb24iLCJhdWQiOiJkZWJsYXNpcy5TcGFjZVRyYWZmaWNDb250cm9sIiwiZXhwIjoxNjMyNzc5NDMyLCJqdGkiOiJiM2U3MzRiYS1iOTQ5LTRjNjEtOTg1ZC0yMzhmMzJlYTdlYTUiLCJpYXQiOjE2MzI2OTMwMzIsImlzcyI6Imh0dHA6Ly9kZWJsYXNpcy12MS1BdXRoU2VydmljZSJ9.AxI7pNM5S6zdeYICNri8gH3UtvNKMXLjk5eqnBq2BnKMCeiKrOKQu_eqPusHk2Mk9F4CKfX_9gnQxl1c1fql8q4Cxsuv7oe1h7CRt349BVSr_X-KP0nahuisKVrqTKfeIWBdsapWP3Ud8_hw_NUrJumgLqMWKBM_uwwvdIuvXmJfFedGTFVPaj1RUSNW5-G9Mv_GYsb_TOwwc8496X3SJUUVHvZCaWj4E815mBF32WBREAeqVnc9D7jil87nztAzU0zWJOJq8ZgsenT2Jqi_pQE-6wdnnXd_OeD1IvE86nhzMP1uE4BnFvh5PyG01OANbGBptloX9ac4LWSxnZBYtA
 
 {
-   "capacity":"2342.4234",
-   "docks":[
-      {
-         "numDockingPorts":"15"
-      }
-   ]
+   "capacity":"2342.4234"
 }
 ###
 GET {{baseUrl}}/centcom/station/all HTTP/1.1
@@ -74,6 +69,22 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMTdiZ
 {
    "weight": 124123.52
 }
+
+###
+
+//RequestLanding
+POST {{baseUrl}}/shipping-station/request-landing HTTP/1.1
+Content-Type: application/json; charset=utf-8
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTJmMDBmNmEtOTU5MS00YWFiLWE4ZjktNzVkYTIzNjExOWQ3IiwidXNlcm5hbWUiOiJQZXJzb25hX1NoaXBfTWlsbGVuaXVtRmFsY29uIiwicm9sZSI6IlNoaXAiLCJhdWQiOiJkZWJsYXNpcy5TcGFjZVRyYWZmaWNDb250cm9sIiwiZXhwIjoxNjMyNzAwMjk1LCJqdGkiOiI4N2ZlNjE1ZC0yNWRjLTQ2NGQtOGUzZC00Y2IyOTI3ZjMwN2YiLCJpYXQiOjE2MzI2MTM4OTUsImlzcyI6Imh0dHA6Ly9kZWJsYXNpcy12MS1BdXRoU2VydmljZSJ9.PyVaEWay--g5u5fk_z3cVgu8R_40gt24XjD0Zmo4uxxDe5oNDfMhoYLNAzCGceYc9ujeJ8Y4Z90KqJxXAsakmMp6a2BykwCGQ_p2GyMVf3L0aVE7tUVNq_V-D2LqGyF9Zei5mfgIeQ_hYzPCNRQgY49sCdd0NVEKP_F4IXM1jZRtc1aOgR6Bl8CXdeuc-m77SfrJga4aC2HbXMV2EdjAKONoljNPVxxZQcSc5WGbDeh7lhxZ8sLMUlEMkUVup1FtrwChV38Ovz8dH5sTVRYjZo44-YJ-OOufCjnhWn7R0YaMZBBEYJS1Twcba27UgvewmbIS6g1d2GXLLGm93LfwuA
+
+{
+   "time": 10
+}
+
+
+
+
+
 
 
 # grpcurl -import-path ./services/auth_dbsvc/pb/ -proto auth_dbsvc.proto -d @ -plaintext localhost:8082 AuthDBSvc/CreateUser <<EOM                                                                             baremetal-cluster 

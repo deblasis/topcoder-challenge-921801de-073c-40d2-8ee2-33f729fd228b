@@ -10,10 +10,13 @@ zipkin:
   v2_url: http://zipkin:9411/api/v2/spans
 
 jwt:
-  privkeypath: /certs/jwt.pem.key
   pubkeypath: /certs/jwt.pem.pub
 #one day  
   tokenduration: 86400   
+
+apigateway:
+  retrymax: 10
+  retrytimeoutms: 5000  
 
 # ssl:
 #   serverCert: ../../../../certs/deblasis-stc.pem

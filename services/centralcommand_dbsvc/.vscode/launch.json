@@ -11,7 +11,8 @@
             "mode": "auto",
             "env": {
                 "DEBLASIS_CONSUL_HOST" : "localhost",
-                "DEBLASIS_DB_ADDRESS": "localhost:5433"
+                "DEBLASIS_DB_ADDRESS": "localhost:5433",
+                "DEBLASIS_AUXGRPCSERVERPORT": "9383"
             },
             "program": "${workspaceFolder}/cmd/app/main.go"
         }

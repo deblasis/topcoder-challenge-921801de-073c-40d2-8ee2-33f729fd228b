@@ -4,255 +4,272 @@
 package e2e_tests
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"time"
 
 	. "deblasis.net/space-traffic-control/e2e_tests/utils"
 	"github.com/bxcodec/faker/v3"
 	"github.com/gavv/httpexpect/v2"
+	"github.com/go-kit/log"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ShippingStationSvc", func() {
 
-	It("Testing harness should be initialized successfully", func() {
-		Expect(client).NotTo(BeNil())
+	Describe("httpClient", func() {
+		It("should be initialized successfully", func() {
+			Expect(client).NotTo(BeNil())
+		})
 	})
 
-	Describe("Register Station", func() {
+	Describe("Request Landing", func() {
 		var (
-			registerStationReq RegisterStationRequest
+			requestLandingReq RequestLandingRequest
 
-			shipClient    *httpexpect.Expect
-			stationClient *httpexpect.Expect
-			commandClient *httpexpect.Expect
+			shipClients    map[string]*httpexpect.Expect
+			stationClients map[string]*httpexpect.Expect
+			commandClient  *httpexpect.Expect
 		)
 		BeforeEach(func() {
-			registerStationReq = RegisterStationRequest{}
+			requestLandingReq = RequestLandingRequest{}
+			shipClients = make(map[string]*httpexpect.Expect)
+			stationClients = make(map[string]*httpexpect.Expect)
+
+			commandClient = client.Builder(func(r *httpexpect.Request) {
+				r.WithHeader("Authorization", "Bearer "+personas[Persona_Command_Initial])
+			})
+
+			shipClients[Persona_Ship_USSEnterprise] = client.Builder(func(r *httpexpect.Request) {
+				r.WithHeader("Authorization", "Bearer "+personas[Persona_Ship_USSEnterprise])
+			})
+			shipClients[Persona_Ship_MilleniumFalcon] = client.Builder(func(r *httpexpect.Request) {
+				r.WithHeader("Authorization", "Bearer "+personas[Persona_Ship_MilleniumFalcon])
+			})
+
+			stationClients[Persona_Station_ISS] = client.Builder(func(r *httpexpect.Request) {
+				r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_ISS])
+			})
+			stationClients[Persona_Station_DeathStar] = client.Builder(func(r *httpexpect.Request) {
+				r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_DeathStar])
+			})
+
 		})
 
-		When("a token is not provided", func() {
-			BeforeEach(func() {
-				if err := faker.FakeData(&registerStationReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should fail returning 401", func() {
-				client.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Ship token is provided", func() {
-			BeforeEach(func() {
-				shipClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Ship_USSEnterprise])
+		Context("there are no registrations of any kind yet", func() {
+
+			When("a token is not provided", func() {
+				BeforeEach(func() {
+					if err := faker.FakeData(&requestLandingReq); err != nil {
+						panic(err)
+					}
 				})
-				if err := faker.FakeData(&registerStationReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should fail returning 401", func() {
-				shipClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Command token is provided", func() {
-			BeforeEach(func() {
-				commandClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Command_Initial])
+				It("should fail returning 401", func() {
+					client.POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().Status(http.StatusUnauthorized)
 				})
-				if err := faker.FakeData(&registerStationReq); err != nil {
-					panic(err)
-				}
 			})
-			It("should fail returning 401", func() {
-				commandClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusUnauthorized)
+
+			When("a Ship token is provided", func() {
+				BeforeEach(func() {
+					if err := faker.FakeData(&requestLandingReq); err != nil {
+						panic(err)
+					}
+				})
+				//This could have been a 404 but 503 seems more appropriate since it's not the user that's in the wrong but the server
+				It("should fail returning 503", func() {
+					shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().Status(http.StatusServiceUnavailable)
+				})
+			})
+			When("a Station token is provided", func() {
+				BeforeEach(func() {
+					if err := faker.FakeData(&requestLandingReq); err != nil {
+						panic(err)
+					}
+				})
+				It("should fail returning 401", func() {
+					stationClients[Persona_Station_ISS].POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().Status(http.StatusUnauthorized)
+				})
+			})
+			When("a Command token is provided", func() {
+				BeforeEach(func() {
+					if err := faker.FakeData(&requestLandingReq); err != nil {
+						panic(err)
+					}
+				})
+				It("should fail returning 401", func() {
+					commandClient.POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().Status(http.StatusUnauthorized)
+				})
 			})
 		})
-		When("a Station token is provided", func() {
+
+		When("there is a station registered", func() {
 			BeforeEach(func() {
+				ctx := context.Background()
+				logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+				CleanupDB(ctx, logger)
+
 				newStationToken := GetNewStationUserToken(client)
 
-				stationClient = client.Builder(func(r *httpexpect.Request) {
+				registerStationReq := &RegisterStationRequest{
+					Capacity: 15.50,
+					Docks: []*Dock{
+						{NumDockingPorts: 5},
+					},
+				}
+				stationClients[Persona_Station_ISS] = client.Builder(func(r *httpexpect.Request) {
 					r.WithHeader("Authorization", "Bearer "+newStationToken)
 				})
-				if err := faker.FakeData(&registerStationReq); err != nil {
-					panic(err)
-				}
+
+				stationClients[Persona_Station_ISS].POST(CentralCommandService_RegisterStation).
+					WithJSON(registerStationReq).Expect().Status(http.StatusOK)
 			})
-			It("should succeed returning 200 and fail on subsequent attempts with 401", func() {
-				validCall := stationClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect()
-
-				validCall.Status(http.StatusOK)
-
-				validCall.JSON().Schema(RegisterStationResponseSchema)
-
-				stationClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusBadRequest)
-				stationClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusBadRequest)
-				stationClient.POST(CentralCommandService_RegisterStation).
-					WithJSON(registerStationReq).Expect().Status(http.StatusBadRequest)
-
+			It("should fail returning 503 because the ship is not registered", func() {
+				requestLandingReq = RequestLandingRequest{Time: 10}
+				shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_RequestLanding).
+					WithJSON(requestLandingReq).Expect().Status(http.StatusServiceUnavailable)
 			})
 		})
-	})
-	Describe("Register Ship", func() {
-		var (
-			registerShipReq RegisterShipRequest
 
-			shipClient    *httpexpect.Expect
-			stationClient *httpexpect.Expect
-			commandClient *httpexpect.Expect
-		)
-		BeforeEach(func() {
-			registerShipReq = RegisterShipRequest{}
-		})
+		When("there is a station and a ship registered", func() {
+			When("there is capacity", func() {
+				BeforeEach(func() {
+					ctx := context.Background()
+					logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+					CleanupDB(ctx, logger)
 
-		When("a token is not provided", func() {
-			BeforeEach(func() {
-				if err := faker.FakeData(&registerShipReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should fail returning 401", func() {
-				client.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Station token is provided", func() {
-			BeforeEach(func() {
-				shipClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_DeathStar])
+					newStationToken := GetNewStationUserToken(client)
+
+					registerStationReq := &RegisterStationRequest{
+						Capacity: 15.50,
+						Docks: []*Dock{
+							{NumDockingPorts: 5},
+						},
+					}
+					stationClients[Persona_Station_ISS] = client.Builder(func(r *httpexpect.Request) {
+						r.WithHeader("Authorization", "Bearer "+newStationToken)
+					})
+
+					stationClients[Persona_Station_ISS].POST(CentralCommandService_RegisterStation).
+						WithJSON(registerStationReq).Expect().Status(http.StatusOK)
+
+					registerShipReq := &RegisterShipRequest{Weight: 10}
+					shipClients[Persona_Ship_USSEnterprise].POST(CentralCommandService_RegisterShip).
+						WithJSON(registerShipReq).Expect().Status(http.StatusOK)
+
 				})
-				if err := faker.FakeData(&registerShipReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should fail returning 401", func() {
-				shipClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Command token is provided", func() {
-			BeforeEach(func() {
-				commandClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Command_Initial])
-				})
-				if err := faker.FakeData(&registerShipReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should fail returning 401", func() {
-				commandClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Ship token is provided", func() {
-			BeforeEach(func() {
-				newShipToken := GetNewShipUserToken(client)
-
-				stationClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+newShipToken)
-				})
-				if err := faker.FakeData(&registerShipReq); err != nil {
-					panic(err)
-				}
-			})
-			It("should succeed returning 200, empty body and fail on subsequent attempts with 401", func() {
-				validCall := stationClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect()
-
-				validCall.Status(http.StatusOK)
-
-				validCall.Body().Empty()
-				Expect(validCall.Raw().ContentLength).To(BeEquivalentTo(0))
-
-				stationClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusBadRequest)
-				stationClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusBadRequest)
-				stationClient.POST(CentralCommandService_RegisterShip).
-					WithJSON(registerShipReq).Expect().Status(http.StatusBadRequest)
-
-			})
-		})
-	})
-
-	Describe("List Stations", func() {
-
-		var (
-			shipClient    *httpexpect.Expect
-			stationClient *httpexpect.Expect
-			commandClient *httpexpect.Expect
-		)
-
-		When("a token is not provided", func() {
-
-			It("should fail returning 401", func() {
-				client.GET(CentralCommandService_AllStations).
-					Expect().Status(http.StatusUnauthorized)
-			})
-		})
-		When("a Station token is provided", func() {
-			BeforeEach(func() {
-				shipClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Station_DeathStar])
+				It("should succeed with a `land` command", func() {
+					requestLandingReq = RequestLandingRequest{Time: 10}
+					shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().
+						JSON().Schema(RequestLandingLandCommandResponseSchema)
 				})
 			})
-			It("should fail returning 400", func() {
-				shipClient.GET(CentralCommandService_AllStations).
-					Expect().Status(http.StatusBadRequest)
-			})
-		})
-		When("a Command token is provided", func() {
-			BeforeEach(func() {
-				commandClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+personas[Persona_Command_Initial])
+			When("there isn't enough capacity", func() {
+				BeforeEach(func() {
+					ctx := context.Background()
+					logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+					CleanupDB(ctx, logger)
+
+					registerStationReq := &RegisterStationRequest{
+						Capacity: 15.50,
+						Docks: []*Dock{
+							{NumDockingPorts: 5},
+						},
+					}
+
+					stationClients[Persona_Station_ISS].POST(CentralCommandService_RegisterStation).
+						WithJSON(registerStationReq).Expect().Status(http.StatusOK)
+
+					registerShipReq := &RegisterShipRequest{
+						Weight: 20,
+					}
+					shipClients[Persona_Ship_USSEnterprise].POST(CentralCommandService_RegisterShip).
+						WithJSON(registerShipReq).Expect().Status(http.StatusOK)
+
+				})
+				It("should succeed with a `wait` command", func() {
+					requestLandingReq = RequestLandingRequest{Time: 10}
+					shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_RequestLanding).
+						WithJSON(requestLandingReq).Expect().
+						JSON().Schema(RequestLandingWaitCommandResponseSchema)
 				})
 			})
-			It("should succeed returning 200", func() {
-				validCall := commandClient.GET(CentralCommandService_AllStations).
-					Expect()
+		})
 
-				validCall.Status(http.StatusOK)
-				validCall.JSON().Schema(GetAllStationsResponseSchema)
+		When("there is capacity but there are no available docks", func() {
+			BeforeEach(func() {
+				ctx := context.Background()
+				logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+				CleanupDB(ctx, logger)
+
+				stationClients[Persona_Station_ISS].POST(CentralCommandService_RegisterStation).
+					WithJSON(&RegisterStationRequest{
+						Capacity: 15.50,
+						Docks: []*Dock{
+							{NumDockingPorts: 1},
+						},
+					}).Expect().Status(http.StatusOK)
+
+				shipClients[Persona_Ship_USSEnterprise].POST(CentralCommandService_RegisterShip).
+					WithJSON(&RegisterShipRequest{
+						Weight: 10,
+					}).Expect().Status(http.StatusOK)
+
+				requestLandingResponse := shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_RequestLanding).
+					WithJSON(RequestLandingRequest{Time: 120}).Expect().
+					JSON()
+
+				requestLandingResponse.Schema(RequestLandingLandCommandResponseSchema)
+				dockIdForLanding := requestLandingResponse.Path("$.dockingStation").String().Raw()
+
+				shipClients[Persona_Ship_USSEnterprise].POST(ShippingStationService_Land).
+					WithJSON(LandRequest{Time: 5, DockId: dockIdForLanding}).Expect().Status(http.StatusOK)
+
+				shipClients[Persona_Ship_MilleniumFalcon].POST(CentralCommandService_RegisterShip).
+					WithJSON(&RegisterShipRequest{
+						Weight: 5,
+					}).Expect().Status(http.StatusOK)
+
+				time.Sleep(100 * time.Millisecond)
+				shipClients[Persona_Ship_MilleniumFalcon].POST(ShippingStationService_RequestLanding).
+					WithJSON(RequestLandingRequest{Time: 120}).Expect().
+					JSON().Object().ContainsMap(map[string]interface{}{
+					"command": "wait",
+				})
 
 			})
-		})
-		When("a Ship token is provided", func() {
-			BeforeEach(func() {
-				newShipToken := GetNewShipUserToken(client)
-				stationClient = client.Builder(func(r *httpexpect.Request) {
-					r.WithHeader("Authorization", "Bearer "+newShipToken)
+			It("should succeed with a `wait` command", func() {
+				shipClients[Persona_Ship_MilleniumFalcon].POST(ShippingStationService_RequestLanding).
+					WithJSON(RequestLandingRequest{Time: 10}).Expect().
+					JSON().Schema(RequestLandingWaitCommandResponseSchema).
+					Object().ContainsMap(map[string]interface{}{
+					"command":  "wait",
+					"duration": 5,
 				})
 			})
-			It("should succeed returning 200", func() {
-				validCall := stationClient.GET(CentralCommandService_AllStations).
-					Expect()
-
-				validCall.Status(http.StatusOK)
-
-				validCall.JSON().Schema(GetAllStationsResponseSchema)
-
-				// validCall.Body().Empty()
-				// Expect(validCall.Raw().ContentLength).To(BeEquivalentTo(0))
-
-				// stationClient.GET(CentralCommandService_AllStations).
-				// 	Expect().Status(http.StatusBadRequest)
-				// stationClient.GET(CentralCommandService_AllStations).
-				// 	Expect().Status(http.StatusBadRequest)
-				// stationClient.GET(CentralCommandService_AllStations).
-				// 	Expect().Status(http.StatusBadRequest)
-
+			It("should return a shorter wait on subsequent calls", func() {
+				time.Sleep(2 * time.Second)
+				shipClients[Persona_Ship_MilleniumFalcon].POST(ShippingStationService_RequestLanding).
+					WithJSON(RequestLandingRequest{Time: 10}).Expect().
+					JSON().Schema(RequestLandingWaitCommandResponseSchema).
+					Object().ContainsMap(map[string]interface{}{
+					"command":  "wait",
+					"duration": 3,
+				})
+			})
+			It("should return a `land` command after the previous ship left", func() {
+				time.Sleep(6 * time.Second)
+				shipClients[Persona_Ship_MilleniumFalcon].POST(ShippingStationService_RequestLanding).
+					WithJSON(RequestLandingRequest{Time: 10}).Expect().
+					JSON().Schema(RequestLandingLandCommandResponseSchema)
 			})
 		})
-
-	})
-	Describe("List Ships", func() {
-
 	})
 
 })

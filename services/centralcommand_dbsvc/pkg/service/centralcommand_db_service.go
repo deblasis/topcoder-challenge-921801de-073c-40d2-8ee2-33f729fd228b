@@ -211,7 +211,7 @@ func (u *centralCommandDBService) GetNextAvailableDockingStation(ctx context.Con
 
 	ret, err := u.dockRepository.GetNextAvailableDockingStation(ctx, uuid.MustParse(request.ShipId))
 	if err != nil {
-		err = errs.NewError(http.StatusInternalServerError, "cannot get next available docking station", err)
+		// err = errs.NewError(http.StatusInternalServerError, "cannot get next available docking station", err)
 		return &dtos.GetNextAvailableDockingStationResponse{
 			Error: err,
 		}, nil

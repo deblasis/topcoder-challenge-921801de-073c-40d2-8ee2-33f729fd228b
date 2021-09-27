@@ -118,7 +118,8 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		errs.EncodeErrorHTTP(ctx, e, w)
 		return nil
 	}
-	if e, ok := response.(endpoint.Failer); ok && e != nil && e.Failed() != nil {
+
+	if e, ok := response.(endpoint.Failer); ok && e != nil && !errs.IsNil(e.Failed()) {
 		errs.EncodeErrorHTTP(ctx, e.Failed(), w)
 		return nil
 	}

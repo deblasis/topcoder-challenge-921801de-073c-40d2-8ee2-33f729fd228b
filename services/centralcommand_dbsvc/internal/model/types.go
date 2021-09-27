@@ -6,7 +6,7 @@ type Ship struct {
 	tableName struct{} `pg:"ships,select:ships_view"`
 
 	//"string - id of the ship"
-	Id string `json:"id,omitempty" db:"id"`
+	Id string `json:"id,omitempty" db:"id" pg:"id,pk"`
 	//Can be 'docked' | 'in-flight'
 	Status string `json:"status,omitempty" db:"status"`
 	//validate:"required,oneof='in-flight' 'docked'"
@@ -16,7 +16,7 @@ type Ship struct {
 type Station struct {
 	tableName struct{} `pg:"stations,select:stations_view"`
 	//"string - id of the shipping station"
-	Id string `json:"id,omitempty" db:"id"`
+	Id string `json:"id,omitempty" db:"id" pg:"id,pk"`
 
 	//“float - total capacity”
 	Capacity float32 `json:"capacity,omitempty" db:"capacity"`
@@ -33,7 +33,7 @@ type Dock struct {
 	tableName struct{} `pg:"docks,select:docks_view"`
 
 	//“string - id of the dock”
-	Id string `json:"id,omitempty" db:"id"`
+	Id string `json:"id,omitempty" db:"id" pg:"id,pk"`
 	//Id of the station that hosts the dock
 	StationId string `json:"station_id,omitempty" db:"station_id"`
 	//"Integer - total number of available ports"
@@ -49,8 +49,8 @@ type Dock struct {
 type DockedShip struct {
 	tableName struct{} `pg:"docked_ships"`
 
-	DockId string `json:"dock_id,omitempty" db:"dock_id"`
-	ShipId string `json:"ship_id,omitempty" db:"ship_id"`
+	DockId string `json:"dock_id,omitempty" db:"dock_id" pg:"dock_id,pk"`
+	ShipId string `json:"ship_id,omitempty" db:"ship_id" pg:"ship_id,pk"`
 
 	DockedSince  time.Time `json:"docked_since,omitempty" db:"docked_since"`
 	DockDuration int64     `json:"dock_duration,omitempty" db:"dock_duration"`

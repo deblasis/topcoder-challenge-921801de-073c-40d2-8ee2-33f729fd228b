@@ -28,3 +28,13 @@ type RegisterStationRequest struct {
 type RegisterShipRequest struct {
 	Weight float32 `json:"weight" faker:"oneof: 1, 3.14, 8, 256"`
 }
+
+//SHIPPINGSTATION
+type RequestLandingRequest struct {
+	Time int `json:"time" faker:"oneof: 1, 5, 10, 20"`
+}
+
+type LandRequest struct {
+	Time   int    `json:"time" faker:"oneof: 1, 5, 10, 20"`
+	DockId string `json:"dockId"`
+}

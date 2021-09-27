@@ -15,8 +15,10 @@ import (
 
 var _ = Describe("CentralCommandSvc", func() {
 
-	It("Testing harness should be initialized successfully", func() {
-		Expect(client).NotTo(BeNil())
+	Describe("httpClient", func() {
+		It("should be initialized successfully", func() {
+			Expect(client).NotTo(BeNil())
+		})
 	})
 
 	Describe("Register Station", func() {

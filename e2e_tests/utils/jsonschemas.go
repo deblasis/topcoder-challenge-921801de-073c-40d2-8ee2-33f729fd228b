@@ -178,4 +178,54 @@ var (
     }
 }
 `
+
+	RequestLandingLandCommandResponseSchema = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "required": [
+      "command",
+      "dockingStation"
+  ],
+  "properties": {
+      "command": {
+          "$id": "#/properties/command",
+          "type": "string",
+          "enum": [
+              "land"
+          ]
+      },
+      "dockingStation": {
+          "$id": "#/properties/dockingStation",
+          "type": "string"
+      }
+  },
+  "additionalProperties": false
+}`
+
+	RequestLandingWaitCommandResponseSchema = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "required": [
+      "command",
+      "duration"
+  ],
+  "properties": {
+      "command": {
+          "$id": "#/properties/command",
+          "type": "string",
+          "enum": [
+              "wait"
+          ]
+      },
+      "duration": {
+          "$id": "#/properties/duration",
+          "type": "number"
+      }
+  },
+  "additionalProperties": true
+}`
 )

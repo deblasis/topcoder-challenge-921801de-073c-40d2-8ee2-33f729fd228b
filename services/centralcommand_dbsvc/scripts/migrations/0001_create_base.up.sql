@@ -9,8 +9,6 @@ CREATE TABLE if not exists docks(
    id UUID NOT NULL,
    station_id UUID NOT NULL,
    num_docking_ports INTEGER NOT NULL,
-   
-   weight FLOAT NOT NULL DEFAULT(0),
  
    PRIMARY KEY(id),
    CONSTRAINT fk_station
@@ -161,6 +159,7 @@ BEGIN
       ), reservation as (
          insert into docked_ships(dock_id, ship_id, waiting_for_ship_since)
          select n.dock_id, _ship_id, NOW() from next_available n
+         where n.available_capacity >= n.ship_weight and n.available_docks_at_station >= 1
       )
       select * from next_available;
    END IF;

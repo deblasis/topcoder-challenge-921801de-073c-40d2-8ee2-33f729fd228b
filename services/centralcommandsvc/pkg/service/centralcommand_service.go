@@ -238,17 +238,7 @@ func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 			Error: errs.ToProtoV1(ret.Error),
 		}, nil
 	}
-	//TODO converter
-	return &pb.GetNextAvailableDockingStationResponse{
-		NextAvailableDockingStation: &pb.NextAvailableDockingStation{
-			DockId:                    ret.NextAvailableDockingStation.DockId,
-			StationId:                 ret.NextAvailableDockingStation.StationId,
-			ShipWeight:                ret.NextAvailableDockingStation.ShipWeight,
-			AvailableCapacity:         *ret.NextAvailableDockingStation.AvailableCapacity,
-			AvailableDocksAtStation:   *ret.NextAvailableDockingStation.AvailableDocksAtStation,
-			SecondsUntilNextAvailable: *ret.NextAvailableDockingStation.SecondsUntilNextAvailable,
-		},
-	}, nil
+	return converters.DBDtoGetNextAvailableDockingStationResponseToProto(ret), nil
 }
 
 func (s *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (resp *pb.RegisterShipLandingResponse, err error) {

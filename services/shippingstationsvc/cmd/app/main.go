@@ -122,11 +122,16 @@ func main() {
 		logger       = cfg.Logger
 		retryMax     = cfg.APIGateway.RetryMax
 		retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond) * 10 //TODO remove
-		tags         = []string{"centralCommandService"}
+		tags         = []string{""}
 		passingOnly  = true
 		cc_endpoints = cce.EndpointSet{}
-		instancer    = consulsd.NewInstancer(client, logger, ccs.ServiceName, tags, passingOnly)
+		instancer    sd.Instancer
 	)
+	if cfg.BindOnLocalhost {
+		instancer = sd.FixedInstancer{"localhost:9482"} //TODO from config
+	} else {
+		instancer = consulsd.NewInstancer(client, logger, ccs.ServiceName, tags, passingOnly)
+	}
 	instancesChannel := make(chan sd.Event)
 	go func() {
 		for event := range instancesChannel {

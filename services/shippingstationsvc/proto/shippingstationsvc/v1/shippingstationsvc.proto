@@ -3,19 +3,20 @@ syntax = "proto3";
 package deblasis.v1;
 
 import "v1/error.proto";
+import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
 
 
 option go_package = "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/proto/v1;shippingstationsvc_v1";
 
 service ShippingStationService {
-  rpc RequestLanding(RequestLandingRequest) returns (RequestLandingResponse) {
+  rpc RequestLanding(RequestLandingRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/shipping-station/request-landing"
       body: "*"
     };
   }
-  rpc Landing(LandingRequest) returns (LandingResponse) {
+  rpc Landing(LandingRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/shipping-station/land"
       body: "*"
@@ -52,7 +53,7 @@ message LandingRequest {
   //@gotags: validate:"uuid4,required"
   string dock_id = 2;
   //@gotags: validate:"required"
-  int64 duration = 3;
+  int64 time = 3;
 }
 
 message LandingResponse {

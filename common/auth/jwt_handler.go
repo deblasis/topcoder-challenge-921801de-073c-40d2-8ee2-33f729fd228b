@@ -26,24 +26,31 @@ type JwtHandler struct {
 
 func NewJwtHandler(logger log.Logger, cfg config.JWTConfig) *JwtHandler {
 
-	privBytes, err := ioutil.ReadFile(cfg.PrivKeyPath)
-	if err != nil {
-		level.Debug(logger).Log("err", err)
+	var privK *rsa.PrivateKey
+	var pubK *rsa.PublicKey
+
+	if cfg.PrivKeyPath != "" {
+		privBytes, err := ioutil.ReadFile(cfg.PrivKeyPath)
+		if err != nil {
+			level.Debug(logger).Log("err", err)
+		}
+
+		privK, err = jwt.ParseRSAPrivateKeyFromPEM(privBytes)
+		if err != nil {
+			level.Debug(logger).Log("err", err)
+		}
 	}
 
-	privK, err := jwt.ParseRSAPrivateKeyFromPEM(privBytes)
-	if err != nil {
-		level.Debug(logger).Log("err", err)
-	}
+	if cfg.PubKeyPath != "" {
+		pubBytes, err := ioutil.ReadFile(cfg.PubKeyPath)
+		if err != nil {
+			level.Error(logger).Log("err", err)
+		}
 
-	pubBytes, err := ioutil.ReadFile(cfg.PubKeyPath)
-	if err != nil {
-		level.Error(logger).Log("err", err)
-	}
-
-	pubK, err := jwt.ParseRSAPublicKeyFromPEM(pubBytes)
-	if err != nil {
-		level.Error(logger).Log("err", err)
+		pubK, err = jwt.ParseRSAPublicKeyFromPEM(pubBytes)
+		if err != nil {
+			level.Error(logger).Log("err", err)
+		}
 	}
 
 	return &JwtHandler{

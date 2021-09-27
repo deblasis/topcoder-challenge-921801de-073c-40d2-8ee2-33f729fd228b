@@ -132,7 +132,6 @@ func main() {
 		instancer = sd.FixedInstancer{"localhost:9382"} //TODO from config
 	} else {
 		instancer = consulsd.NewInstancer(client, logger, dbs.ServiceName, tags, passingOnly)
-
 	}
 
 	instancesChannel := make(chan sd.Event)
@@ -190,6 +189,20 @@ func main() {
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.GetAllStationsEndpoint = retry
+	}
+	{
+		factory := centralCommandServiceFactory(dbe.MakeGetNextAvailableDockingStationEndpoint, cfg, tracer, zipkinTracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		db_endpoints.GetNextAvailableDockingStationEndpoint = retry
+	}
+	{
+		factory := centralCommandServiceFactory(dbe.MakeLandShipToDockEndpoint, cfg, tracer, zipkinTracer, logger)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
+		db_endpoints.LandShipToDockEndpoint = retry
 	}
 
 	// Here we leverage the fact that addsvc comes with a constructor for an
