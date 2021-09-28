@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,15 +18,13 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package endpoints
 
 import (
 	"context"
 
-	stdopentracing "github.com/opentracing/opentracing-go"
-	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 
 	"deblasis.net/space-traffic-control/common/errs"
@@ -37,9 +35,6 @@ import (
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/tracing/opentracing"
-	"github.com/go-kit/kit/tracing/zipkin"
 )
 
 type EndpointSet struct {
@@ -50,46 +45,31 @@ type EndpointSet struct {
 	logger                    log.Logger
 }
 
-func NewEndpointSet(s service.AuthDBService, logger log.Logger, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer) EndpointSet {
+func NewEndpointSet(s service.AuthDBService, logger log.Logger) EndpointSet {
 
 	var getUserByUsernameEndpoint endpoint.Endpoint
 	{
 		getUserByUsernameEndpoint = MakeGetUserByUsernameEndpoint(s)
 		getUserByUsernameEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByUsernameEndpoint)
-		getUserByUsernameEndpoint = opentracing.TraceServer(otTracer, "GetUserByUsername")(getUserByUsernameEndpoint)
-		if zipkinTracer != nil {
-			getUserByUsernameEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetUserByUsername")(getUserByUsernameEndpoint)
-		}
 		getUserByUsernameEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetUserByUsername"))(getUserByUsernameEndpoint)
-		getUserByUsernameEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetUserByUsername"))(getUserByUsernameEndpoint)
 	}
 
 	var getUserByIdEndpoint endpoint.Endpoint
 	{
 		getUserByIdEndpoint = MakeGetUserByIdEndpoint(s)
 		getUserByIdEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(getUserByIdEndpoint)
-		getUserByIdEndpoint = opentracing.TraceServer(otTracer, "GetUserById")(getUserByIdEndpoint)
-		if zipkinTracer != nil {
-			getUserByIdEndpoint = zipkin.TraceEndpoint(zipkinTracer, "GetUserById")(getUserByIdEndpoint)
-		}
 		getUserByIdEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "GetUserById"))(getUserByIdEndpoint)
-		getUserByIdEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "GetUserById"))(getUserByIdEndpoint)
 	}
 
 	var createUserEndpoint endpoint.Endpoint
 	{
 		createUserEndpoint = MakeCreateUserEndpoint(s)
 		createUserEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(createUserEndpoint)
-		createUserEndpoint = opentracing.TraceServer(otTracer, "CreateUser")(createUserEndpoint)
-		if zipkinTracer != nil {
-			createUserEndpoint = zipkin.TraceEndpoint(zipkinTracer, "CreateUser")(createUserEndpoint)
-		}
 		createUserEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "CreateUser"))(createUserEndpoint)
-		createUserEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "CreateUser"))(createUserEndpoint)
 	}
 
 	return EndpointSet{
-		StatusEndpoint:            healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
+		StatusEndpoint:            healthcheck.MakeStatusEndpoint(logger),
 		GetUserByUsernameEndpoint: getUserByUsernameEndpoint,
 		GetUserByIdEndpoint:       getUserByIdEndpoint,
 		CreateUserEndpoint:        createUserEndpoint,

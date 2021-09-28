@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package transport
 
@@ -34,38 +34,14 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/ratelimit"
-	"github.com/go-kit/kit/tracing/opentracing"
-	"github.com/go-kit/kit/tracing/zipkin"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 )
 
-func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) service.AuthService {
-	// We construct a single ratelimiter middleware, to limit the total outgoing
-	// QPS from this client to all methods on the remote instance. We also
-	// construct per-endpoint circuitbreaker middlewares to demonstrate how
-	// that's done, although they could easily be combined into a single breaker
-	// for the entire remote instance, too.
+func NewGRPCClient(conn *grpc.ClientConn, logger log.Logger) service.AuthService {
 	limiter := ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))
-
-	// global client middlewares
-	var options []grpctransport.ClientOption
-
-	if zipkinTracer != nil {
-		// Zipkin GRPC Client Trace can either be instantiated per gRPC method with a
-		// provided operation name or a global tracing client can be instantiated
-		// without an operation name and fed to each Go kit client as ClientOption.
-		// In the latter case, the operation name will be the endpoint's grpc method
-		// path.
-		//
-		// In this example, we demonstrace a global tracing client.
-		options = append(options, zipkin.GRPCClientTrace(zipkinTracer))
-
-	}
 
 	var signupEndpoint endpoint.Endpoint
 	{
@@ -76,10 +52,8 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			encodeGRPCSignupRequest,
 			decodeGRPCSignupReply,
 			pb.SignupResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
-		signupEndpoint = opentracing.TraceClient(otTracer, "Signup")(signupEndpoint)
 		signupEndpoint = limiter(signupEndpoint)
 		signupEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Signup",
@@ -95,10 +69,8 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			encodeGRPCLoginRequest,
 			decodeGRPCLoginReply,
 			pb.LoginResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
-		loginEndpoint = opentracing.TraceClient(otTracer, "Login")(loginEndpoint)
 		loginEndpoint = limiter(loginEndpoint)
 		loginEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Login",
@@ -114,10 +86,8 @@ func NewGRPCClient(conn *grpc.ClientConn, otTracer stdopentracing.Tracer, zipkin
 			encodeGRPCCheckTokenRequest,
 			decodeGRPCCheckTokenReply,
 			pb.CheckTokenResponse{},
-			append(options, grpctransport.ClientBefore(opentracing.ContextToGRPC(otTracer, logger)))...,
 		).Endpoint()
 
-		checkTokenEndpoint = opentracing.TraceClient(otTracer, "Login")(checkTokenEndpoint)
 		checkTokenEndpoint = limiter(checkTokenEndpoint)
 		checkTokenEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Login",

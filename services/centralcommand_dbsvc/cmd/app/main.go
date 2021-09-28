@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 // The application represents for routing the endpoints
 package main
@@ -30,10 +30,8 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 
-	"deblasis.net/space-traffic-control/common/bootstrap"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/db"
@@ -43,20 +41,13 @@ import (
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"
-
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	grpcgokit "github.com/go-kit/kit/transport/grpc"
+	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
-
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/metrics/prometheus"
-	grpcgokit "github.com/go-kit/kit/transport/grpc"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/oklog/oklog/pkg/group"
 )
 
 func main() {
@@ -79,38 +70,6 @@ func main() {
 	)
 	defer connection.Close()
 
-	zipkinTracer, tracer := bootstrap.SetupTracers(cfg, service.ServiceName)
-
-	// var ints, chars metrics.Counter
-	// {
-	// 	// Business-level metrics.
-	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "integers_summed", //TODO
-	// 		Help:      "Total count of integers summed via the Sum method.",
-	// 	}, []string{})
-	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "characters_concatenated", //TODO
-	// 		Help:      "Total count of characters concatenated via the Concat method.",
-	// 	}, []string{})
-	// }
-
-	var duration metrics.Histogram
-	{
-		// Endpoint-level metrics.
-		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, "-")[2],
-			Name:      "request_duration_seconds",
-			Help:      "Request duration in seconds.",
-		}, []string{"method", "success"})
-	}
-
-	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
-
 	var (
 		g group.Group
 
@@ -118,7 +77,7 @@ func main() {
 		stationRepo = repositories.NewStationRepository(connection, log.With(cfg.Logger, "component", "StationRepository"))
 		dockRepo    = repositories.NewDockRepository(connection, log.With(cfg.Logger, "component", "DockRepository"))
 		svc         = service.NewCentralCommandDBService(shipRepo, stationRepo, dockRepo, log.With(cfg.Logger, "component", "CentralCommandDBService"))
-		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		eps         = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"))
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
@@ -252,28 +211,3 @@ func main() {
 
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
-
-// func addsvcFactory(makeEndpoint func(addservice.Service) endpoint.Endpoint, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
-// 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-// 		// We could just as easily use the HTTP or Thrift client package to make
-// 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
-// 		// the transport is an implementation detail: it doesn't leak out of
-// 		// this function. Nice!
-
-// 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
-// 		if err != nil {
-// 			return nil, nil, err
-// 		}
-// 		service := addtransport.NewGRPCClient(conn, tracer, zipkinTracer, logger)
-// 		endpoint := makeEndpoint(service)
-
-// 		// Notice that the addsvc gRPC client converts the connection to a
-// 		// complete addsvc, and we just throw away everything except the method
-// 		// we're interested in. A smarter factory would mux multiple methods
-// 		// over the same connection. But that would require more work to manage
-// 		// the returned io.Closer, e.g. reference counting. Since this is for
-// 		// the purposes of demonstration, we'll just keep it simple.
-
-// 		return endpoint, conn, nil
-// 	}
-// }

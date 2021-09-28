@@ -28,8 +28,7 @@ bindOnLocalhost: true
 consul:
   host: consul
   port: 8500
-zipkin:
-  v2_url: http://zipkin:9411/api/v2/spans
+
 
 db:
   address: auth_db:5432

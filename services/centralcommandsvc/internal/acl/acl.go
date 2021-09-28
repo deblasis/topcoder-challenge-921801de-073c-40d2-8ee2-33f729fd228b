@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package acl
 
@@ -39,8 +39,6 @@ func AclRules() map[string]auth.ACLRule {
 
 			return auth.NewMustCheckTokenDescriptor(func(t *jwt.Token) error {
 
-				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
-				// role := claims["role"]
 				claims := t.Claims.(*auth.STCClaims)
 				role := claims.Role
 
@@ -55,8 +53,6 @@ func AclRules() map[string]auth.ACLRule {
 
 			return auth.NewMustCheckTokenDescriptor(func(t *jwt.Token) error {
 
-				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
-				// role := claims["role"]
 				claims := t.Claims.(*auth.STCClaims)
 				role := claims.Role
 
@@ -71,8 +67,6 @@ func AclRules() map[string]auth.ACLRule {
 
 			return auth.NewMustCheckTokenDescriptorWithCustomStatusCode(func(t *jwt.Token) error {
 
-				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
-				// role := claims["role"]
 				claims := t.Claims.(*auth.STCClaims)
 				role := claims.Role
 
@@ -86,8 +80,6 @@ func AclRules() map[string]auth.ACLRule {
 
 			return auth.NewMustCheckTokenDescriptor(func(t *jwt.Token) error {
 
-				// claims := t.Claims.(jwt.MapClaims) //auth.STCClaims
-				// role := claims["role"]
 				claims := t.Claims.(*auth.STCClaims)
 				role := claims.Role
 

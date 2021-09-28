@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 // The application represents for routing the endpoints
 package main
@@ -36,7 +36,6 @@ import (
 	"time"
 
 	"deblasis.net/space-traffic-control/common/auth"
-	"deblasis.net/space-traffic-control/common/bootstrap"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/healthcheck"
@@ -51,17 +50,11 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/metrics/prometheus"
 	"github.com/go-kit/kit/sd"
 	consulsd "github.com/go-kit/kit/sd/consul"
 	"github.com/go-kit/kit/sd/lb"
 	"github.com/hashicorp/consul/api"
 	"github.com/oklog/oklog/pkg/group"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	stdzipkin "github.com/openzipkin/zipkin-go"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -80,37 +73,6 @@ func main() {
 		grpcAddr   = net.JoinHostPort(cfg.ListenAddr, cfg.GrpcServerPort)
 		consulAddr = net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
 	)
-
-	zipkinTracer, tracer := bootstrap.SetupTracers(cfg, service.ServiceName)
-
-	// var ints, chars metrics.Counter
-	// {
-	// 	// Business-level metrics.
-	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "integers_summed", //TODO
-	// 		Help:      "Total count of integers summed via the Sum method.",
-	// 	}, []string{})
-	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "characters_concatenated", //TODO
-	// 		Help:      "Total count of characters concatenated via the Concat method.",
-	// 	}, []string{})
-	// }
-
-	var duration metrics.Histogram
-	{
-		// Endpoint-level metrics.
-		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, "-")[2],
-			Name:      "request_duration_seconds",
-			Help:      "Request duration in seconds.",
-		}, []string{"method", "success"})
-	}
-	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
 
 	//dependencies
 	// Service discovery domain. In this example we use Consul.
@@ -185,42 +147,42 @@ func main() {
 	// <-done
 
 	{
-		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeCreateShipEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateShipEndpoint = retry
 	}
 	{
-		factory := centralCommandServiceFactory(dbe.MakeGetAllShipsEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeGetAllShipsEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.GetAllShipsEndpoint = retry
 	}
 	{
-		factory := centralCommandServiceFactory(dbe.MakeCreateStationEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeCreateStationEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.CreateStationEndpoint = retry
 	}
 	{
-		factory := centralCommandServiceFactory(dbe.MakeGetAllStationsEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeGetAllStationsEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.GetAllStationsEndpoint = retry
 	}
 	{
-		factory := centralCommandServiceFactory(dbe.MakeGetNextAvailableDockingStationEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeGetNextAvailableDockingStationEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
 		db_endpoints.GetNextAvailableDockingStationEndpoint = retry
 	}
 	{
-		factory := centralCommandServiceFactory(dbe.MakeLandShipToDockEndpoint, cfg, tracer, zipkinTracer, logger)
+		factory := centralCommandServiceFactory(dbe.MakeLandShipToDockEndpoint, cfg, logger)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, time.Duration(retryTimeout), balancer)
@@ -233,7 +195,7 @@ func main() {
 
 	logger.Log("retryMax", retryMax, "retryTimeout", retryTimeout)
 
-	//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtransport.NewHTTPHandler(db_endpoints, tracer, zipkinTracer, logger)))
+	//r.PathPrefix("/addsvc").Handler(http.StripPrefix("/addsvc", addtransport.NewHTTPHandler(db_endpoints, logger)))
 
 	var (
 		g group.Group
@@ -242,7 +204,7 @@ func main() {
 		grpcServerAuthInterceptor = auth.NewAuthServerInterceptor(log.With(cfg.Logger, "component", "AuthServerInterceptor"), jwtHandler, acl.AclRules())
 		httpAuthProvider          = auth.NewHttpAuthProvider(log.With(cfg.Logger, "component", "HttpAuthProvider"), jwtHandler)
 		svc                       = service.NewCentralCommandService(log.With(cfg.Logger, "component", "CentralCommandService"), cfg.JWT, db_endpoints)
-		eps                       = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		eps                       = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"))
 		httpHandler               = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer                = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))
 	)
@@ -342,7 +304,7 @@ func main() {
 	level.Info(cfg.Logger).Log("exit", g.Run())
 }
 
-func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService) endpoint.Endpoint, cfg config.Config, tracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer, logger log.Logger) sd.Factory {
+func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService) endpoint.Endpoint, cfg config.Config, logger log.Logger) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		// We could just as easily use the HTTP or Thrift client package to make
 		// the connection to addsvc. We've chosen gRPC arbitrarily. Note that
@@ -377,7 +339,7 @@ func centralCommandServiceFactory(makeEndpoint func(dbs.CentralCommandDBService)
 		if err != nil {
 			return nil, nil, err
 		}
-		service := dbt.NewGRPCClient(conn, tracer, zipkinTracer, logger)
+		service := dbt.NewGRPCClient(conn, logger)
 		endpoint := makeEndpoint(service)
 		//TODO improve
 		level.Debug(logger).Log(
