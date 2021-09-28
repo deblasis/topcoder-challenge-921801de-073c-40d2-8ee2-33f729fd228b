@@ -99,7 +99,8 @@ services:
   authsvc:
     image: deblasis/stc_authsvc:latest
     depends_on: 
-      - net
+      - consul
+      - auth_db
     volumes:
       - ./services/authsvc/app.yaml:/app.yaml
     environment: 
