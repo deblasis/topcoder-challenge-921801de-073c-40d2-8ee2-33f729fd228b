@@ -4,7 +4,16 @@
 This is an implementation of the corresponding [Topcoder Challenge](https://www.topcoder.com/challenges/921801de-073c-40d2-8ee2-33f729fd228b?tab=details)
 
 
-## Overview
+## TLDR;
+
+```bash
+make run-fast
+```
+then navigate to http://localhost:8081 and you will be redirected to the swagger UI 
+<img src="./docs/swagger.jpg" />
+From there you can play with the API
+
+Side note: I used a playful tone, normally I keep it more professional 😉. 
 
 ### Architecture
 The architecture of this implementation is as follows:
