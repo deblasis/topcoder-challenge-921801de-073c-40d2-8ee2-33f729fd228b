@@ -98,7 +98,7 @@ func GetCommandUserToken(client *httpexpect.Expect) string {
 	var tokenReq = client.POST(AuthService_Login).WithJSON(LoginRequest{
 		Username: "deblasis",
 		Password: "password!",
-	}).Expect().JSON().Path("$.token.token")
+	}).Expect().JSON().Path("$.token")
 
 	Expect(tokenReq.NotNull()).NotTo(BeNil())
 
@@ -119,7 +119,7 @@ func GetNewStationUserToken(client *httpexpect.Expect) string {
 	signupReq.Role = consts.ROLE_STATION
 
 	return commandClient.POST(AuthService_Signup).WithJSON(signupReq).
-		Expect().JSON().Path("$.token.token").String().Raw()
+		Expect().JSON().Path("$.token").String().Raw()
 
 }
 
@@ -133,7 +133,7 @@ func GetNewShipUserToken(client *httpexpect.Expect) string {
 	signupReq.Role = consts.ROLE_SHIP
 
 	return client.POST(AuthService_Signup).WithJSON(signupReq).
-		Expect().JSON().Path("$.token.token").String().Raw()
+		Expect().JSON().Path("$.token").String().Raw()
 
 }
 
@@ -158,15 +158,15 @@ func bootstrapInitialUsers() {
 			Password: s,
 		}).Expect().JSON()
 
-		if loginResp.Path("$.error").Raw() == nil || loginResp.Path("$.error").Raw() == "" {
-			token = loginResp.Path("$.token.token").String().Raw()
+		if loginResp.Object().Raw()["error"] == nil {
+			token = loginResp.Path("$.token").String().Raw()
 			personas[s] = token
 		} else {
 			personas[s] = commandClient.POST(AuthService_Signup).WithJSON(SignupRequest{
 				Username: s,
 				Password: s,
 				Role:     consts.ROLE_SHIP,
-			}).Expect().JSON().Path("$.token.token").String().Raw()
+			}).Expect().JSON().Path("$.token").String().Raw()
 		}
 	}
 
@@ -180,15 +180,15 @@ func bootstrapInitialUsers() {
 			Password: s,
 		}).Expect().JSON()
 
-		if loginResp.Path("$.error").Raw() == nil || loginResp.Path("$.error").Raw() == "" {
-			token = loginResp.Path("$.token.token").String().Raw()
+		if loginResp.Object().Raw()["error"] == nil {
+			token = loginResp.Path("$.token").String().Raw()
 			personas[s] = token
 		} else {
 			personas[s] = commandClient.POST(AuthService_Signup).WithJSON(SignupRequest{
 				Username: s,
 				Password: s,
 				Role:     consts.ROLE_STATION,
-			}).Expect().JSON().Path("$.token.token").String().Raw()
+			}).Expect().JSON().Path("$.token").String().Raw()
 		}
 	}
 

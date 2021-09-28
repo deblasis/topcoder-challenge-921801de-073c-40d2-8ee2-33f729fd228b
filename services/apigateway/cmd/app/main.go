@@ -37,7 +37,6 @@ import (
 
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
-	"deblasis.net/space-traffic-control/common/errs"
 	authpb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	sspb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
@@ -52,6 +51,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -370,8 +370,20 @@ func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runt
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(rw).Encode(&errs.Err{
-				Message: e.Error(),
+			var (
+				msg string
+			)
+
+			if err, ok := status.FromError(e); ok {
+				msg = err.Message()
+			} else {
+				msg = e.Error()
+			}
+
+			json.NewEncoder(rw).Encode(&struct {
+				Error string `json:"error"`
+			}{
+				Error: msg,
 			})
 
 			return

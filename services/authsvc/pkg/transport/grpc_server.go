@@ -24,6 +24,8 @@ package transport
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
@@ -72,7 +74,13 @@ func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*httpbody
 		return nil, err
 	}
 	errs.InjectGrpcStatusCode(ctx, rep)
-	return rep.(*pb.SignupResponse), nil
+	resp := rep.(*pb.SignupResponse)
+	json := serializeSignupResponse(resp)
+	return &httpbody.HttpBody{
+		ContentType: "application/json",
+		Data:        []byte(json),
+	}, nil
+
 }
 
 func decodeGRPCSignupRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -90,9 +98,14 @@ func (g *grpcServer) Login(ctx context.Context, r *pb.LoginRequest) (*httpbody.H
 		return nil, err
 	}
 	errs.InjectGrpcStatusCode(ctx, rep)
-
-	return rep.(*pb.LoginResponse), nil
+	resp := rep.(*pb.LoginResponse)
+	json := serializeLoginResponse(resp)
+	return &httpbody.HttpBody{
+		ContentType: "application/json",
+		Data:        []byte(json),
+	}, nil
 }
+
 func decodeGRPCLoginRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
 	return grpcReq.(*pb.LoginRequest), nil
 }
@@ -115,4 +128,36 @@ func decodeGRPCCheckTokenRequest(c context.Context, grpcReq interface{}) (interf
 
 func encodeGRPCCheckTokenResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
 	return grpcResponse.(*pb.CheckTokenResponse), nil
+}
+
+func serializeSignupResponse(resp *pb.SignupResponse) []byte {
+	if !errs.IsNil(resp.Failed()) {
+		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
+	}
+	type token struct {
+		Token     string `json:"token"`
+		ExpiresAt int64  `json:"expiresAt"`
+	}
+
+	json, _ := json.Marshal(token{
+		Token:     resp.Token.Token,
+		ExpiresAt: resp.Token.ExpiresAt,
+	})
+	return json
+}
+
+func serializeLoginResponse(resp *pb.LoginResponse) []byte {
+	if !errs.IsNil(resp.Failed()) {
+		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
+	}
+	type token struct {
+		Token     string `json:"token"`
+		ExpiresAt int64  `json:"expiresAt"`
+	}
+
+	json, _ := json.Marshal(token{
+		Token:     resp.Token.Token,
+		ExpiresAt: resp.Token.ExpiresAt,
+	})
+	return json
 }

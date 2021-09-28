@@ -94,7 +94,7 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 	}
 }
 
-func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*httpbody.HttpBody, error) {
+func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*httpbody.HttpBody, error) { //TODO should this return empty?
 	_, rep, err := g.registerShip.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
@@ -114,10 +114,9 @@ func (g *grpcServer) GetAllShips(ctx context.Context, r *pb.GetAllShipsRequest) 
 	if err != nil {
 		return nil, err
 	}
-
+	errs.InjectGrpcStatusCode(ctx, rep)
 	resp := rep.(*pb.GetAllShipsResponse)
 	json := serializeGetAllShipsResponse(resp)
-	errs.InjectGrpcStatusCode(ctx, rep)
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
 		Data:        []byte(json),
@@ -130,10 +129,9 @@ func (g *grpcServer) RegisterStation(ctx context.Context, r *pb.RegisterStationR
 	if err != nil {
 		return nil, err
 	}
-	resp := rep.(*pb.RegisterStationResponse)
-
-	json := serializeRegisterStationResponse(resp)
 	errs.InjectGrpcStatusCode(ctx, rep)
+	resp := rep.(*pb.RegisterStationResponse)
+	json := serializeRegisterStationResponse(resp)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -146,10 +144,9 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 	if err != nil {
 		return nil, err
 	}
-
+	errs.InjectGrpcStatusCode(ctx, rep)
 	resp := rep.(*pb.GetAllStationsResponse)
 	json := serializeGetAllStationsResponse(resp)
-	errs.InjectGrpcStatusCode(ctx, rep)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -164,7 +161,6 @@ func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.G
 		return nil, err
 	}
 	errs.InjectGrpcStatusCode(ctx, rep)
-
 	resp := rep.(*pb.GetNextAvailableDockingStationResponse)
 	return resp, nil
 }
@@ -175,7 +171,6 @@ func (g *grpcServer) RegisterShipLanding(ctx context.Context, r *pb.RegisterShip
 		return nil, err
 	}
 	errs.InjectGrpcStatusCode(ctx, rep)
-
 	resp := rep.(*pb.RegisterShipLandingResponse)
 	return resp, nil
 }
