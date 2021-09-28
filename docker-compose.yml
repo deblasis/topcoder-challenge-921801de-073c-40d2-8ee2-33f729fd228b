@@ -100,7 +100,7 @@ services:
     image: deblasis/stc_authsvc:latest
     depends_on: 
       - consul
-      - auth_db
+      - auth_dbsvc
     volumes:
       - ./services/authsvc/app.yaml:/app.yaml
     environment: 
