@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package transport
 
@@ -32,6 +32,7 @@ import (
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -68,7 +69,7 @@ func NewGRPCServer(l log.Logger, e endpoints.EndpointSet) pb.AuthServiceServer {
 	}
 }
 
-func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*pb.SignupResponse, error) {
+func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*httpbody.HttpBody, error) {
 	_, rep, err := g.signup.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
@@ -93,7 +94,7 @@ func encodeGRPCSignupResponse(ctx context.Context, grpcResponse interface{}) (in
 	return resp, nil
 }
 
-func (g *grpcServer) Login(ctx context.Context, r *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (g *grpcServer) Login(ctx context.Context, r *pb.LoginRequest) (*httpbody.HttpBody, error) {
 	_, rep, err := g.login.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err

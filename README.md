@@ -6,7 +6,6 @@ This is an implementation of the corresponding [Topcoder Challenge](https://www.
 
 ## Overview
 
-
 ### Architecture
 The architecture of this implementation is as follows:
 

@@ -65,5 +65,6 @@ COPY ./common ./common
 COPY ./services ./services
 COPY ./scripts ./scripts
 COPY ./scripts/*.sh /
+COPY ./statik ./statik
 
 RUN make binaries

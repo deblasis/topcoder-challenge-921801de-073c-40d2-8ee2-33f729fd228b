@@ -75,6 +75,7 @@ header:
     - 'dist'
     - 'licenses'
     - '**/*.md'
+    - 'swagger/ui'
     - 'LICENSE'
     - 'NOTICE'
     - go.mod
