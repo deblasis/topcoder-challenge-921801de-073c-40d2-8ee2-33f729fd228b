@@ -29,12 +29,8 @@ services:
       NODE: consul  
       CONSUL_LOCAL_CONFIG: "{'skip_leave_on_interrupt': true}"
     command: consul agent -server -bind 0.0.0.0 -node consul -client 0.0.0.0 -dns-port 53 -data-dir /consul/data -ui -bootstrap  
-# -advertise $PRIVATE_IP_ADDRESS \
-    # volumes:
-    #   - data_consul:/data
     networks:  
-      net:
-
+      - net
 
   apigateway:
     image: deblasis/stc_apigateway:latest
@@ -42,17 +38,15 @@ services:
       - consul
       - authsvc
     volumes:
-      # - ./certs:/certs
       - ./services/apigateway/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
      DEBLASIS_APIGATEWAY_AUTHSERVICE_GRPCENDPOINT: deblasis-v1-AuthService.service.consul:9082
      DEBLASIS_APIGATEWAY_CENTRALCOMMANDSERVICE_GRPCENDPOINT: deblasis-v1-CentralCommandService.service.consul:9482
      DEBLASIS_APIGATEWAY_SHIPPINGSTATIONSERVICE_GRPCENDPOINT: deblasis-v1-ShippingStationService.service.consul:9282
     networks:
-      net:
+      - net
     dns:
       - 127.0.0.1
       - 8.8.8.8
@@ -76,8 +70,7 @@ services:
       DEBLASIS_CONSULT_PORT: 8500
 
     networks: 
-      - auth_backend    
-      - net  
+      - net   
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
@@ -91,13 +84,10 @@ services:
       - consul
       - auth_db
     volumes:
-      # - ./certs:/certs
       - ./services/auth_dbsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_DB_ADDRESS: auth_db:5432
-    #  DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net
     healthcheck:
@@ -112,10 +102,7 @@ services:
       - consul
       - auth_dbsvc
     volumes:
-      # - ./certs:/certs
       - ./services/authsvc/app.yaml:/app.yaml
-      # - ./certs/jwt.pem.key:/certs/jwt.pem.key
-      # - ./certs/jwt.pem.pub:/certs/jwt.pem.pub
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
@@ -123,7 +110,7 @@ services:
      DEBLASIS_JWT_PRIVKEYPATH: /certs/jwt.pem.key
      DEBLASIS_JWT_PUBKEYPATH: /certs/jwt.pem.pub
     networks:
-      - net      
+      - net 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
       interval: 30s
@@ -133,7 +120,7 @@ services:
 
   centralcommand_db:
     image: postgres:13.4-alpine3.14
-    command: ["postgres"] # , "-c", "log_statement=all"]
+    command: ["postgres"]
     restart: always
     environment:
       PGUSER: postgres
@@ -157,13 +144,10 @@ services:
       - consul
       - centralcommand_db
     volumes:
-      # - ./certs:/certs
       - ./services/centralcommand_dbsvc/app.yaml:/app.yaml
     environment: 
       DEBLASIS_BINDONLOCALHOST: "false"
       DEBLASIS_DB_ADDRESS: centralcommand_db:5432
-      # DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-      # DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
       - net
     healthcheck:
@@ -178,14 +162,12 @@ services:
       - consul
       - centralcommand_dbsvc
     volumes:
-      # - ./certs:/certs
       - ./services/centralcommandsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
-      - net      
+      - net 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
       interval: 30s
@@ -199,14 +181,12 @@ services:
       - consul
       - centralcommandsvc
     volumes:
-      # - ./certs:/certs
       - ./services/shippingstationsvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_BINDONLOCALHOST: "false"
      DEBLASIS_SSL_SERVERCERT: /certs/deblasis-stc.pem
-    #  DEBLASIS_SSL_SERVERKEY: /certs/deblasis-stc-key.pem
     networks:
-      - net      
+      - net    
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9081/health"]
       interval: 30s
@@ -219,12 +199,11 @@ services:
       - consul
       - centralcommand_dbsvc
     volumes:
-      # - ./certs:/certs
       - ./services/clessidrasvc/app.yaml:/app.yaml
     environment: 
      DEBLASIS_CENTRALCOMMANDDB: centralcommand_db:5432
     networks:
-      net:
+      - net
     dns:
       - 127.0.0.1
       - 8.8.8.8
@@ -236,8 +215,4 @@ services:
       retries: 3  
 
 networks: 
-  #auth_frontend:    
-  auth_backend:
-  centralcommand_backend:
   net:
-  ##  driver: bridge
