@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 //go:build integration
 // +build integration
@@ -297,7 +297,7 @@ var _ = Describe("AuthSvc", func() {
 				client.POST(AuthService_Login).WithJSON(loginReq).Expect().Status(http.StatusOK)
 			})
 			It("should return token", func() {
-				client.POST(AuthService_Login).WithJSON(loginReq).Expect().JSON().Path("$.token.token").NotNull()
+				client.POST(AuthService_Login).WithJSON(loginReq).Expect().JSON().Path("$.token").NotNull()
 			})
 		})
 	})

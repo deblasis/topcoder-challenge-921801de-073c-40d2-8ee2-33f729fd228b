@@ -3,6 +3,7 @@ syntax = "proto3";
 package deblasis.v1;
 
 import "v1/error.proto";
+import "google/api/httpbody.proto";
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 
@@ -10,13 +11,13 @@ option go_package = "deblasis.net/space-traffic-control/gen/proto/go/authsvc/pro
 
 
 service AuthService {
-  rpc Login(LoginRequest) returns (LoginResponse) {
+  rpc Login(LoginRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/auth/login"
       body: "*"
     };
   };
-  rpc Signup(SignupRequest) returns (SignupResponse) {
+  rpc Signup(SignupRequest) returns (google.api.HttpBody) {
     option (google.api.http) = {
       post: "/user/signup"
       body: "*"

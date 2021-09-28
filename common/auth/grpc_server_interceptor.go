@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,16 +18,18 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package auth
 
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"deblasis.net/space-traffic-control/common"
+	"deblasis.net/space-traffic-control/common/errs"
 	"github.com/go-kit/kit/log"
 	gk "github.com/go-kit/kit/transport/grpc"
 	"github.com/go-kit/log/level"
@@ -68,6 +70,7 @@ func (interceptor *AuthServerInterceptor) Unary() grpc.UnaryServerInterceptor {
 
 		ctx, err := interceptor.checkAuth(ctx, info.FullMethod, req, log.With(interceptor.logger, "component", "checkAuth"))
 		if err != nil {
+			errs.InjectGrpcErrorStatusCode(ctx, err, http.StatusUnauthorized)
 			return nil, err
 		}
 

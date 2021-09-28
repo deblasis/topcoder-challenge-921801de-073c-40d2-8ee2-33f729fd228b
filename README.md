@@ -4,15 +4,23 @@
 This is an implementation of the corresponding [Topcoder Challenge](https://www.topcoder.com/challenges/921801de-073c-40d2-8ee2-33f729fd228b?tab=details)
 
 
-## Overview
+## TLDR;
 
+```bash
+make run-fast
+```
+then navigate to http://localhost:8081 and you will be redirected to the swagger UI 
+<img src="./docs/swagger.jpg" />
+From there you can play with the API
+
+Side note: I used a playful tone, normally I keep it more professional 😉. 
 
 ### Architecture
 The architecture of this implementation is as follows:
 
 <img src="./docs/architecture-diagram.jpg" />
 
-There is also a single `Consul` leader instance and two additional `Agents` offering DNS for `APIGateway` and `ShippingStationSvc`.
+There is also a single `Consul` leader instance and two additional `Agents` offering DNS for `APIGateway` and `ClessidraSvc`. 
 
 ### Consul
 
@@ -68,7 +76,8 @@ The makefile is used as a productivity enhancer, there are targets that are mean
 They can be generated on the host or inside a container for a containerized build depending on the needs. There's also a target in the Makefile to copy the certificates to the host from the containerized builder for debugging purposes.
 
 ### Worker
-There's a worker service called `ClessidraSvc` (Clessidra is Italian for hourglass) that simulates passage of time, making sure that the ships that are supposed to leave, leave their docks and that the reserved docks are freed after a configurable timeout
+There's a worker service called `ClessidraSvc` (Clessidra is Italian for hourglass) that simulates passage of time, making sure that the ships that are supposed to leave, leave their docks and that the reserved docks are freed after a configurable timeout. 
+The service registers itself with consul via the agent sidecar.
 
 
 ## Prerequisites

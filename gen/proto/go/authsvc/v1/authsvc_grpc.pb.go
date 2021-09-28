@@ -4,6 +4,7 @@ package authsvc_v1
 
 import (
 	context "context"
+	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -18,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
+	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error)
 }
 
 type authServiceClient struct {
@@ -30,8 +31,8 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
-	out := new(LoginResponse)
+func (c *authServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthService/Login", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -39,8 +40,8 @@ func (c *authServiceClient) Login(ctx context.Context, in *LoginRequest, opts ..
 	return out, nil
 }
 
-func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error) {
-	out := new(SignupResponse)
+func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*httpbody.HttpBody, error) {
+	out := new(httpbody.HttpBody)
 	err := c.cc.Invoke(ctx, "/deblasis.v1.AuthService/Signup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -52,8 +53,8 @@ func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts 
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
+	Login(context.Context, *LoginRequest) (*httpbody.HttpBody, error)
+	Signup(context.Context, *SignupRequest) (*httpbody.HttpBody, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -61,10 +62,10 @@ type AuthServiceServer interface {
 type UnimplementedAuthServiceServer struct {
 }
 
-func (UnimplementedAuthServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+func (UnimplementedAuthServiceServer) Login(context.Context, *LoginRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*SignupResponse, error) {
+func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*httpbody.HttpBody, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signup not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}

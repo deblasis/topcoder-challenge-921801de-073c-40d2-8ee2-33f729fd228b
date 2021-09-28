@@ -206,24 +206,32 @@ func FromProtoV1(e *common_v1.Error) *Err {
 }
 
 func InjectGrpcStatusCode(ctx context.Context, resp interface{}) {
+	if failer, ok := resp.(endpoint.Failer); ok {
+		e := failer.Failed()
+		InjectGrpcErrorStatusCode(ctx, e, http.StatusInternalServerError)
+	}
+}
+
+func InjectGrpcErrorStatusCode(ctx context.Context, e error, fallbackCode int) {
 
 	var code int
 	var err *Err
 	var perr *common_v1.Error
 
-	if failer, ok := resp.(endpoint.Failer); ok {
-		e := failer.Failed()
-		if !IsNil(e) {
-			if errors.As(e, &err) {
-				code = int(err.Code)
-			}
-			if errors.As(e, &perr) {
-				code = int(perr.Code)
-			}
-			header := metadata.Pairs(
-				"x-http-code", fmt.Sprintf("%v", code),
-			)
-			grpc.SendHeader(ctx, header)
+	if !IsNil(e) {
+		if errors.As(e, &err) {
+			code = int(err.Code)
 		}
+		if errors.As(e, &perr) {
+			code = int(perr.Code)
+		}
+		if code == 0 {
+			code = fallbackCode
+		}
+		header := metadata.Pairs(
+			"x-http-code", fmt.Sprintf("%v", code),
+		)
+		grpc.SendHeader(ctx, header)
 	}
+
 }

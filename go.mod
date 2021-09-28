@@ -26,6 +26,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.2.5
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
+	github.com/rakyll/statik v0.1.7
 	github.com/sony/gobreaker v0.4.1
 	github.com/spf13/viper v1.9.0
 	github.com/stretchr/testify v1.7.0
