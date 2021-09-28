@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package transport
 
@@ -34,12 +34,9 @@ import (
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/genproto/googleapis/api/httpbody"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type grpcServer struct {
-	//TODO check for consistency
 	pb.UnimplementedShippingStationServiceServer
 
 	requestLanding grpctransport.Handler
@@ -76,6 +73,7 @@ func (g *grpcServer) RequestLanding(ctx context.Context, r *pb.RequestLandingReq
 	resp := rep.(*pb.RequestLandingResponse)
 
 	json := serializeRequestLandingResponse(resp)
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -92,6 +90,7 @@ func (g *grpcServer) Landing(ctx context.Context, r *pb.LandingRequest) (*httpbo
 
 	resp := rep.(*pb.LandingResponse)
 	json := serializeLandingResponse(resp)
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -101,22 +100,10 @@ func (g *grpcServer) Landing(ctx context.Context, r *pb.LandingRequest) (*httpbo
 }
 
 func decodeGRPCRequestLandingRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.RequestLandingRequest)
-	return req, nil
+	return grpcReq.(*pb.RequestLandingRequest), nil
 }
 func encodeGRPCRequestLandingResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.RequestLandingResponse)
-
-	//TODO refactor
-	if !errs.IsNil(response.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
-			"x-no-content", "true",
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	return response, nil
+	return grpcResponse.(*pb.RequestLandingResponse), nil
 }
 
 func decodeGRPCLandingRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -124,18 +111,7 @@ func decodeGRPCLandingRequest(c context.Context, grpcReq interface{}) (interface
 	return req, nil
 }
 func encodeGRPCLandingResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-
-	response := grpcResponse.(*pb.LandingResponse)
-	//TODO: refactor
-	if !errs.IsNil(response.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", response.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	//return converters.LandingResponseToProto(*response), nil
-	return response, nil
+	return grpcResponse.(*pb.LandingResponse), nil
 }
 
 func serializeRequestLandingResponse(resp *pb.RequestLandingResponse) []byte {

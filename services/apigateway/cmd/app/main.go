@@ -335,8 +335,6 @@ func preflightHandler(w http.ResponseWriter, r *http.Request) {
 
 func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
 	return func(ctx context.Context, sm *runtime.ServeMux, m runtime.Marshaler, rw http.ResponseWriter, r *http.Request, e error) {
-		//TODO refactor
-
 		logger.Log("msg", "checking metadata")
 		md, ok := runtime.ServerMetadataFromContext(ctx)
 		if !ok {
@@ -383,14 +381,8 @@ func noContentErrorHandler(logger log.Logger) func(ctx context.Context, sm *runt
 	}
 }
 
-type errorBody struct {
-	Error string `json:"error,omitempty"`
-}
-
 func httpHeaderRewriter(logger log.Logger) func(c context.Context, rw http.ResponseWriter, m proto.Message) error {
 	return func(ctx context.Context, rw http.ResponseWriter, m proto.Message) error {
-		//TODO refactor
-
 		var (
 			code      int
 			noContent bool

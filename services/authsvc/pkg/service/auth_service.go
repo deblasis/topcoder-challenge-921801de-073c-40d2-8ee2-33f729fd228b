@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package service
 
@@ -51,7 +51,7 @@ var (
 	Namespace        = "deblasis"
 	Tags             = []string{}
 
-	GrpcServerPort = 9082 //TODO config
+	GrpcServerPort = 9082
 )
 
 type AuthService interface {
@@ -110,7 +110,7 @@ func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (re
 		}, nil
 	}
 
-	jwtTokenClaims, expiresAt, err := s.jwtHandler.NewJWTToken(*ret.Id, request.Username, request.Role, "http://"+ServiceName) //TODO cfg
+	jwtTokenClaims, expiresAt, err := s.jwtHandler.NewJWTToken(*ret.Id, request.Username, request.Role, "http://"+ServiceName)
 
 	resp = &pb.SignupResponse{
 		Token: &pb.Token{

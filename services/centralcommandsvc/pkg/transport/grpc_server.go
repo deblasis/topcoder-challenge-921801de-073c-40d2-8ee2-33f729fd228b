@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package transport
 
@@ -60,31 +60,6 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			decodeGRPCRegisterShipRequest,
 			encodeGRPCRegisterShipResponse,
 			options...,
-		// grpctransport.ServerBefore(func(c context.Context, m metadata.MD) context.Context {
-		// 	level.Info(l).Log("ServerBefore", "RegisterShip",
-		// 		"userId", c.Value(common.ContextKeyUserId).(string),
-		// 		"role", c.Value(common.ContextKeyUserRole).(string),
-		// 	)
-		// 	level.Info(l).Log("ServerBefore", "RegisterShip",
-		// 		"userId-md", m["x-stc-user-id"],
-		// 		"role-md", m["x-stc-user-role"],
-		// 	)
-		// 	// level.Info(l).Log("ServerBefore", "RegisterShip",
-		// 	// 	"userId-md[0]", m["x-stc-user-id"][0],
-		// 	// 	"role-md[0]", m["x-stc-user-role"][0],
-		// 	// )
-
-		// 	return c
-		// }),
-		// grpctransport.ServerAfter(func(ctx context.Context, header, trailer *metadata.MD) context.Context {
-		// 	var statusCode int
-		// 	statusCode, ok := ctx.Value(common.ContextKeyReturnCode).(int)
-		// 	if ok {
-		// 		header.Append("x-http-code", fmt.Sprintf("%v", statusCode))
-		// 	}
-		// 	return ctx
-		// }),
-
 		),
 		getAllShips: grpctransport.NewServer(
 			e.GetAllShipsEndpoint,
@@ -97,41 +72,6 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 			decodeGRPCRegisterStationRequest,
 			encodeGRPCRegisterStationResponse,
 			options...,
-		// grpctransport.ServerErrorHandler(transport.ErrorHandlerFunc(func(ctx context.Context, err error) {
-
-		// 	level.Info(l).Log("ServerErrorHandler", "RegisterStation",
-		// 		"err", err,
-		// 	)
-		// 	if err != nil {
-		// 		st, ok := status.FromError(err)
-		// 		if ok && st.Code() == codes.AlreadyExists {
-		// 			header := metadata.Pairs("x-http-code", "400")
-		// 			grpc.SendHeader(ctx, header)
-		// 			level.Info(l).Log("ServerErrorHandler", "RegisterStation",
-		// 				"grpcheader", "x-http-code",
-		// 				"msg", "sent",
-		// 			)
-		// 		}
-		// 	}
-		// })),
-		// grpctransport.ServerAfter(func(ctx context.Context, header, trailer *metadata.MD) context.Context {
-		// 	level.Info(l).Log("ServerAfter", "RegisterStation",
-		// 		"statusCode_from_ctx", ctx.Value(common.ContextKeyReturnCode),
-		// 	)
-
-		// 	//panic(ctx.Value(common.ContextKeyReturnCode))
-		// 	// var statusCode int
-		// 	// statusCode, ok := ctx.Value(common.ContextKeyReturnCode).(int)
-		// 	// if ok {
-		// 	// 	level.Info(l).Log("ServerAfter", "RegisterStations",
-		// 	// 		"statusCode", statusCode,
-		// 	// 		"msg", "appending to header md as x-http-code",
-		// 	// 	)
-		// 	// 	header.Append("x-http-code", fmt.Sprintf("%v", statusCode))
-		// 	// }
-
-		// 	return ctx
-		// }),
 		),
 		getAllStations: grpctransport.NewServer(
 			e.GetAllStationsEndpoint,
@@ -155,16 +95,15 @@ func NewGRPCServer(e endpoints.EndpointSet, l log.Logger) pb.CentralCommandServi
 }
 
 func (g *grpcServer) RegisterShip(ctx context.Context, r *pb.RegisterShipRequest) (*httpbody.HttpBody, error) {
-	_, _, err := g.registerShip.ServeGRPC(ctx, r)
+	_, rep, err := g.registerShip.ServeGRPC(ctx, r)
 	if err != nil {
 		return nil, err
 	}
-	//resp := rep.(*pb.RegisterShipResponse)
-	// if errors.Is(resp.Error, errs.ErrCannotInsertAlreadyExistingEntity) {
-	// 	//this will trigger the error handlers so we can alter body and header
-	// 	return nil, resp.Error
-	// }
-
+	errs.InjectGrpcStatusCode(ctx, rep)
+	header := metadata.Pairs(
+		"x-no-content", "true",
+	)
+	grpc.SendHeader(ctx, header)
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
 	}, nil
@@ -178,7 +117,7 @@ func (g *grpcServer) GetAllShips(ctx context.Context, r *pb.GetAllShipsRequest) 
 
 	resp := rep.(*pb.GetAllShipsResponse)
 	json := serializeGetAllShipsResponse(resp)
-
+	errs.InjectGrpcStatusCode(ctx, rep)
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
 		Data:        []byte(json),
@@ -194,6 +133,7 @@ func (g *grpcServer) RegisterStation(ctx context.Context, r *pb.RegisterStationR
 	resp := rep.(*pb.RegisterStationResponse)
 
 	json := serializeRegisterStationResponse(resp)
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -209,6 +149,7 @@ func (g *grpcServer) GetAllStations(ctx context.Context, r *pb.GetAllStationsReq
 
 	resp := rep.(*pb.GetAllStationsResponse)
 	json := serializeGetAllStationsResponse(resp)
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	return &httpbody.HttpBody{
 		ContentType: "application/json",
@@ -222,6 +163,7 @@ func (g *grpcServer) GetNextAvailableDockingStation(ctx context.Context, r *pb.G
 	if err != nil {
 		return nil, err
 	}
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	resp := rep.(*pb.GetNextAvailableDockingStationResponse)
 	return resp, nil
@@ -232,145 +174,58 @@ func (g *grpcServer) RegisterShipLanding(ctx context.Context, r *pb.RegisterShip
 	if err != nil {
 		return nil, err
 	}
+	errs.InjectGrpcStatusCode(ctx, rep)
 
 	resp := rep.(*pb.RegisterShipLandingResponse)
 	return resp, nil
 }
 
 func decodeGRPCRegisterShipRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.RegisterShipRequest)
-	return req, nil
-
-	// Id:       req.User.Id,
-	// Username: req.User.Username,
-	// Password: req.User.Password,
-	// //TODO centralize
-	// Role: strings.Title(strings.ToLower(strings.TrimLeft(req.User.Role.String(), "ROLE_"))),
-
+	return grpcReq.(*pb.RegisterShipRequest), nil
 }
 func encodeGRPCRegisterShipResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	resp := grpcResponse.(*pb.RegisterShipResponse)
-
-	header := metadata.Pairs(
-		"x-no-content", "true",
-	)
-	//TODO refactor
-	if !errs.IsNil(resp.Failed()) {
-		header.Set("x-http-code", fmt.Sprintf("%v", resp.Error.Code))
-	}
-	grpc.SendHeader(ctx, header)
-
-	//return converters.RegisterShipResponseToProto(*response), nil
-	return resp, nil
+	return grpcResponse.(*pb.RegisterShipResponse), nil
 }
 
 func decodeGRPCGetAllShipsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetAllShipsRequest)
-	return req, nil
+	return grpcReq.(*pb.GetAllShipsRequest), nil
 }
 func encodeGRPCGetAllShipsResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-
-	resp := grpcResponse.(*pb.GetAllShipsResponse)
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-	//return converters.GetAllShipsResponseToProto(*response), nil
-	return resp, nil
+	return grpcResponse.(*pb.GetAllShipsResponse), nil
 }
 
 func decodeGRPCRegisterStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.RegisterStationRequest)
-	//return converters.ProtoRegisterStationRequestToDto(*req), nil
-	return req, nil
-
-	// Id:       req.User.Id,
-	// Username: req.User.Username,
-	// Password: req.User.Password,
-	// //TODO centralize
-	// Role: strings.Title(strings.ToLower(strings.TrimLeft(req.User.Role.String(), "ROLE_"))),
-
+	return grpcReq.(*pb.RegisterStationRequest), nil
 }
 func encodeGRPCRegisterStationResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	resp := grpcResponse.(*pb.RegisterStationResponse)
-
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	//return converters.RegisterStationResponseToProto(*response), nil
-	return resp, nil
+	return grpcResponse.(*pb.RegisterStationResponse), nil
 }
 
 func decodeGRPCGetAllStationsRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetAllStationsRequest)
-	// if req != nil {
-	// 	return pb.GetAllStationsRequest{}, nil
-	// }
-	// return nil, errors.Str2err("cannot unmarshal GetAllStationsRequest")
-	return req, nil
+	return grpcReq.(*pb.GetAllStationsRequest), nil
 }
 func encodeGRPCGetAllStationsResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	resp := grpcResponse.(*pb.GetAllStationsResponse)
-
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	//return converters.GetAllStationsResponseToProto(*response), nil
-	return resp, nil
+	return grpcResponse.(*pb.GetAllStationsResponse), nil
 }
 
 func decodeGRPCGetNextAvailableDockingStationRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.GetNextAvailableDockingStationRequest)
-	// if req != nil {
-	// 	return pb.GetNextAvailableDockingStationRequest{}, nil
-	// }
-	// return nil, errors.Str2err("cannot unmarshal GetNextAvailableDockingStationRequest")
-	return req, nil
+	return grpcReq.(*pb.GetNextAvailableDockingStationRequest), nil
 }
 func encodeGRPCGetNextAvailableDockingStationResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-	resp := grpcResponse.(*pb.GetNextAvailableDockingStationResponse)
-
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	//return converters.GetNextAvailableDockingStationResponseToProto(*response), nil
-	return resp, nil
+	return grpcResponse.(*pb.GetNextAvailableDockingStationResponse), nil
 }
 
 func decodeGRPCRegisterShipLandingRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*pb.RegisterShipLandingRequest)
-	return req, nil
+	return grpcReq.(*pb.RegisterShipLandingRequest), nil
 }
 func encodeGRPCRegisterShipLandingResponse(_ context.Context, grpcResponse interface{}) (interface{}, error) {
-	response := grpcResponse.(*pb.RegisterShipLandingResponse)
-	return response, nil
+	return grpcResponse.(*pb.RegisterShipLandingResponse), nil
 }
 
 func serializeRegisterStationResponse(resp *pb.RegisterStationResponse) []byte {
-
-	//TODO: apply where appropriate
 	if !errs.IsNil(resp.Failed()) {
 		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
 	}
-
 	type dock struct {
 		Id              string `json:"id"`
 		NumDockingPorts int64  `json:"numDockingPorts"`
@@ -394,6 +249,9 @@ func serializeRegisterStationResponse(resp *pb.RegisterStationResponse) []byte {
 }
 
 func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
+	if !errs.IsNil(resp.Failed()) {
+		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
+	}
 	type dock struct {
 		Id              string   `json:"id"`
 		NumDockingPorts int64    `json:"numDockingPorts"`
@@ -433,6 +291,9 @@ func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
 }
 
 func serializeGetAllShipsResponse(resp *pb.GetAllShipsResponse) []byte {
+	if !errs.IsNil(resp.Failed()) {
+		return []byte(fmt.Sprintf(`{"error":"%v"}`, resp.Failed()))
+	}
 	type ship struct {
 		Id     string  `json:"id"`
 		Status string  `json:"status"`

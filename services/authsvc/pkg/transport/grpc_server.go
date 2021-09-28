@@ -24,7 +24,6 @@ package transport
 
 import (
 	"context"
-	"fmt"
 
 	"deblasis.net/space-traffic-control/common/errs"
 	"deblasis.net/space-traffic-control/common/transport_conf"
@@ -33,8 +32,6 @@ import (
 	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"google.golang.org/genproto/googleapis/api/httpbody"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 type grpcServer struct {
@@ -74,6 +71,7 @@ func (g *grpcServer) Signup(ctx context.Context, r *pb.SignupRequest) (*httpbody
 	if err != nil {
 		return nil, err
 	}
+	errs.InjectGrpcStatusCode(ctx, rep)
 	return rep.(*pb.SignupResponse), nil
 }
 
@@ -83,14 +81,6 @@ func decodeGRPCSignupRequest(c context.Context, grpcReq interface{}) (interface{
 func encodeGRPCSignupResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
 
 	resp := grpcResponse.(*pb.SignupResponse)
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
 	return resp, nil
 }
 
@@ -99,6 +89,8 @@ func (g *grpcServer) Login(ctx context.Context, r *pb.LoginRequest) (*httpbody.H
 	if err != nil {
 		return nil, err
 	}
+	errs.InjectGrpcStatusCode(ctx, rep)
+
 	return rep.(*pb.LoginResponse), nil
 }
 func decodeGRPCLoginRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
@@ -106,17 +98,7 @@ func decodeGRPCLoginRequest(c context.Context, grpcReq interface{}) (interface{}
 }
 
 func encodeGRPCLoginResponse(ctx context.Context, grpcResponse interface{}) (interface{}, error) {
-
-	resp := grpcResponse.(*pb.LoginResponse)
-	//TODO: refactor
-	if !errs.IsNil(resp.Failed()) {
-		header := metadata.Pairs(
-			"x-http-code", fmt.Sprintf("%v", resp.Error.Code),
-		)
-		grpc.SendHeader(ctx, header)
-	}
-
-	return resp, nil
+	return grpcResponse.(*pb.LoginResponse), nil
 }
 
 func (g *grpcServer) CheckToken(ctx context.Context, r *pb.CheckTokenRequest) (*pb.CheckTokenResponse, error) {
@@ -124,6 +106,7 @@ func (g *grpcServer) CheckToken(ctx context.Context, r *pb.CheckTokenRequest) (*
 	if err != nil {
 		return nil, err
 	}
+	errs.InjectGrpcStatusCode(ctx, rep)
 	return rep.(*pb.CheckTokenResponse), nil
 }
 func decodeGRPCCheckTokenRequest(c context.Context, grpcReq interface{}) (interface{}, error) {
