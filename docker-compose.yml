@@ -35,13 +35,6 @@ services:
     networks:  
       net:
 
-  # zipkin:
-  #   image: openzipkin/zipkin
-  #   ports:
-  #     - 9411:9411
-  #   networks:
-  #     - net
-
 
   apigateway:
     image: deblasis/stc_apigateway:latest
@@ -81,7 +74,6 @@ services:
       POSTGRES_DB: auth
       DEBLASIS_CONSULT_HOST: consul
       DEBLASIS_CONSULT_PORT: 8500
-      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
 
     networks: 
       - auth_backend    
@@ -150,7 +142,6 @@ services:
       POSTGRES_DB: centralcommand
       DEBLASIS_CONSULT_HOST: consul
       DEBLASIS_CONSULT_PORT: 8500
-      DEBLASIS_ZIPKINV2_URL: http://zipkin:9411/api/v2/spans
     networks: 
       - net  
     healthcheck:

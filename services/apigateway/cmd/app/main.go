@@ -75,25 +75,8 @@ func main() {
 
 	var (
 		logger log.Logger = cfg.Logger
-		// tracer          = stdopentracing.GlobalTracer() // no-op
-		// zipkinTracer, _ = stdzipkin.NewTracer(nil, stdzipkin.WithNoopTracer(true))
-		ctx = context.Background()
+		ctx               = context.Background()
 	)
-
-	// var duration metrics.Histogram
-	// {
-	// 	// Endpoint-level metrics.
-	// 	duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "request_duration_seconds",
-	// 		Help:      "Request duration in seconds.",
-	// 	}, []string{"method", "success"})
-	// }
-	// http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
-
-	// Now we begin installing the routes. Each route corresponds to a single
-	// method: sum, concat, uppercase, and count.
 
 	{
 
@@ -148,21 +131,6 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			//mux.Handle("/centcom", ccGw)
-
-			// s := &http.Server{
-			// 	Addr:    httpAddr,
-			// 	Handler: allowCORS(mux),
-			// }
-
-			//mux.HandleFunc("/openapiv2/", openAPIServer(opts.OpenAPIDir))
-			//mux.HandleFunc("/healthz", healthzServer(conn))
-
-			// gw, err := newGateway(ctx, conn, opts.Mux)
-			// if err != nil {
-			// 	return err
-			// }
-			// mux.Handle("/", gw)
 
 			// Interrupt handler.
 			errc := make(chan error)

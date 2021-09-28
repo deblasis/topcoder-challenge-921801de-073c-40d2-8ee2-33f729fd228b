@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 // The application represents for routing the endpoints
 package main
@@ -30,10 +30,8 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 
-	"deblasis.net/space-traffic-control/common/bootstrap"
 	"deblasis.net/space-traffic-control/common/config"
 	consulreg "deblasis.net/space-traffic-control/common/consul"
 	"deblasis.net/space-traffic-control/common/db"
@@ -49,11 +47,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/metrics/prometheus"
 	grpcgokit "github.com/go-kit/kit/transport/grpc"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -82,44 +76,12 @@ func main() {
 	)
 	defer connection.Close()
 
-	zipkinTracer, tracer := bootstrap.SetupTracers(cfg, service.ServiceName)
-
-	// var ints, chars metrics.Counter
-	// {
-	// 	// Business-level metrics.
-	// 	ints = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "integers_summed", //TODO
-	// 		Help:      "Total count of integers summed via the Sum method.",
-	// 	}, []string{})
-	// 	chars = prometheus.NewCounterFrom(stdprometheus.CounterOpts{
-	// 		Namespace: service.Namespace,
-	// 		Subsystem: strings.Split(service.ServiceName, ".")[2],
-	// 		Name:      "characters_concatenated", //TODO
-	// 		Help:      "Total count of characters concatenated via the Concat method.",
-	// 	}, []string{})
-	// }
-
-	var duration metrics.Histogram
-	{
-		// Endpoint-level metrics.
-		duration = prometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: service.Namespace,
-			Subsystem: strings.Split(service.ServiceName, "-")[2],
-			Name:      "request_duration_seconds",
-			Help:      "Request duration in seconds.",
-		}, []string{"method", "success"})
-	}
-
-	http.DefaultServeMux.Handle("/metrics", promhttp.Handler())
-
 	var (
 		g group.Group
 
 		repo = repositories.NewUserRepository(connection, log.With(cfg.Logger, "component", "UserRepository"))
 		svc  = service.NewAuthDBService(repo, log.With(cfg.Logger, "component", "AuthDBService"))
-		eps  = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"), duration, tracer, zipkinTracer)
+		eps  = endpoints.NewEndpointSet(svc, log.With(cfg.Logger, "component", "EndpointSet"))
 
 		httpHandler = transport.NewHTTPHandler(eps, log.With(cfg.Logger, "component", "HTTPHandler"))
 		grpcServer  = transport.NewGRPCServer(eps, log.With(cfg.Logger, "component", "GRPCServer"))

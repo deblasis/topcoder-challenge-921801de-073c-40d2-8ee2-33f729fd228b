@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 package endpoints
 
@@ -33,11 +33,6 @@ import (
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
-	"github.com/go-kit/kit/tracing/opentracing"
-	"github.com/go-kit/kit/tracing/zipkin"
-	stdopentracing "github.com/opentracing/opentracing-go"
-	stdzipkin "github.com/openzipkin/zipkin-go"
 	"github.com/sony/gobreaker"
 )
 
@@ -50,34 +45,24 @@ type EndpointSet struct {
 	logger log.Logger
 }
 
-func NewEndpointSet(s service.ShippingStationService, logger log.Logger, duration metrics.Histogram, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer) EndpointSet {
+func NewEndpointSet(s service.ShippingStationService, logger log.Logger) EndpointSet {
 
 	var requestLandingEndpoint endpoint.Endpoint
 	{
 		requestLandingEndpoint = MakeRequestLandingEndpoint(s)
 		requestLandingEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(requestLandingEndpoint)
-		requestLandingEndpoint = opentracing.TraceServer(otTracer, "RequestLanding")(requestLandingEndpoint)
-		if zipkinTracer != nil {
-			requestLandingEndpoint = zipkin.TraceEndpoint(zipkinTracer, "RequestLanding")(requestLandingEndpoint)
-		}
 		requestLandingEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "RequestLanding"))(requestLandingEndpoint)
-		requestLandingEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "RequestLanding"))(requestLandingEndpoint)
 	}
 
 	var landingEndpoint endpoint.Endpoint
 	{
 		landingEndpoint = MakeLandingEndpoint(s)
 		landingEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(landingEndpoint)
-		landingEndpoint = opentracing.TraceServer(otTracer, "Landing")(landingEndpoint)
-		if zipkinTracer != nil {
-			landingEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Landing")(landingEndpoint)
-		}
 		landingEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "Landing"))(landingEndpoint)
-		landingEndpoint = middlewares.InstrumentingMiddleware(duration.With("method", "Landing"))(landingEndpoint)
 	}
 
 	return EndpointSet{
-		StatusEndpoint: healthcheck.MakeStatusEndpoint(logger, duration, otTracer, zipkinTracer),
+		StatusEndpoint: healthcheck.MakeStatusEndpoint(logger),
 
 		RequestLandingEndpoint: requestLandingEndpoint,
 		LandingEndpoint:        landingEndpoint,

@@ -33,8 +33,10 @@ import (
 	common_v1 "deblasis.net/space-traffic-control/gen/proto/go/v1"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	m "gopkg.in/jeevatkm/go-model.v1"
 )
 
@@ -224,6 +226,9 @@ func InjectGrpcErrorStatusCode(ctx context.Context, e error, fallbackCode int) {
 		}
 		if errors.As(e, &perr) {
 			code = int(perr.Code)
+		}
+		if err, ok := status.FromError(e); ok {
+			code = runtime.HTTPStatusFromCode(err.Code())
 		}
 		if code == 0 {
 			code = fallbackCode
