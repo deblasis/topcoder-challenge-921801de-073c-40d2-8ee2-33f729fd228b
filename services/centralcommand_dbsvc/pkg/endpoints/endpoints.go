@@ -28,7 +28,6 @@ import (
 	"github.com/sony/gobreaker"
 
 	"deblasis.net/space-traffic-control/common/errs"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
@@ -38,8 +37,6 @@ import (
 )
 
 type EndpointSet struct {
-	StatusEndpoint endpoint.Endpoint
-
 	CreateShipEndpoint  endpoint.Endpoint
 	GetAllShipsEndpoint endpoint.Endpoint
 
@@ -96,7 +93,6 @@ func NewEndpointSet(s service.CentralCommandDBService, logger log.Logger) Endpoi
 		landShipToDockEndpoint = middlewares.LoggingMiddleware(log.With(logger, "method", "LandShipToDock"))(landShipToDockEndpoint)
 	}
 	return EndpointSet{
-		StatusEndpoint:                         healthcheck.MakeStatusEndpoint(logger),
 		CreateShipEndpoint:                     createShipEndpoint,
 		GetAllShipsEndpoint:                    getAllShipsEndpoint,
 		CreateStationEndpoint:                  createStationEndpoint,

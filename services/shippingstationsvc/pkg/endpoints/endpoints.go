@@ -26,7 +26,6 @@ import (
 	"context"
 
 	"deblasis.net/space-traffic-control/common/errs"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
 	"deblasis.net/space-traffic-control/services/shippingstationsvc/pkg/service"
@@ -37,8 +36,6 @@ import (
 )
 
 type EndpointSet struct {
-	StatusEndpoint endpoint.Endpoint
-
 	RequestLandingEndpoint endpoint.Endpoint
 	LandingEndpoint        endpoint.Endpoint
 
@@ -62,8 +59,6 @@ func NewEndpointSet(s service.ShippingStationService, logger log.Logger) Endpoin
 	}
 
 	return EndpointSet{
-		StatusEndpoint: healthcheck.MakeStatusEndpoint(logger),
-
 		RequestLandingEndpoint: requestLandingEndpoint,
 		LandingEndpoint:        landingEndpoint,
 

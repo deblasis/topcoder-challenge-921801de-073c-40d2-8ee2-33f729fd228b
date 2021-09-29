@@ -26,7 +26,6 @@ import (
 	"context"
 
 	"deblasis.net/space-traffic-control/common/errs"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
@@ -37,7 +36,6 @@ import (
 )
 
 type EndpointSet struct {
-	StatusEndpoint     endpoint.Endpoint
 	SignupEndpoint     endpoint.Endpoint
 	LoginEndpoint      endpoint.Endpoint
 	CheckTokenEndpoint endpoint.Endpoint
@@ -69,7 +67,6 @@ func NewEndpointSet(s service.AuthService, logger log.Logger) EndpointSet {
 	}
 
 	return EndpointSet{
-		StatusEndpoint:     healthcheck.MakeStatusEndpoint(logger),
 		SignupEndpoint:     signupEndpoint,
 		LoginEndpoint:      loginEndpoint,
 		CheckTokenEndpoint: checkTokenEndpoint,
