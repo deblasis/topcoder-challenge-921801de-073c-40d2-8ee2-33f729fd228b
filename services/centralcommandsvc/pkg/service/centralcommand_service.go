@@ -72,7 +72,7 @@ func NewCentralCommandService(logger log.Logger, jwtConfig config.JWTConfig, db_
 }
 
 func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.RegisterShipRequest) (resp *pb.RegisterShipResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "RegisterShip",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
@@ -113,7 +113,7 @@ func (s *centralCommandService) RegisterShip(ctx context.Context, request *pb.Re
 }
 
 func (s *centralCommandService) RegisterStation(ctx context.Context, request *pb.RegisterStationRequest) (resp *pb.RegisterStationResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "RegisterStation",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
@@ -196,7 +196,7 @@ func (s *centralCommandService) GetAllShips(ctx context.Context, request *pb.Get
 }
 
 func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.GetAllStationsRequest) (resp *pb.GetAllStationsResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "GetAllStations",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
@@ -234,7 +234,7 @@ func (s *centralCommandService) GetAllStations(ctx context.Context, request *pb.
 }
 
 func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Context, request *pb.GetNextAvailableDockingStationRequest) (resp *pb.GetNextAvailableDockingStationResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "GetNextAvailableDockingStation",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
@@ -263,7 +263,7 @@ func (s *centralCommandService) GetNextAvailableDockingStation(ctx context.Conte
 }
 
 func (s *centralCommandService) RegisterShipLanding(ctx context.Context, request *pb.RegisterShipLandingRequest) (resp *pb.RegisterShipLandingResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "RegisterShipLanding",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
