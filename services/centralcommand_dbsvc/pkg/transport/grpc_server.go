@@ -32,8 +32,8 @@ import (
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/converters"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
-	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/go-kit/log"
 )
 
 type grpcServer struct {

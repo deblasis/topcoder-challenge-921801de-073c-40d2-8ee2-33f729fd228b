@@ -31,8 +31,8 @@ import (
 	"deblasis.net/space-traffic-control/common/transport_conf"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/endpoints"
-	"github.com/go-kit/kit/log"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/go-kit/log"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 )
 
