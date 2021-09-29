@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 //go:build integration
 // +build integration
@@ -42,13 +42,30 @@ type LoginRequest struct {
 type Dock struct {
 	NumDockingPorts int `json:"numDockingPorts" faker:"oneof: 1, 2, 5, 10"`
 }
+type DockResp struct {
+	Id              string  `json:"id"`
+	NumDockingPorts int     `json:"numDockingPorts"`
+	Occupied        int     `json:"occupied"`
+	Weight          float64 `json:"weight"`
+}
 type RegisterStationRequest struct {
-	Capacity float32 `json:"capacity" faker:"oneof: 1, 3.14, 8, 256"`
+	Capacity float64 `json:"capacity" faker:"oneof: 1, 3.14, 8, 256"`
 	Docks    []*Dock `json:"docks"`
+}
+type RegisterStationResponse struct {
+	Id           string      `json:"id"`
+	Capacity     float64     `json:"capacity"`
+	UsedCapacity float64     `json:"usedCapacity"`
+	Docks        []*DockResp `json:"docks"`
 }
 
 type RegisterShipRequest struct {
-	Weight float32 `json:"weight" faker:"oneof: 1, 3.14, 8, 256"`
+	Weight float64 `json:"weight" faker:"oneof: 1, 3.14, 8, 256"`
+}
+type RegisterShipResponse struct {
+	Id     string  `json:"id"`
+	Weight float64 `json:"weight"`
+	Status string  `json:"status"`
 }
 
 //SHIPPINGSTATION

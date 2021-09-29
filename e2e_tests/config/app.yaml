@@ -20,32 +20,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE. 
 #
-version: '3.6'
 
-services:
-  auth_db:
-    command: ["postgres", "-c", "log_statement=all"]
+jwt:
+  pubkeypath: ../certs/jwt.pem.pub
 
-  centralcommand_db:
-    command: ["postgres", "-c", "log_statement=all"]
-
-  centralcommand_dbsvc:
-    environment:
-# this enables the auxiliary endpoint that enables destructive operations like truncating tables during testing...
-      DEBLASIS_AUXGRPCSERVERPORT: 9383
-
-  integrationtester:
-    image: deblasis/stc_integrationtester:latest
-    environment: 
-      - APIGATEWAY=http://apigateway:8081
-      - CENTRALCOMMAND_AUX_DBENDPOINT=centralcommand_dbsvc:9383
-      - DEBLASIS_JWT_PUBKEYPATH=/certs/jwt.pem.pub      
-    depends_on:
-      - apigateway
-    # working_dir: /go/src/deblasis/stc-integrationtester
-    # volumes: 
-    #   - ./e2e_tests/scripts/entrypoint.sh:/entrypoint.sh
-    #   - .:/go/src/deblasis/stc-integrationtester
-    # command: /entrypoint.sh
-    networks:  
-      - net
+loglevel: debug

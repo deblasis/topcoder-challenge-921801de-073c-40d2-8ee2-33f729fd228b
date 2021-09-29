@@ -137,11 +137,11 @@ docker-build: builder
 	
 .PHONY: host-build
 host-build: proto binaries builder
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml -f docker-compose.integrationtests.yml build --parallel
 
 .PHONY: integrationtests-build
 integrationtests-build: builder
-	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml build --parallel
+	COMPOSE_PROJECT_NAME=deblasis-stc-e2e_tests $(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.integrationtests.yml build --parallel
 
 .PHONY: integrationtests-up
 integrationtests-up: integrationtests-build

@@ -20,32 +20,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE. 
 #
-version: '3.6'
+# Base build image
+FROM golang:1.17-alpine AS server_builder
+ARG SVC_NAME
 
-services:
-  auth_db:
-    command: ["postgres", "-c", "log_statement=all"]
+WORKDIR /go/src/deblasis.net/space-traffic-control
 
-  centralcommand_db:
-    command: ["postgres", "-c", "log_statement=all"]
+ARG SVC_NAME
+RUN echo $SVC_NAME
 
-  centralcommand_dbsvc:
-    environment:
-# this enables the auxiliary endpoint that enables destructive operations like truncating tables during testing...
-      DEBLASIS_AUXGRPCSERVERPORT: 9383
+COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/scripts/*.sh /   
+COPY ./e2e_tests/scripts/*.sh /   
 
-  integrationtester:
-    image: deblasis/stc_integrationtester:latest
-    environment: 
-      - APIGATEWAY=http://apigateway:8081
-      - CENTRALCOMMAND_AUX_DBENDPOINT=centralcommand_dbsvc:9383
-      - DEBLASIS_JWT_PUBKEYPATH=/certs/jwt.pem.pub      
-    depends_on:
-      - apigateway
-    # working_dir: /go/src/deblasis/stc-integrationtester
-    # volumes: 
-    #   - ./e2e_tests/scripts/entrypoint.sh:/entrypoint.sh
-    #   - .:/go/src/deblasis/stc-integrationtester
-    # command: /entrypoint.sh
-    networks:  
-      - net
+FROM golang:1.17-alpine
+RUN apk update && apk upgrade && apk add bash make curl build-base
+WORKDIR /go/src/deblasis.net/space-traffic-control
+
+COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/certs/jwt.pem.pub /certs/jwt.pem.pub
+COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/ ./
+COPY --from=server_builder /entrypoint.sh /wait-for-it.sh  /
+COPY ./e2e_tests ./e2e_tests
+
+ENTRYPOINT ["/entrypoint.sh"]

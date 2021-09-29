@@ -31,6 +31,8 @@ import (
 	"os"
 	"testing"
 
+	"deblasis.net/space-traffic-control/common/auth"
+	"deblasis.net/space-traffic-control/common/config"
 	"deblasis.net/space-traffic-control/common/consts"
 	. "deblasis.net/space-traffic-control/e2e_tests/utils"
 	"github.com/bxcodec/faker/v3"
@@ -42,8 +44,13 @@ import (
 
 var (
 	client *httpexpect.Expect
+	cfg    config.Config
 
 	personas map[string]string
+
+	ctx        = context.Background()
+	logger     log.Logger
+	jwtHandler *auth.JwtHandler
 )
 
 func TestE2ETests(t *testing.T) {
@@ -53,6 +60,14 @@ func TestE2ETests(t *testing.T) {
 	if envTarget := os.Getenv("APIGATEWAY"); envTarget != "" {
 		target = envTarget
 	}
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		println(err.Error())
+		os.Exit(-1)
+	}
+	logger = cfg.Logger
+	jwtHandler = auth.NewJwtHandler(logger, cfg.JWT)
 
 	client = httpexpect.New(&ginkgoTestReporter{}, target)
 	GinkgoWriter.Write([]byte("\n⏳ Initializing test harness, creating test users and getting their credentials...\n"))
