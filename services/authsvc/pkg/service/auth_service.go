@@ -81,7 +81,7 @@ func NewAuthService(logger log.Logger, jwtConfig config.JWTConfig, db_svc_endpoi
 }
 
 func (s *authService) Signup(ctx context.Context, request *pb.SignupRequest) (resp *pb.SignupResponse, err error) {
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "Signup",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),

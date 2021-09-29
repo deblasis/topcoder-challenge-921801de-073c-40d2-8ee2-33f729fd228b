@@ -40,12 +40,9 @@ import (
 	authpb "deblasis.net/space-traffic-control/gen/proto/go/authsvc/v1"
 	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	sspb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
-	"github.com/etherlabsio/healthcheck/v2"
-
-	// "deblasis.net/space-traffic-control/services/authsvc/pkg/dtos"
-
 	"deblasis.net/space-traffic-control/services/apigateway/internal/routing"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
+	"github.com/etherlabsio/healthcheck/v2"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/golang/glog"
@@ -67,19 +64,11 @@ func main() {
 	}
 	var (
 		httpAddr = net.JoinHostPort(cfg.ListenAddr, cfg.HttpServerPort)
-		// consulAddr = net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
-
-		// retryMax     = cfg.APIGateway.RetryMax
-		// retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond)
-	)
-
-	var (
 		logger log.Logger = cfg.Logger
 		ctx               = context.Background()
 	)
 
 	{
-
 		{
 			if cfg.Consul.Host != "" && cfg.Consul.Port != "" {
 				consulAddres := net.JoinHostPort(cfg.Consul.Host, cfg.Consul.Port)
@@ -105,7 +94,6 @@ func main() {
 
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
-			//mux := http.NewServeMux()
 
 			authGw, err := newAuthSvcGateway(ctx, cfg,
 				runtime.WithForwardResponseOption(httpHeaderRewriter(log.With(logger, "component", "httpHeaderRewriter"))),
@@ -114,7 +102,6 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			//mux.Handle("/", authGw)
 
 			ccGw, err := newCentralCommandSvcGateway(ctx, cfg,
 				runtime.WithForwardResponseOption(httpHeaderRewriter(log.With(logger, "component", "httpHeaderRewriter"))),
@@ -164,7 +151,7 @@ func main() {
 						})),
 				}
 
-				router := LoggerMw(logger, allowCORS(routing.NewRouter(authGw, ccGw, ssGw, healthchecks)), "grpc-gw")
+				router := loggerMw(logger, allowCORS(routing.NewRouter(authGw, ccGw, ssGw, healthchecks)), "grpc-gw")
 
 				errc <- http.ListenAndServe(fmt.Sprintf(":%v", cfg.HttpServerPort), router)
 
@@ -178,8 +165,6 @@ func main() {
 
 // newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
 func newAuthSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
-
-	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", auth_service.ServiceName, auth_service.GrpcServerPort))
 	conn, err := dial(ctx, cfg.APIGateway.AuthServiceGRPCEndpoint)
 	if err != nil {
 		panic(err)
@@ -203,10 +188,8 @@ func newAuthSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.S
 	return mux, nil
 }
 
-// newAuthSvcGateway returns a new gateway server which translates HTTP into gRPC.
+// newCentralCommandSvcGateway returns a new gateway server which translates HTTP into gRPC.
 func newCentralCommandSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
-
-	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
 	conn, err := dial(ctx, cfg.APIGateway.CentralCommandServiceGRPCEndpoint)
 	if err != nil {
 		panic(err)
@@ -230,9 +213,8 @@ func newCentralCommandSvcGateway(ctx context.Context, cfg config.Config, opts ..
 	return mux, nil
 }
 
+// newShippingStationSvcGateway returns a new gateway server which translates HTTP into gRPC.
 func newShippingStationSvcGateway(ctx context.Context, cfg config.Config, opts ...runtime.ServeMuxOption) (http.Handler, error) {
-
-	//conn, err := dial(ctx, fmt.Sprintf("%v.service.consul:%d", cc_service.ServiceName, cc_service.GrpcServerPort))
 	conn, err := dial(ctx, cfg.APIGateway.ShippingStationGRPCEndpoint)
 	if err != nil {
 		panic(err)
@@ -256,7 +238,7 @@ func newShippingStationSvcGateway(ctx context.Context, cfg config.Config, opts .
 	return mux, nil
 }
 
-func LoggerMw(logger log.Logger, inner http.Handler, name string) http.Handler {
+func loggerMw(logger log.Logger, inner http.Handler, name string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 

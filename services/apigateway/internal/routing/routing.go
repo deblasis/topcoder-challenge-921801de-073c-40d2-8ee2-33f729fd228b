@@ -112,7 +112,6 @@ func NewRouter(authGw http.Handler, ccGw http.Handler, ssGw http.Handler, health
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc
-		//handler = Logger(handler, route.Name)
 
 		router.
 			Methods(route.Method).

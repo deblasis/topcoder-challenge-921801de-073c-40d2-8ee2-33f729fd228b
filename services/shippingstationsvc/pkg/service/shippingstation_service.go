@@ -69,7 +69,7 @@ func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb
 			level.Debug(s.logger).Log("method", "RequestLanding", "err", err)
 		}
 	}()
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "RequestLanding",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),
@@ -79,7 +79,6 @@ func (s *shippingStationService) RequestLanding(ctx context.Context, request *pb
 	role := common.ExtractUserRoleFromCtx(ctx)
 	if role != consts.ROLE_SHIP {
 		err = errs.NewError(http.StatusUnauthorized, "you are not a ship! You can't land here", errs.ErrUnauthorized)
-		//TODO check if this should be a domain error
 		return nil, err
 	}
 	userId := common.ExtractUserIdFromCtx(ctx)
@@ -131,7 +130,7 @@ func (s *shippingStationService) Landing(ctx context.Context, request *pb.Landin
 			level.Debug(s.logger).Log("method", "CreateShip", "err", err)
 		}
 	}()
-	//TODO use middleware
+
 	level.Info(s.logger).Log("handlingrequest", "Landing",
 		"userId", ctx.Value(common.ContextKeyUserId),
 		"role", ctx.Value(common.ContextKeyUserRole),

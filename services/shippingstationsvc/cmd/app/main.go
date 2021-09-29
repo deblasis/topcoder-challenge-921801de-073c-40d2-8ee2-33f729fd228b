@@ -90,22 +90,11 @@ func main() {
 		client = consulsd.NewClient(consulClient)
 	}
 
-	// Transport domain.
-	// var (
-	// 	ctx = context.Background()
-	// 	r   = mux.NewRouter()
-	// )
-	// Each method gets constructed with a factory. Factories take an
-	// instance string, and return a specific endpoint. In the factory we
-	// dial the instance string we get from Consul, and then leverage an
-	// addsvc client package to construct a complete service. We can then
-	// leverage the addsvc.Make{Sum,Concat}Endpoint constructors to convert
-	// the complete service to specific endpoint.
 
 	var (
 		logger       = cfg.Logger
 		retryMax     = cfg.APIGateway.RetryMax
-		retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond) * 10 //TODO remove
+		retryTimeout = cfg.APIGateway.RetryTimeoutMs * int(time.Millisecond)
 		tags         = []string{""}
 		passingOnly  = true
 		cc_endpoints = cce.EndpointSet{}
@@ -141,9 +130,7 @@ func main() {
 		cc_endpoints.RegisterShipLandingEndpoint = retry
 	}
 
-	// Here we leverage the fact that addsvc comes with a constructor for an
-	// HTTP handler, and just install it under a particular path prefix in
-	// our router.
+	
 
 	logger.Log("retryMax", retryMax, "retryTimeout", retryTimeout)
 
@@ -262,37 +249,17 @@ func centralCommandServiceFactory(makeEndpoint func(ccs.CentralCommandService) e
 			err  error
 		)
 
-		// if cfg.SSL.ServerCert != "" && cfg.SSL.ServerKey != "" {
-		// 	creds, err := credentials.NewServerTLSFromFile(cfg.SSL.ServerCert, cfg.SSL.ServerKey)
-		// 	if err != nil {
-		// 		level.Error(cfg.Logger).Log("client", "centralCommandServiceFactory", "certificates", creds, "err", err)
-		// 		os.Exit(1)
-		// 	}
-		// 	level.Info(cfg.Logger).Log("client", "centralCommandServiceFactory", "protocol", "GRPC", "certFile", cfg.SSL.ServerCert, "keyFile", cfg.SSL.ServerKey)
-
-		// 	conn, err = grpc.Dial(instance, grpc.WithTransportCredentials(creds))
-		// 	if err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// } else {
 		if cfg.BindOnLocalhost {
 			conn, err = grpc.Dial("localhost:"+strings.Split(instance, ":")[1], grpc.WithInsecure())
 		} else {
 			conn, err = grpc.Dial(instance, grpc.WithInsecure())
 		}
-		//}
 
 		if err != nil {
 			return nil, nil, err
 		}
 		service := cct.NewGRPCClient(conn, logger)
 		endpoint := makeEndpoint(service)
-		//TODO improve
-		level.Debug(logger).Log(
-			"method", "centralCommandServiceFactory",
-			"instance", instance,
-			"conn", conn,
-		)
 		return endpoint, conn, nil
 	}
 }

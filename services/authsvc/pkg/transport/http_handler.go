@@ -101,6 +101,5 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 		return nil
 	}
 
-	//TODO need to handle status when business error here and in all services...
 	return json.NewEncoder(w).Encode(response)
 }

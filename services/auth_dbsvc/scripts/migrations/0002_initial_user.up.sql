@@ -26,5 +26,5 @@ CREATE TABLE if not exists seeding_tmp(
 		 username VARCHAR(255) NOT NULL UNIQUE,
 		 password TEXT NOT NULL
 );
-
+--this is just for ease of testing / running this exercise obviously...
 INSERT INTO seeding_tmp (role, username, password) VALUES ('Command','deblasis','password!');

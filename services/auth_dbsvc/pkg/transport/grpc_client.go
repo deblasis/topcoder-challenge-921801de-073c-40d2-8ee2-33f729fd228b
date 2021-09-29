@@ -121,11 +121,6 @@ func decodeGRPCGetUserByUsernameResponse(_ context.Context, grpcResponse interfa
 func encodeGRPCCreateUserRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*dtos.CreateUserRequest)
 
-	// //TODO: centralise
-	// roleId := pb.User_Role_value[strings.ToUpper("ROLE_"+req.Role)]
-	// if roleId <= 0 {
-	// 	return nil, errors.New("cannot unmarshal role")
-	// }
 	return &pb.CreateUserRequest{
 		User: &pb.User{
 			Id:       req.Id,
