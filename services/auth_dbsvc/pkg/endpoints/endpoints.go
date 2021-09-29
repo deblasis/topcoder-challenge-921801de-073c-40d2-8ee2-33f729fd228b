@@ -28,7 +28,6 @@ import (
 	"github.com/sony/gobreaker"
 
 	"deblasis.net/space-traffic-control/common/errs"
-	"deblasis.net/space-traffic-control/common/healthcheck"
 	"deblasis.net/space-traffic-control/common/middlewares"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/dtos"
 	"deblasis.net/space-traffic-control/services/auth_dbsvc/pkg/service"
@@ -38,7 +37,6 @@ import (
 )
 
 type EndpointSet struct {
-	StatusEndpoint            endpoint.Endpoint
 	GetUserByUsernameEndpoint endpoint.Endpoint
 	GetUserByIdEndpoint       endpoint.Endpoint
 	CreateUserEndpoint        endpoint.Endpoint
@@ -69,7 +67,6 @@ func NewEndpointSet(s service.AuthDBService, logger log.Logger) EndpointSet {
 	}
 
 	return EndpointSet{
-		StatusEndpoint:            healthcheck.MakeStatusEndpoint(logger),
 		GetUserByUsernameEndpoint: getUserByUsernameEndpoint,
 		GetUserByIdEndpoint:       getUserByIdEndpoint,
 		CreateUserEndpoint:        createUserEndpoint,
