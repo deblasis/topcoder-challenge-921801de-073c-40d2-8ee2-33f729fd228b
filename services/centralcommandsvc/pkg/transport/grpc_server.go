@@ -255,7 +255,7 @@ func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
 	}
 	type station struct {
 		Id           string   `json:"id"`
-		Capacity     int64    `json:"capacity"`
+		Capacity     float32  `json:"capacity"`
 		UsedCapacity *float32 `json:"usedCapacity"`
 		Docks        []*dock  `json:"docks"`
 	}
@@ -265,7 +265,7 @@ func serializeGetAllStationsResponse(resp *pb.GetAllStationsResponse) []byte {
 
 			station := station{
 				Id:           s.Id,
-				Capacity:     int64(s.Capacity),
+				Capacity:     s.Capacity,
 				UsedCapacity: &s.UsedCapacity,
 				Docks:        []*dock{},
 			}

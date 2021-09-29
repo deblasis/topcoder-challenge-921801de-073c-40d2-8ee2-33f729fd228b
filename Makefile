@@ -137,7 +137,7 @@ docker-build: builder
 	
 .PHONY: host-build
 host-build: proto binaries builder
-	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml build --parallel
+	$(DOCKERCOMPOSE) -f docker-compose.yml -f docker-compose.hostbuild.yml -f docker-compose.prod.yml -f docker-compose.integrationtests.yml build --parallel
 
 .PHONY: integrationtests-build
 integrationtests-build: builder

@@ -73,3 +73,10 @@ services:
       args: 
         SVC_NAME: clessidrasvc        
    
+  integrationtester:
+    build:
+      dockerfile: ./e2e_tests/docker/Dockerfile
+      context: .
+      args: 
+        SVC_NAME: integrationtester        
+      

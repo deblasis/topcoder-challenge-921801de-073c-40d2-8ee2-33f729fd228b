@@ -1,6 +1,6 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>  
+// Copyright (c) 2021 Alessandro De Blasis <alex@deblasis.net>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 // AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE. 
+// SOFTWARE.
 //
 //go:build integration
 // +build integration
@@ -27,6 +27,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/go-kit/kit/log"
@@ -58,4 +59,16 @@ func CleanupDB(ctx context.Context, logger log.Logger) error {
 		return err
 	}
 	return resp.Error
+}
+
+func BarelyEqual(a, b float64) bool {
+	ret := fmt.Sprintf("%.2f", float64(a)) == fmt.Sprintf("%.2f", float64(b))
+	return ret
+}
+
+func RemoveItemAtIndex(slice *[]interface{}, i int) {
+	s := *slice
+	s[i] = s[len(s)-1]
+	s[len(s)-1] = nil
+	*slice = s[:len(s)-1]
 }
