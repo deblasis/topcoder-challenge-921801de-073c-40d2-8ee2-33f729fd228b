@@ -39,6 +39,7 @@ WORKDIR /go/src/deblasis.net/space-traffic-control
 COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/certs/jwt.pem.pub /certs/jwt.pem.pub
 COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-control/ ./
 COPY --from=server_builder /entrypoint.sh /wait-for-it.sh  /
+RUN chmod +x /entrypoint.sh /wait-for-it.sh
 COPY ./e2e_tests ./e2e_tests
 
 ENTRYPOINT ["/entrypoint.sh"]

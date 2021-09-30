@@ -47,5 +47,6 @@ COPY --from=deblasis/stc_builder:latest /go/src/deblasis.net/space-traffic-contr
 FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash
 COPY --from=server_builder /entrypoint.sh /exe /migrator /seeder /wait-for-it.sh  /
+RUN chmod +x /entrypoint.sh /exe /migrator /seeder /wait-for-it.sh
 COPY --from=server_builder /scripts /scripts
 ENTRYPOINT ["/entrypoint.sh"]
