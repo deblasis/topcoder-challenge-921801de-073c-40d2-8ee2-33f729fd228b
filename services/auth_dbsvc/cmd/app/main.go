@@ -49,8 +49,8 @@ import (
 
 	grpcgokit "github.com/go-kit/kit/transport/grpc"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/oklog/oklog/pkg/group"
 )
 

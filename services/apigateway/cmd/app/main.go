@@ -43,7 +43,7 @@ import (
 	"deblasis.net/space-traffic-control/services/apigateway/internal/routing"
 	"deblasis.net/space-traffic-control/services/authsvc/pkg/service"
 	"github.com/etherlabsio/healthcheck/v2"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/golang/glog"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"

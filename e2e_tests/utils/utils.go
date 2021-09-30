@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 
 	centralcommand_dbsvc_v1 "deblasis.net/space-traffic-control/gen/proto/go/centralcommand_dbsvc/v1"
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/transport"

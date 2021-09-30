@@ -32,7 +32,7 @@ import (
 
 	common_v1 "deblasis.net/space-traffic-control/gen/proto/go/v1"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"

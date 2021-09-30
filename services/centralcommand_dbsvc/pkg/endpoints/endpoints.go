@@ -33,7 +33,7 @@ import (
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/service"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 )
 
 type EndpointSet struct {

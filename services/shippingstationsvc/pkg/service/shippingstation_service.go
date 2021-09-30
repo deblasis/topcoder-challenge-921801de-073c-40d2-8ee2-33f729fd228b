@@ -33,7 +33,7 @@ import (
 	ccpb "deblasis.net/space-traffic-control/gen/proto/go/centralcommandsvc/v1"
 	pb "deblasis.net/space-traffic-control/gen/proto/go/shippingstationsvc/v1"
 	cc "deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/endpoints"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
 )

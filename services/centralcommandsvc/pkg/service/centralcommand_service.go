@@ -34,7 +34,7 @@ import (
 	"deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/dtos"
 	dbe "deblasis.net/space-traffic-control/services/centralcommand_dbsvc/pkg/endpoints"
 	"deblasis.net/space-traffic-control/services/centralcommandsvc/pkg/converters"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"

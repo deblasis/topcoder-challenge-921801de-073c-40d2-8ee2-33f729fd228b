@@ -27,7 +27,7 @@ import (
 
 	"deblasis.net/space-traffic-control/common/auth"
 	"deblasis.net/space-traffic-control/common/consts"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/golang-jwt/jwt"
 	"google.golang.org/grpc/codes"
 )

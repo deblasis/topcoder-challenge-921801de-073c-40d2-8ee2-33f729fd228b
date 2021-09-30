@@ -30,8 +30,8 @@ import (
 
 	"deblasis.net/space-traffic-control/common"
 	"deblasis.net/space-traffic-control/common/errs"
-	"github.com/go-kit/kit/log"
 	gk "github.com/go-kit/kit/transport/grpc"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
