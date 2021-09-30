@@ -42,10 +42,5 @@ services:
       - DEBLASIS_JWT_PUBKEYPATH=/certs/jwt.pem.pub      
     depends_on:
       - apigateway
-    # working_dir: /go/src/deblasis/stc-integrationtester
-    # volumes: 
-    #   - ./e2e_tests/scripts/entrypoint.sh:/entrypoint.sh
-    #   - .:/go/src/deblasis/stc-integrationtester
-    # command: /entrypoint.sh
     networks:  
       - net

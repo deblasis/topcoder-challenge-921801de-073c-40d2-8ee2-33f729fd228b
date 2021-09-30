@@ -48,6 +48,8 @@ FROM alpine:3.14.2
 RUN apk update && apk upgrade && apk add bash && apk add supervisor
 COPY --from=build_base /bin/consul /bin/goreman /bin/
 COPY --from=server_builder /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh /Procfile  /
+RUN chmod +x /entrypoint.sh /consul-agent.sh /exe /wait-for-it.sh
+
 COPY --from=server_builder /consul/service.json /consul/service.json
 
 ENTRYPOINT [ "goreman" ]
