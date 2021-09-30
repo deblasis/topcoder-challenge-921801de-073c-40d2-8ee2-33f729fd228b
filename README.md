@@ -15,6 +15,20 @@ From there you can play with the API
 
 Side note: I used a playful tone, normally I keep it more professional 😉. 
 
+### ⚠ "Root" User Token
+In order to get the pre-seeded `Command` user token, just run the following command, I would never put usernames and password in source control, that's why I am following best practices... 😂 not
+```bash
+curl -X 'POST' \
+  'http://localhost:8081/auth/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "deblasis",
+  "password": "password!"
+}'
+```
+Otherwise follow the instructions below for seeding your own user(s).
+
 ### Architecture
 The architecture of this implementation is as follows:
 
@@ -38,6 +52,7 @@ It proxies requests, converts them into GRPC and also takes care of handling aut
 
 ### AuthZ / AuthN
 I used JWTs RSA RS256 and I implemented handlers, interceptors and ACL myself instead of using out-of-the-box solutions. 
+Token expiration is configurable via the `jwt.tokenduration` key in the [AuthService's app.yaml](./services/authsvc/app.yaml) hat is also overridable via environment variable `DEBLASIS_JWT_TOKENDURATION` supplied obviously to the `AuthService` container.
 
 ### TLS
 It's implemented but disabled by default to simplify testing/verification/debugging
