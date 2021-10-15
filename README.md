@@ -1,5 +1,5 @@
 # @deblasis' Space Traffic Control
-![E2E Integration Tests](https://github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b/actions/workflows/e2e-tests.yml/badge.svg)
+[![E2E Integration Tests](https://github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b/actions/workflows/e2e-tests.yml/badge.svg)](https://github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b/actions) [![Go Report](https://goreportcard.com/badge/github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b)](https://goreportcard.com/report/github.com/deblasis/topcoder-challenge-921801de-073c-40d2-8ee2-33f729fd228b)
 
 This is an implementation of the corresponding [Topcoder Challenge](https://www.topcoder.com/challenges/921801de-073c-40d2-8ee2-33f729fd228b?tab=details)
 
@@ -9,11 +9,11 @@ This is an implementation of the corresponding [Topcoder Challenge](https://www.
 ```bash
 make run-fast
 ```
-then navigate to http://localhost:8081 and you will be redirected to the swagger UI 
+then navigate to http://localhost:8081 and you will be redirected to the swagger UI
 <img src="./docs/swagger.jpg" />
 From there you can play with the API
 
-Side note: I used a playful tone, normally I keep it more professional 😉. 
+Side note: I used a playful tone, normally I keep it more professional 😉.
 
 ### ⚠ "Root" User Token
 In order to get the pre-seeded `Command` user token, just run the following command, I would never put usernames and password in source control, that's why I am following best practices... 😂 not
@@ -34,7 +34,7 @@ The architecture of this implementation is as follows:
 
 <img src="./docs/architecture-diagram.jpg" />
 
-There is also a single `Consul` leader instance and two additional `Agents` offering DNS for `APIGateway` and `ClessidraSvc`. 
+There is also a single `Consul` leader instance and two additional `Agents` offering DNS for `APIGateway` and `ClessidraSvc`.
 
 ### Consul
 
@@ -51,7 +51,7 @@ All http requests requests are served by a front facing `API Gateway` that imple
 It proxies requests, converts them into GRPC and also takes care of handling authorization headers.
 
 ### AuthZ / AuthN
-I used JWTs RSA RS256 and I implemented handlers, interceptors and ACL myself instead of using out-of-the-box solutions. 
+I used JWTs RSA RS256 and I implemented handlers, interceptors and ACL myself instead of using out-of-the-box solutions.
 Token expiration is configurable via the `jwt.tokenduration` key in the [AuthService's app.yaml](./services/authsvc/app.yaml) hat is also overridable via environment variable `DEBLASIS_JWT_TOKENDURATION` supplied obviously to the `AuthService` container.
 
 ### TLS
@@ -91,7 +91,7 @@ The makefile is used as a productivity enhancer, there are targets that are mean
 They can be generated on the host or inside a container for a containerized build depending on the needs. There's also a target in the Makefile to copy the certificates to the host from the containerized builder for debugging purposes.
 
 ### Worker
-There's a worker service called `ClessidraSvc` (Clessidra is Italian for hourglass) that simulates passage of time, making sure that the ships that are supposed to leave, leave their docks and that the reserved docks are freed after a configurable timeout. 
+There's a worker service called `ClessidraSvc` (Clessidra is Italian for hourglass) that simulates passage of time, making sure that the ships that are supposed to leave, leave their docks and that the reserved docks are freed after a configurable timeout.
 The service registers itself with consul via the agent sidecar.
 
 
@@ -122,7 +122,7 @@ To spin up a version that doesn't expose container ports apart from the entrypoi
 ```bash
 make run-fast
 ```
-You can then navigate to http://localhost:8081 to the Swagger UI 
+You can then navigate to http://localhost:8081 to the Swagger UI
 
 
 ## Notes
@@ -132,6 +132,6 @@ First come first serve.
 - When a ship has to land, in the requirements there's no mention of the `dockId` to land to.
 Since when we request landing we receive a `dockId` (from `dockingStation` in the response with `command` = `land`) I made it compulsory to have a `land` request that requires not only the `time` but also the `dockId` to land to.
 
-- I believe this was a fun challenge, I am sorry I didn't see much participation and submissions so far (we are 9d from submission end at the time of writing). 
+- I believe this was a fun challenge, I am sorry I didn't see much participation and submissions so far (we are 9d from submission end at the time of writing).
 
 - Because of the latter reason, I didn't spend too much time cleaning up the code, refactoring, etc. I might do that on Github after the competition is completed.
