@@ -16,7 +16,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.3
 	github.com/hashicorp/consul/api v1.11.0
 	github.com/oklog/oklog v0.3.2
 	github.com/onsi/ginkgo v1.16.5
@@ -28,8 +28,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
-	google.golang.org/genproto v0.0.0-20210924002016-3dee208752a0
-	google.golang.org/grpc v1.41.0
+	google.golang.org/genproto v0.0.0-20220118154757-00ab72f36ad5
+	google.golang.org/grpc v1.43.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/jeevatkm/go-model.v1 v1.1.0
@@ -44,7 +44,6 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-pg/zerochecker v0.2.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
@@ -103,4 +102,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	mellium.im/sasl v0.2.1 // indirect
 	moul.io/http2curl v1.0.1-0.20190925090545-5cd742060b0e // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
